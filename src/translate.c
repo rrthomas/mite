@@ -13,42 +13,7 @@
 /* Instructions' operand types */
 #define OPS(t1, t2, t3)  ((op_ ## t3) << 8) | ((op_ ## t2) << 4) | (op_ ## t1)
 unsigned int opType[] = {
-  /* dummy */ OPS(_,_,_),
-  /* lab */   OPS(L,_,_),
-  /* mov */   OPS(r,r,_),
-  /* movi */  OPS(r,i,_),
-  /* ldl */   OPS(r,d,_),
-  /* ld */    OPS(r,r,_),
-  /* st */    OPS(r,r,_),
-  /* gets */  OPS(r,_,_),
-  /* sets */  OPS(r,_,_),
-  /* pop */   OPS(r,_,_),
-  /* push */  OPS(r,_,_),
-  /* add */   OPS(r,r,r),
-  /* sub */   OPS(r,r,r),
-  /* mul */   OPS(r,r,r),
-  /* div */   OPS(r,r,r),
-  /* rem */   OPS(r,r,r),
-  /* and */   OPS(r,r,r),
-  /* or */    OPS(r,r,r),
-  /* xor */   OPS(r,r,r),
-  /* sl */    OPS(r,r,r),
-  /* srl */   OPS(r,r,r),
-  /* sra */   OPS(r,r,r),
-  /* teq */   OPS(r,r,r),
-  /* tlt */   OPS(r,r,r),
-  /* tltu */  OPS(r,r,r),
-  /* b */     OPS(b,_,_),
-  /* br */    OPS(r,_,_),
-  /* bf */    OPS(r,b,_),
-  /* bt */    OPS(r,b,_),
-  /* call */  OPS(s,_,_),
-  /* callr */ OPS(r,_,_),
-  /* ret */   OPS(_,_,_),
-  /* calln */ OPS(r,_,_),
-  /* lit */   OPS(i,_,_),
-  /* litl */  OPS(l,_,_),
-  /* space */ OPS(i,_,_),
+#include "opToTypes.c"
 };
 
 const char *labelType[] = {
