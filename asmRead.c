@@ -1,5 +1,6 @@
 /* Mite assembly reader
- * Reuben Thomas    24/11/00-20/5/01 */
+   (c) Reuben Thomas 2000
+*/
 
 
 #include <stdint.h>
@@ -8,13 +9,12 @@
 #include <errno.h>
 #include <string.h>
 
-#include <rrt/except.h>
-#include <rrt/hash.h>
-#include <rrt/string.h>
+#include "except.h"
+#include "hash.h"
+#include "string.h"
+#include "translate.h"
 
-#include "Translate.h"
-
-#include "Insts.c"
+#include "insts.c"
 
 
 static int

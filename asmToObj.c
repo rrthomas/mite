@@ -1,11 +1,12 @@
 /* Mite assembly to object translator
- * Reuben Thomas    14/5/01 */
+   (c) Reuben Thomas 2001
+*/
 
 
-#include "Translate.h"
+#include "translate.h"
 
 #define TRANSLATOR asmToObj
 TranslatorFunction TRANSLATOR;
 
-#include "ObjWrite.c"
-#include "AsmRead.c"
+#include "objWrite.c"
+#include "asmRead.c"

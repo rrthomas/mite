@@ -1,19 +1,21 @@
 /* Mite abstract grammar
- * Reuben Thomas    1/12/00-20/5/01 */
+   (c) Reuben Thomas 2000
+*/
 
 
 #ifndef MITE_ABSGRAM
 #define MITE_ABSGRAM
 
+
 #include <stddef.h>
 #include <stdint.h>
 #include <limits.h>
 
-#include <rrt/memory.h>
-#include <rrt/hash.h>
+#include "buffer.h"
+#include "hash.h"
 
 
-/* typedef uint8_t Byte; */
+typedef uint8_t Byte;
 typedef int8_t SByte;
 typedef uint32_t Word;
 
@@ -35,6 +37,8 @@ typedef uint32_t Word;
   /* Number of bytes left in the Word from p */
 #define PTR_BYTES_LEFT(p) (PTR_BYTE - ((uintptr_t)p & PTR_MASK))
   /* Number of bytes left in the Word from p */
+
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 #define ensure(n) bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + (n))
 

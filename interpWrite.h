@@ -1,5 +1,6 @@
 /* Mite interpretive code writer
- * Reuben Thomas   2-3/4/01 */
+   (c) Reuben Thomas 2001
+*/
 
 
 #ifndef MITE_INTERPWRITE

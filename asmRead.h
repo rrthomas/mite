@@ -1,5 +1,6 @@
 /* Mite assembly reader
- * Reuben Thomas   24/11/00-15/4/01 */
+   (c) Reuben Thomas 2000
+*/
 
 
 #ifndef MITE_ASMREAD

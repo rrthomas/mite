@@ -1,13 +1,14 @@
 /* Mite object to object translator
- * Reuben Thomas    21/4-14/5/01 */
+   Reuben Thomas 2001
+*/
 
 /* This translator can be used to check the validity of object files */
 
 
-#include "Translate.h"
+#include "translate.h"
 
 #define TRANSLATOR objToObj
 TranslatorFunction TRANSLATOR;
 
-#include "ObjWrite.c"
-#include "ObjRead.c"
+#include "objWrite.c"
+#include "objRead.c"

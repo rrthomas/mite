@@ -1,5 +1,6 @@
 /* Mite object to interpretive code translator
- * Reuben Thomas    29/4/01 */
+   (c) Reuben Thomas 2001
+*/
 
 
 #include "Translate.h"

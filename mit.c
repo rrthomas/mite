@@ -1,17 +1,17 @@
 /* Mite translator
- * Reuben Thomas    24/11/00-14/5/01 */
+   (c) Reuben Thomas 2000
+*/
 
 
 #include <stdio.h>
 #include <limits.h>
 
-#include <rrt/except.h>
-#include <rrt/memory.h>
-#include <rrt/stream.h>
-#include <rrt/string.h>
-
-#include "Translate.h"
-#include "Translators.h"
+#include "except.h"
+#include "buffer.h"
+#include "flen.h"
+#include "string.h"
+#include "translate.h"
+#include "translators.h"
 
 
 #if CHAR_BIT != 8
@@ -27,8 +27,8 @@ enum {
 static unsigned int
 typeFromSuffix(const char *s)
 {
-  if (strEq(s, "o")) return Obj;
-  else if (s == None || *s == '\0' || strEq(s, "s")) return Asm;
+  if (strcmp(s, "o") == 0) return Obj;
+  else if (s == None || *s == '\0' || strcmp(s, "s") == 0) return Asm;
   return None;
 }
 
@@ -36,7 +36,6 @@ static const char *
 suffix(const char *s)
 {
   const char *suff = strrchr(s, '.');
-
   if (suff) suff++;
   return suff;
 }
@@ -48,7 +47,6 @@ readFile(const char *file, Byte **data)
   Byte *p;
   long len = 0;
   uintptr_t max;
-
   if (*file == '-' && (file[1] == '\0' || file[1] == '.')) {
     fp = stdin;
     *data = bufNew(max, MIN_IMAGE_SIZE);
@@ -79,7 +77,6 @@ writeFile(const char *file, Byte *data, long len)
 {
   FILE *fp = *file == '-' && (file[1] == '\0' || file[1] == '.') ?
     stdout : fopen(file, "wb");
-
   if (!fp) throw("could not open file");
   if (fwrite(data, sizeof(Byte), len, fp) != (uintptr_t)len)
     throw("error writing '%s'", file);
@@ -94,7 +91,6 @@ main(int argc, char *argv[])
   long len;
   Translator *t;
   unsigned int r, w;
-  
   progName = argv[0];
   excInit();
   if (argc < 2 || argc > 3) {
@@ -119,6 +115,5 @@ main(int argc, char *argv[])
   else t = objToObj(img, img + len);
   free(img);
   writeFile(argc == 3 ? argv[2] : "-", t->wImg, (long)(t->wPtr - t->wImg));
-
   return EXIT_SUCCESS;
 }

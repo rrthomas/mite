@@ -1,12 +1,16 @@
 /* Mite translators
- * Reuben Thomas    21-29/4/01 */
+   (c) Reuben Thomas 2001
+*/
 
 
 #ifndef MITE_TRANSLATORS
 #define MITE_TRANSLATORS
 
 
-#include "Translate.h"
+#include "translate.h"
+
+Translator *
+asmToObj(Byte *rImg, Byte *rEnd);
 
 Translator *
 objToObj(Byte *rImg, Byte *rEnd);

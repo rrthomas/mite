@@ -1,16 +1,16 @@
 /* Mite object reader
- * Reuben Thomas    23/3-26/4/01 */
+   (c) Reuben Thomas 2001
+*/
 
 /* Things to verify:
- *   Also need a post-pass to verify everything else (what is there?) */
+     Also need a post-pass to verify everything else (what is there?) */
 
+     
 #include <stdint.h>
 #include <limits.h>
 
-#include <rrt/except.h>
-#include <rrt/memory.h>
-
-#include "Translate.h"
+#include "except.h"
+#include "translate.h"
 
 
 /* set excLine to the current offset into the image, then throw an exception */
@@ -18,7 +18,6 @@ static void
 throwPos(Translator *t, const char *fmt, ...)
 {
   va_list ap;
-  
   va_start(ap, fmt);
   excLine = t->rPtr - t->rImg;
   vThrow(fmt, ap);
@@ -31,7 +30,6 @@ static int
 bits(int n)
 {
   int n2, m = 033; /* mask */
-
   n -= (n2 = (n >> 1) & m);  /* n - floor(n/2) */
   n -= (n2 = (n2 >> 1) & m); /* n - floor(n/2) - floor(n/4) */
   return ((n + (n >> 3)) & 0x7) + (n >> 6);
@@ -44,7 +42,6 @@ getBits(Translator *t, uintptr_t n)
 #define p t->rPtr
   int i, endBit, bits;
   uint32_t w;
-
   if (p < t->rEnd) {
     do {
       w = 0;
@@ -75,7 +72,6 @@ getNum(Translator *t, int *sgnRet)
   uintptr_t n;
   int sgn;
   unsigned int o;
-
   sgn = -(h >> (BYTE_BIT - 2));
   n = getBits(t, (uintptr_t)sgn);
   o = (unsigned)(p - start - 1); /* Don't count first byte, which is in h */
@@ -139,7 +135,6 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
   intptr_t n;
   uintptr_t l;
   int sgn, i;
-
   for (i = 0; i < LABEL_TYPES; i++) t->labels[i] = 0;
   while (t->rPtr < t->rEnd) {
     w = *(Word *)t->rPtr;

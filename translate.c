@@ -1,13 +1,13 @@
 /* Mite abstract grammar
- * Reuben Thomas    29/11/00-22/4/01 */
+   (c) Reuben Thomas 2000
+*/
 
 
 #include <string.h>
 
-#include <rrt/except.h>
-#include <rrt/memory.h>
-
-#include "Translate.h"
+#include "except.h"
+#include "buffer.h"
+#include "translate.h"
 
 
 /* Instructions' operand types */
@@ -61,7 +61,6 @@ void
 align(Translator *t)
 {
   unsigned int n;
-
   for (n = WORD_BYTES_LEFT(t->wPtr) & WORD_ALIGN; n; n--)
     *t->wPtr++ = (Byte)0;
 }
@@ -76,7 +75,6 @@ addDangle(Translator *t, unsigned int ty, uintptr_t n)
 {
   Dangle *d = new(Dangle);
   Label *l = new(Label);
-
   l->ty = ty;
   l->v.n = n;
   d->l = l;
@@ -92,7 +90,6 @@ insertDangles(Translator *t, Byte *fImg, Byte *fPtr,
 {
   Dangle *d;
   uintptr_t prev = 0, extras;
- 
   for (d = t->dangles->next; d; d = d->next) {
     memcpy(fPtr, t->wImg + prev, d->ins - prev);
     fPtr += d->ins - prev;
@@ -110,7 +107,6 @@ Translator *
 translatorNew(Byte *img, Byte *end)
 {
   Translator *t = new(Translator);
-
   t->rPtr = t->rImg = img;
   t->rEnd = end;
   t->wImg = bufNew(t->wSize, MIN_IMAGE_SIZE);
@@ -119,6 +115,7 @@ translatorNew(Byte *img, Byte *end)
   t->dangleEnd = t->dangles;
   return t;
 }  
+
 /* 
  * Translator *
  * translate(Byte *rImg, Byte *rEnd)

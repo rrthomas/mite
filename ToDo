@@ -1,7 +1,14 @@
+Immediate action to get it working and back on track:
+
+Debug core dump
+
+Add output of assembler back in, and do asm->asm and obj->asm (need to
+match assembly reader and writer with ReadObj.c)
+
+
 Shifts of type size (e.g. 32 bits for a word) are not allowed; make sure
 they are not assumed.
 
-Need to match assembly reader and writer with ReadObj.c.
 
 
 Test system:
@@ -35,7 +42,7 @@ at least for the standard C library.
 
 FP instruction set (using new reg set, use only 64-bit IEEE numbers).
 
-Higher level calling: use Swig.
+Higher level calling: use Swig or libffi
 
 
 Separate compilation of Mite code

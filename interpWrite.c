@@ -1,20 +1,19 @@
 /* Mite interpretive code writer
- * Reuben Thomas    15-29/4/01 */
+   (c) Reuben Thomas 2001
+*/
 
 /* Format of interpretive code: same as object code, but with data written out
- *   To speed up interpretation, could have top-bit-set instruction variants
- *   which take a simple number in the rest of the word; non-top-bit set
- *   indicates that flags or multiple words are used; could also write out
- *   modified code which expands constants and addresses */
+     To speed up interpretation, could have top-bit-set instruction variants
+     which take a simple number in the rest of the word; non-top-bit set
+     indicates that flags or multiple words are used; could also write out
+     modified code which expands constants and addresses */
 
 
 #include <stdint.h>
 #include <limits.h>
 #include <string.h>
 
-#include <rrt/except.h>
-#include <rrt/memory.h>
-
+#include "except.h"
 #include "Translate.h"
 #include "InterpWrite.h"
 
@@ -83,7 +82,6 @@ void
 resolve(Translator *t)
 {
   Dangle *d;
- 
   for (d = t->dangles->next; d; d = d->next)
     (uintptr_t)d->ins = labelMap(t, d->l).n;
 }

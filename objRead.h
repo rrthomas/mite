@@ -1,5 +1,6 @@
 /* Mite object reader
- * Reuben Thomas   23/3-15/4/01 */
+   (c) Reuben Thomas 2001
+*/
 
 
 #ifndef MITE_OBJREAD

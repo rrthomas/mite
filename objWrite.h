@@ -1,5 +1,6 @@
 /* Mite object writer
- * Reuben Thomas   17/3-15/4/01 */
+   (c) Reuben Thomas 2001
+*/
 
 
 #ifndef MITE_OBJWRITE

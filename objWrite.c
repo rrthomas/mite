@@ -1,14 +1,13 @@
 /* Mite object writer
- * Reuben Thomas    17/3-29/4/01 */
+   Reuben Thomas 2001
+*/
 
 
 #include <stdint.h>
 #include <limits.h>
 
-#include <rrt/except.h>
-#include <rrt/memory.h>
-
-#include "Translate.h"
+#include "except.h"
+#include "translate.h"
 
 
 /* Store w into the rest of the current instruction word in big-endian order
@@ -17,7 +16,6 @@ static void
 writeBytes(Byte *p, uint32_t w)
 {
   int i = WORD_BYTES_LEFT(p) - 1;
-
   do {
     p[i--] = (Byte)w; /* Check this cast works as expected */
     w >>= BYTE_BIT;
@@ -30,7 +28,6 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 {
   int len = 1, cur = (WORD_BYTES_LEFT(p) << BYTE_SHIFT) - 1;
   uintptr_t bytes = 0;
-
   while (n >> len && len < (int)WORD_BIT) len++; 
   if (sgn) n = (uintptr_t)(-(intptr_t)n);
   while ((bytes += (cur + 1) >> BYTE_SHIFT), len > cur) {
@@ -102,7 +99,6 @@ static uintptr_t
 writeUInt(Byte **p, uintptr_t n)
 {
   uintptr_t len = writeInt(*p, 0, n);
-
   *p += len;
   return len & WORD_ALIGN;
 }
@@ -113,7 +109,6 @@ resolve(Translator *t, LabelValue (*labelMap)(Translator *t, Label *l))
   Byte *fImg;
   Dangle *d;
   uintptr_t n;
- 
   for (d = t->dangles->next, n = 0; d; d = d->next, n++);
   fImg = excMalloc(t->wPtr - t->wImg + n * (WORD_BYTE * 2));
   insertDangles(t, fImg, fImg, writeUInt, labelMap);
