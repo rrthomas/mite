@@ -11,6 +11,7 @@
 #include "except.h"
 #include "list.h"
 
+
 const char *_excMsg[] = {
 #include "excMsg.h"
 };
@@ -65,7 +66,7 @@ vThrow(int exc, va_list arg)
 {
   if (!listEmpty(_excBufs))
     longjmp(*((jmp_buf *)_excBufs->next->item), exc);
-  vDie(_excMsg[exc], arg);
+  vDie(_excMsg[exc - 1], arg);
 }
 unVify(int, vThrow, throw)
 
