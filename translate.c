@@ -58,7 +58,7 @@ const char *labelType[] = {
 };
 
 void
-align(Translator *t)
+align(TState *t)
 {
   unsigned int n;
   for (n = WORD_BYTES_LEFT(t->wPtr) & WORD_ALIGN; n; n--)
@@ -66,12 +66,12 @@ align(Translator *t)
 }
 
 void
-nullLabNew(Translator *t, unsigned int ty, uintptr_t n)
+nullLabNew(TState *t, unsigned int ty, uintptr_t n)
 {
 }
 
 void
-addDangle(Translator *t, unsigned int ty, uintptr_t n)
+addDangle(TState *t, unsigned int ty, uintptr_t n)
 {
   Dangle *d = new(Dangle);
   Label *l = new(Label);
@@ -84,9 +84,9 @@ addDangle(Translator *t, unsigned int ty, uintptr_t n)
 }
 
 void
-insertDangles(Translator *t, Byte *fImg, Byte *fPtr,
+insertDangles(TState *t, Byte *finalImg, Byte *fPtr,
 	      uintptr_t (*write)(Byte **p, uintptr_t n),
-	      LabelValue (*labelMap)(Translator *t, Label *l))
+	      LabelValue (*labelMap)(TState *t, Label *l))
 {
   Dangle *d;
   uintptr_t prev = 0, extras;
@@ -99,14 +99,14 @@ insertDangles(Translator *t, Byte *fImg, Byte *fPtr,
   memcpy(fPtr, t->wImg + prev, t->wPtr - t->wImg - prev);
   fPtr += t->wPtr - t->wImg - prev;
   free(t->wImg);
-  t->wImg = realloc(fImg, fPtr - fImg);
-  t->wPtr = fPtr;
+  t->wImg = realloc(finalImg, fPtr - finalImg);
+  t->wPtr = t->wImg + (fPtr - finalImg);
 }
 
-Translator *
+TState *
 translatorNew(Byte *img, Byte *end)
 {
-  Translator *t = new(Translator);
+  TState *t = new(TState);
   t->rPtr = t->rImg = img;
   t->rEnd = end;
   t->wImg = bufNew(t->wSize, MIN_IMAGE_SIZE);
@@ -117,10 +117,10 @@ translatorNew(Byte *img, Byte *end)
 }  
 
 /* 
- * Translator *
+ * TState *
  * translate(Byte *rImg, Byte *rEnd)
  * {
- * Translator *t = translatorNew(rImg, rEnd);
+ * TState *t = translatorNew(rImg, rEnd);
  * unsigned int i;
  * MiteValue op1, op2, op3;
  * 
