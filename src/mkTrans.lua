@@ -165,7 +165,7 @@ for i = 1, getn(inst) do
             "      }")
 end
 writeLine("    default:",
-          "      throw(\"bad instruction\");")
+          "      throw(ExcBadInst);")
 
 -- End of the translator function
 writeLine("    }",

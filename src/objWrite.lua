@@ -13,7 +13,7 @@ return Writer(
 /* Store w in the rest of the current instruction word in big-endian
    order; the data given in w must fit in p mod WORD_BYTE bytes */
 static void
-writeBytes(Byte *p, uint32_t w)
+writeBytes(Byte *p, Word w)
 {
   int i = WORD_BYTES_LEFT(p) - 1;
   do {
@@ -23,21 +23,21 @@ writeBytes(Byte *p, uint32_t w)
 }
 
 /* Write an integer: sgn is 0 for +ve, 1 for -ve; n is the value */
-static uintptr_t
-writeInt(Byte *p, int sgn, uintptr_t n)
+static Word
+writeInt(Byte *p, int sgn, Word n)
 {
   int len = 1, cur = (WORD_BYTES_LEFT(p) << BYTE_SHIFT) - 1;
-  uintptr_t bytes = 0;
+  Word bytes = 0;
   while (n >> len && len < (int)WORD_BIT)
     len++;
   if (sgn)
-    n = (uintptr_t)(-(intptr_t)n);
+    n = (Word)(-(SWord)n);
   while ((bytes += (cur + 1) >> BYTE_SHIFT), len > cur) {
     len -= cur; /* Number of bits left */
-    writeBytes(p, (uint32_t)(n >> len));
+    writeBytes(p, (Word)(n >> len));
     cur = WORD_BIT - 1;
   }
-  writeBytes(p, (uint32_t)(n & ((1 << cur) - 1)) /* Mask cur bits */
+  writeBytes(p, (Word)(n & ((1 << cur) - 1)) /* Mask cur bits */
 	     | (1 << cur)); /* Add 1 bit to last word */
   return bytes;
 }
@@ -49,12 +49,12 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 
 #ifdef LITTLE_ENDIAN
 #  define W(a, b, c, d) \
-     *(Word *)t->wPtr = a | (b << BYTE_BIT) | \
+     *(InstWord *)t->wPtr = a | (b << BYTE_BIT) | \
        (c << (BYTE_BIT * 2)) | (d << (BYTE_BIT * 3)); \
      t->wPtr += WORD_BYTE
 #else /* !LITTLE_ENDIAN */
 #  define W(a, b, c, d) \
-     *(Word *)t->wPtr = (a << (BYTE_BIT * 3)) | \
+     *(InstWord *)t->wPtr = (a << (BYTE_BIT * 3)) | \
        (b << (BYTE_BIT * 2)) | (c << BYTE_BIT) | d; \
      t->wPtr += WORD_BYTE
 #endif /* LITTLE_ENDIAN */
@@ -77,7 +77,7 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 
 #define writeUInt(p, n) \
   { \
-    uintptr_t len = writeInt(*(p), 0, (n)); \
+    Word len = writeInt(*(p), 0, (n)); \
     *(p) += len; \
     extras = len & WORD_ALIGN; \
   }

@@ -13,9 +13,9 @@ return Writer(
 #include "translate.h"
 
 
-/* maximum number of octal digits in a Word
+/* maximum number of octal digits in an InstWord
    (upper bound on max. no. of decimal digits) */
-#define WORD_MAXLEN (sizeof(Word) * CHAR_BIT / 3)
+#define WORD_MAXLEN (sizeof(InstWord) * CHAR_BIT / 3)
 
 static void
 putChar(TState *t, char c)
@@ -24,17 +24,17 @@ putChar(TState *t, char c)
 }
 
 static void
-putStr(TState *t, const char *s, uintptr_t len)
+putStr(TState *t, const char *s, Word len)
 {
   ensure(len);
   memcpy(t->wPtr, s, len);
   t->wPtr += len;
 }
 
-static uintptr_t
-writeNum(Byte *s, uintptr_t n)
+static Word
+writeNum(Byte *s, Word n)
 {
-  uintptr_t last = n ? log10(n) : 0;
+  Word last = n ? log10(n) : 0;
   s += last;
   do {
     *s-- = '0' + n % 10;
@@ -44,7 +44,7 @@ writeNum(Byte *s, uintptr_t n)
 }
 
 static void
-putNum(TState *t, uintptr_t n)
+putNum(TState *t, Word n)
 {
   t->wPtr += writeNum(t->wPtr, n);
 }
@@ -68,7 +68,7 @@ putLabTy(TState *t, LabelType ty)
 #define S(s) putStr(t, s, sizeof(s) / sizeof(char) - 1)
 
 static void
-putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
+putImm(TState *t, int f, int n, Word v, Word r)
 {
   if (f & FLAG_E)
     putChar(t, 'e');

@@ -16,11 +16,17 @@ void vWarn(const char *fmt, va_list arg);
 void warn(const char *fmt, ...);
 void vDie(const char *fmt, va_list arg);
 void die(const char *fmt, ...);
-void vThrow(const char *fmt, va_list arg);
-void throw(const char *fmt, ...);
+void vThrow(int exc, va_list arg);
+void throw(int exc, ...);
 
-#define try if (!setjmp(*_excEnv()))
-#define catch
+#define try \
+  { \
+    int _exc; \
+    if ((_exc = setjmp(*_excEnv())) == 0)
+#define catch else
+#define endTry \
+  _endTry(); \
+  }
 
 jmp_buf *_excEnv(void);
 void _endTry(void);
@@ -33,5 +39,9 @@ void *excRealloc(void *p, size_t size);
 extern unsigned long excLine;
 extern char *excFile;
 extern char *progName;
+
+typedef enum {
+#include "excEnum.h"
+} Exception;
 
 #endif

@@ -49,7 +49,7 @@ isimm(int c)
 /* Read next token consisting of characters for which f() returns true into
    *tok, advancing t->rPtr past it, and discarding leading non-f() characters
    and comments */
-static uintptr_t
+static Word
 rdTok(TState *t, char **tok, int (*f)(int))
 { 
 #define p t->rPtr
@@ -69,9 +69,9 @@ rdTok(TState *t, char **tok, int (*f)(int))
   *tok = (char *)p;
   while (f((char)*p)) p++;
   if (*tok == (char *)p)
-    throw("missing token");
+    throw(ExcMissingTok);
   if (!isspace((char)*p))
-    throw("bad character");
+    throw(ExcBadChar);
   if ((char)*p == '\n')
     t->eol = 1;
   *p = (Byte)'\0';
@@ -83,10 +83,10 @@ static Opcode
 rdInst(TState *t)
 {
   char *tok;
-  uintptr_t len = rdTok(t, &tok, issym);
+  Word len = rdTok(t, &tok, issym);
   struct Inst *i = findInst(tok, len);
   if (i == NULL)
-    throw("bad instruction");
+    throw(ExcBadInst);
   return i->opcode;
 }
 
@@ -96,10 +96,10 @@ rdReg(TState *t)
 {
   char *tok, *nend;
   Register r;
-  uintptr_t len = rdTok(t, &tok, isdigit);
+  Word len = rdTok(t, &tok, isdigit);
   r = strtoul(tok, &nend, 10);
-  if (r > UINT_MAX || (uintptr_t)(nend - tok) != len)
-    throw("bad register");
+  if (r > UINT_MAX || (Word)(nend - tok) != len)
+    throw(ExcBadReg);
   return r;
 }
 
@@ -107,7 +107,7 @@ static LabelType
 rdLabTy(TState *t)
 {
   char *tok;
-  uintptr_t len = rdTok(t, &tok, isalpha);
+  Word len = rdTok(t, &tok, isalpha);
   if (len == 1)
     switch (*tok) {
     case 'b':
@@ -117,7 +117,7 @@ rdLabTy(TState *t)
     case 'd':
       return LABEL_D;
     }
-  throw("bad label type");
+  throw(ExcBadLabTy);
 }
 
 static HashNode *
@@ -131,7 +131,7 @@ rdLab(TState *t, LabelType ty)
   if (hl.found) {
     l = hl.curr->body;
     if (l->ty != ty)
-      throw("inconsistent label");
+      throw(ExcWrongLab);
     return hl.curr;
   } else {
     l = new(Label);
@@ -142,7 +142,7 @@ rdLab(TState *t, LabelType ty)
 }
 
 static void
-rdImm(TState *t, Byte *f, SByte *sgn, uintptr_t *v, int *r)
+rdImm(TState *t, Byte *f, SByte *sgn, Word *v, int *r)
 {
   int rsgn;
   long rl;
@@ -171,7 +171,7 @@ rdImm(TState *t, Byte *f, SByte *sgn, uintptr_t *v, int *r)
   if (errno == ERANGE || (*sgn && *v > (unsigned long)(LONG_MAX) + 1))
     /* rather than -LONG_MIN; we're assuming two's complement anyway, and
        negating LONG_MIN overflows long */
-    throw("immediate value out of range");
+    throw(ExcBadImmVal);
   tok = nend;
   rsgn = 0;
   if (*tok == '>' && tok[1] == '>') {
@@ -184,13 +184,13 @@ rdImm(TState *t, Byte *f, SByte *sgn, uintptr_t *v, int *r)
     }
     rl = strtoul(tok, &nend, 0);
     if (rl + rsgn > 127 || errno == ERANGE)
-      throw("immediate rotation out of range");
+      throw(ExcBadImmRot);
     tok = nend;
     *r = rsgn ? -(int)rl : (int)rl;
   } else
     *r = 0;
   if (*tok)
-    throw("bad immediate");
+    throw(ExcBadImm);
 }
 
 static LabelValue
@@ -207,7 +207,7 @@ labelAddr(TState *t, Label *l)
     r = OpType("Register r%n = rdReg(t);", ""),
     i = OpType([[Byte i%n_f;
         SByte i%n_sgn;
-        uintptr_t i%n_v;
+        Word i%n_v;
         int i%n_r;]],
         "rdImm(t, &i%n_f, &i%n_sgn, &i%n_v, &i%n_r);"),
     t = OpType("LabelType t%n = rdLabTy(t);", ""),
@@ -225,7 +225,7 @@ labelAddr(TState *t, Label *l)
                  local ty = labelType(inst, op)
                  return [[l = n%n_hn->body;
         if (l->v.n)
-          throw("duplicate definition for `%s'", n%n_hn->key);
+          throw(ExcDupLab, n%n_hn->key);
         l->v.n = ++t->labels[]] .. ty .. "];"
                end),
   },

@@ -59,19 +59,19 @@ readFile(const char *file, Byte **data)
       bufExt(*data, max, max * 2);
     }
     if (len == 0)
-      throw("empty input");
+      throw(ExcEmptyFile, "stdin");
     bufShrink(*data, len + 1);
   } else {
     fp = fopen(file, "rb");
     if (!fp)
-      throw("could not open `%s'", excFile);
+      throw(ExcFopen, excFile);
     if ((len = flen(fp)) < 0)
-      throw("error getting length of file");
+      throw(ExcFlen, excFile);
     if (len == 0)
-      throw("empty file `%s'", excFile);
+      throw(ExcEmptyFile, excFile);
     *data = excMalloc(len + 1);
     if (fread(*data, sizeof(Byte), len, fp) != (uintptr_t)len)
-      throw("error reading `%s'", file);
+      throw(ExcFread, file);
   }
   (*data)[len] = '\0';
   fclose(fp);
@@ -84,9 +84,9 @@ writeFile(const char *file, Byte *data, long len)
   FILE *fp = *file == '-' && (file[1] == '\0' || file[1] == '.') ?
     stdout : fopen(file, "wb");
   if (!fp)
-    throw("could not open `%s'", file);
+    throw(ExcFopen, file);
   if (fwrite(data, sizeof(Byte), len, fp) != (uintptr_t)len)
-    throw("error writing '%s'", file);
+    throw(ExcFwrite, file);
   if (fp != stdout) fclose(fp);
 }
 

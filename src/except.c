@@ -11,13 +11,17 @@
 #include "except.h"
 #include "list.h"
 
-#define unVify(vf, f) \
+const char *_excMsg[] = {
+#include "excMsg.h"
+};
+
+#define unVify(ty, vf, f) \
   void\
-  f (const char *fmt, ...) \
+  f (ty exc, ...) \
   { \
     va_list ap; \
-    va_start(ap, fmt); \
-    vf(fmt, ap); \
+    va_start(ap, exc); \
+    vf(exc, ap); \
     va_end(ap); \
   }
 
@@ -46,24 +50,24 @@ vWarn(const char *fmt, va_list arg)
   va_end(arg);
   putc('\n', stderr);
 }
-unVify(vWarn, warn)
+unVify(const char *, vWarn, warn)
 
 void
-vDie(const char *fmt, va_list arg)
+vDie(const char *exc, va_list arg)
 {
-  vWarn(fmt, arg);
+  vWarn(exc, arg);
   exit(EXIT_FAILURE);
 }
-unVify(vDie, die)
+unVify(const char *, vDie, die)
 
 void
-vThrow(const char *fmt, va_list arg)
+vThrow(int exc, va_list arg)
 {
   if (!listEmpty(_excBufs))
-    longjmp(*((jmp_buf *)_excBufs->next->item), 1);
-  vDie(fmt, arg);
+    longjmp(*((jmp_buf *)_excBufs->next->item), exc);
+  vDie(_excMsg[exc], arg);
 }
-unVify(vThrow, throw)
+unVify(int, vThrow, throw)
 
 jmp_buf *
 _excEnv(void)
@@ -79,14 +83,13 @@ _endTry(void)
   if (!listEmpty(_excBufs))
     listBehead(_excBufs);
 }
-#define endTry _endTry()
 
 void *
 excMalloc(size_t size)
 {
   void *p = malloc(size);
   if (!p && size)
-    throw("could not allocate memory");
+    throw(ExcMalloc);
   return p;
 }
 
@@ -95,7 +98,7 @@ excCalloc(size_t nobj, size_t size)
 {
   void *p = calloc(nobj, size);
   if (!p && nobj && size)
-    throw("could not allocate memory");
+    throw(ExcMalloc);
   return p;
 }
 
@@ -103,6 +106,6 @@ void *
 excRealloc(void *p, size_t size)
 {
   if (!(p = realloc(p, size)) && size)
-    throw("could not reallocate memory");
+    throw(ExcRealloc);
   return p;
 }

@@ -17,12 +17,12 @@ return Reader(
 /* set excLine to the current offset into the image, then throw an
    exception */ 
 static void
-throwPos(TState *t, const char *fmt, ...)
+throwPos(TState *t, int exc, ...)
 {
   va_list ap;
-  va_start(ap, fmt);
+  va_start(ap, exc);
   excLine = t->rPtr - t->rImg;
-  vThrow(fmt, ap);
+  vThrow(exc, ap);
   va_end(ap);
 }
 
@@ -38,12 +38,12 @@ bits(int n)
     /* add 3-bit sub-totals and 7th bit */
 }
 
-static uintptr_t
-getBits(TState *t, uintptr_t n)
+static Word
+getBits(TState *t, Word n)
 {
 #define p t->rPtr
   int i, endBit, bits;
-  uint32_t w;
+  Word w;
   if (p < t->rEnd) {
     do {
       w = 0;
@@ -60,41 +60,36 @@ getBits(TState *t, uintptr_t n)
     n -= 1 << bits;
   }
   if (endBit == 0 && p == t->rEnd)
-    throwPos(t, "badly encoded or missing quantity");
+    throwPos(t, ExcBadImm);
   return n;
 #undef p
 }
 
-static uintptr_t
+static Word
 getNum(TState *t, int *sgnRet)
 {
 #define p t->rPtr
   Byte *start = p;
-  uint32_t h = *p & (BYTE_SIGN_BIT - 1);
-  uintptr_t n;
+  Word h = *p & (BYTE_SIGN_BIT - 1);
+  Word n;
   int sgn;
   unsigned int len;
   sgn = -(h >> (BYTE_BIT - 2));
-  n = getBits(t, (uintptr_t)sgn);
+  n = getBits(t, (Word)sgn);
   len = (unsigned int)(p - start - 1); /* Don't count first byte,
                                           which is in h */
   if ((BYTE_BIT - 1) * len +
       bits((int)(sgn == 0 ? h : ~h & (BYTE_SIGN_BIT - 1)))
       > WORD_BIT + sgn)
-    throwPos(t, "number too large");
+    throwPos(t, ExcBadImmVal);
       /* (BYTE_BIT - 1) * len is the no. of significant bits in the
          bottom bytes bits(...) is the number in the most significant
          byte if we're reading a negative number, the maximum size is
          one less */
   *sgnRet = sgn;
-  return sgn ? (uintptr_t)(-(intptr_t)n) : n;
+  return sgn ? (Word)(-(SWord)n) : n;
 #undef p
 }
-
-static const char *badReg = "bad register",
-  *badLab = "negative label",
-  *badLabTy = "bad label type",
-  *badFlags = "bad immediate flags";
 
 #ifdef LITTLE_ENDIAN
 
@@ -118,16 +113,16 @@ static const char *badReg = "bad register",
     r = OpType([[#undef r%n
         #define r%n op%n]],
         [[if (r%n == 0) /* r%n can't be > UINT_MAX */
-          throwPos(t, badReg);]]),
+          throwPos(t, ExcBadReg);]]),
     i = OpType([[#undef i%n_f
         #define i%n_f op%n
         int i%n_sgn;
-        uintptr_t i%n_v;
+        Word i%n_v;
         int i%n_r;]],
                function (inst, op)
                  return
         [[if (i%n_f & ~(FLAG_R | FLAG_S | FLAG_W | FLAG_E))
-          throwPos(t, badFlags);
+          throwPos(t, ExcBadImmMod);
         i%n_r = (op%n & FLAG_R) ?
           (t->rPtr -= 2 - %n, op]] .. tostring(op + 1) .. [[) :
           ((t->rPtr -= 3 - %n), 0);
@@ -136,14 +131,14 @@ static const char *badReg = "bad register",
     t = OpType([[#undef t%n
         #define t%n op%n]],
         [[if (op%n == 0 || op%n > LABEL_TYPES)
-          throwPos(t, badLabTy);]]),
+          throwPos(t, ExcBadLabTy);]]),
     l = OpType([[int l%n_sgn;
         LabelValue l%n;]],
                function (inst, op)
                  return [[t->rPtr -= 4 - %n;
         l%n.n = getNum(t, &l%n_sgn);
         if (l%n_sgn)
-          throwPos(t, badLab);]]
+          throwPos(t, ExcBadLab);]]
                end),
     n = OpType("LabelValue l%n;",
                function (inst, op)
@@ -152,11 +147,11 @@ static const char *badReg = "bad register",
                end),
   },
   Translator(
-    [[Word w;
+    [[InstWord w;
     Byte op1, op2, op3;]],   -- decls
     [[t->labHash = hashNew(4096);
     t->eol = 0;]],           -- init
-    [[w = *(Word *)t->rPtr;
+    [[w = *(InstWord *)t->rPtr;
     op1 = OP(1);
     op2 = OP(2);
     op3 = OP(3);

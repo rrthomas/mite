@@ -13,11 +13,11 @@ return Writer(
 
 #include "translate.h"
 
-static uintptr_t
-evalImm(Byte f, int sgn, uintptr_t v, intptr_t r)
+static Word
+evalImm(Byte f, int sgn, Word v, SWord r)
 {
   if (sgn)
-    v = (uintptr_t)(-(intptr_t)v);
+    v = (Word)(-(SWord)v);
 #ifndef LITTLE_ENDIAN
   if (f & FLAG_E)
     v = PTR_BYTE - v;
@@ -26,12 +26,12 @@ evalImm(Byte f, int sgn, uintptr_t v, intptr_t r)
   if (f & FLAG_W)
     v *= PTR_BYTE;
   if (r > 0) {
-    if (r > (intptr_t)PTR_BIT)
+    if (r > (SWord)PTR_BIT)
       r = PTR_BIT;
     v = (v >> r) | (v << (PTR_BIT - r));
   } else {
     if (r < 0) {
-      if (r < -(intptr_t)PTR_BIT)
+      if (r < -(SWord)PTR_BIT)
         r = -PTR_BIT;
       v = (v >> -r) | (v << (PTR_BIT - -r));
     }
@@ -41,7 +41,7 @@ evalImm(Byte f, int sgn, uintptr_t v, intptr_t r)
 
 #define writeUInt(p, n) \
   { \
-    uintptr_t **uip = (uintptr_t **)(p); \
+    Word **uip = (Word **)(p); \
     *(*uip)++ = (n); \
     extras = PTR_BYTE; \
   }
@@ -66,14 +66,14 @@ evalImm(Byte f, int sgn, uintptr_t v, intptr_t r)
     Inst("br",    ""), Inst("bf",    ""), Inst("bt",    ""),
     Inst("call",  ""), Inst("callr", ""), Inst("ret",   ""),
     Inst("calln", ""),
-    Inst("lit",    "*(uintptr_t *)t->wPtr = evalImm(i1_f, i1_sgn, " ..
+    Inst("lit",    "*(Word *)t->wPtr = evalImm(i1_f, i1_sgn, " ..
                    "i1_v, i1_r); t->wPtr += PTR_BYTE"),
     Inst("litl",   "addDangle(t, t1, l2); t->wPtr += PTR_BYTE"),
     Inst("space",  "sp = evalImm(i1_f, i1_sgn, i1_v, i1_r) * " ..
                    "PTR_BYTE;ensure(sp); memset(t->wPtr, 0, sp); " ..
                    "t->wPtr += sp"),
   },
-  Translator("uintptr_t sp;",                       -- decls
+  Translator("Word sp;",                       -- decls
              [[for (ty = 0; ty < LABEL_TYPES; ty++)
     t->labAddr[ty] = bufNew(t->labSize[ty], INIT_LABS * PTR_BYTE);]],
                                                     -- init
