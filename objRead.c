@@ -105,7 +105,7 @@ static const char *badReg = "bad register",
 #ifdef LITTLE_ENDIAN
   #define OPCODE(w) (w) & BYTE_MASK
   #define OP(p) (w >> (BYTE_BIT * (p))) & BYTE_MASK
-  #define GET_LAB(p) t->rPtr -= 4 - (p); l = getNum(t, &sgn); \
+  #define GET_LAB(p) t->rPtr -= 4 - (p); l.n = getNum(t, &sgn); \
     if (sgn) throwPos(t, badLab)
   #define GET_IMM1 r = (op1 & 1) ? (t->rPtr--, op2) : ((t->rPtr -= 2), 0); \
     n = getNum(t, &sgn)
@@ -134,7 +134,7 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
   Byte op1, op2, op3;
   SByte r;
   intptr_t n;
-  uintptr_t l;
+  LabelValue l;
   int sgn, i;
   for (i = 0; i < LABEL_TYPES; i++) t->labels[i] = 0;
   while (t->rPtr < t->rEnd) {
@@ -142,6 +142,7 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
     op1 = OP(1);  op2 = OP(2);  op3 = OP(3);
     t->rPtr += WORD_BYTE;
     excLine += WORD_BYTE;
+    bufEnsure(INST_MAXLEN);
     switch (OPCODE(w)) {
       case OP_LAB:   OPS(L,_,_); wrLab(op1, ++t->labels[op1]); break;
       case OP_MOV:   OPS(r,r,_); wrMov(op1, op2); break;
