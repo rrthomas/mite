@@ -21,14 +21,14 @@ TRANS_SRC = asmToObj.c objToAsm.c
 TRANS_OBJ = asmToObj.o objToAsm.o
 SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c $(TRANS_SRC)
 OBJS = mit.o translate.o except.o list.o hash.o flen.o insts.o $(TRANS_OBJ)
-GEN_SRCS = opEnum.h opToInst.h opToName.h insts.gperf insts.c endian.h
+GEN_SRCS = opToTypes.c opEnum.h insts.gperf insts.c endian.h
 PROGS = mit endian
 
 # Top-level targets
 
 all: mit
 
-depend: .depend $(SRCS)
+depend: .depend
 
 clean:
 	rm -f $(OBJS)
@@ -38,7 +38,7 @@ dist-clean:
 
 # File dependencies
 
-.depend: $(SRCS)
+.depend: $(SRCS) $(GEN_SRCS)
 	mkdep -p $(CFLAGS) $(SRCS)
 
 mit: $(OBJS)
