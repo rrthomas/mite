@@ -19,7 +19,7 @@ RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 # Source files
 
-include translator.make
+TRANS_SRCS = asmToObj.c objToAsm.c
 TRANS_OBJS = $(patsubst %.c,%.o,$(TRANS_SRCS))
 SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c
 
@@ -64,6 +64,14 @@ endian.h: endian.c
 insts.gperf translate.h: $(MITE_TOP)/spec.lua procSpec.lua
 	$(RUNLUA) procSpec.lua
 	touch translate.h
+
+mit.o: translators.c
+
+asmToObj.c: asmRead.lua objWrite.lua mkTrans.lua
+	$(RUNLUA) mkTrans.lua asmRead.lua objWrite.lua $*
+
+objToAsm.c: objRead.lua asmWrite.lua mkTrans.lua
+	$(RUNLUA) mkTrans.lua objRead.lua asmWrite.lua $*
 
 
 # Include dependencies
