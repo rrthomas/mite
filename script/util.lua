@@ -531,7 +531,6 @@ end
 --   ind1: indent of first line [ind]
 -- returns
 --   s: wrapped paragraph
--- TODO: make this function cope with newlines
 function wrap(s, w, ind, ind1)
   w = w or 78
   ind = ind or 0
