@@ -14,7 +14,7 @@ function prefix(s)
   return "Exc" .. s
 end
 writeto("excEnum.h")
-excEnum = map(prefix, project(exception, "name"))
+excEnum = map(prefix, project("name", exception))
 excEnum[1] = excEnum[1] .. " = 0x01"
 writeWrapped(join(", ", excEnum))
 

@@ -2,180 +2,17 @@
 -- (c) Reuben Thomas 2000
 
 
--- TODO: LuaDocify, LTN7-ify
--- TODO: Add a set table type with elem, ==, + (union), - (set
---   difference) and / (intersection) operations
--- TODO: Add indices() and values(), which return a list of the
---   indices and values of a table
--- TODO: Implement hslibs pretty-printing (sdoc) routines (have .. for
---   <> and + for <+>)
--- TODO: Separate this file into one file per module
+-- TODO: LuaDocify, LTN7-ify (one file per module)
+-- TODO: Write a style guide (indenting/wrapping, capitalisation,
+--   variable names)
 -- TODO: When Lua 4.1 is released, kick this out of Mite SF and have a
 --   new SF project StdLua (require should use LUALIB env var as a
 --   path variable)
--- TODO: change return value variables to names ending in _
--- TODO: write a style guide (indenting, capitalisation, variable
---   names, how to wrap standard routines)
+-- TODO: Add a set table type with elem, ==, + (union), - (set
+--   difference) and / (intersection) operations
+-- TODO: Implement hslibs pretty-printing (sdoc) routines (use .. for
+--   <> and + for <+>)
 
-
-
--- Assertions, warnings, errors and tracing
-
--- warn: Give warning with the name of program and file (if any)
---   s: warning string
-function warn(s)
-  if prog.name then
-    write(_STDERR, prog.name .. ": ")
-  end
-  if file then
-    write(_STDERR, file .. ": ")
-  end
-  writeLine(_STDERR, s)
-end
-
--- die: Die with error
---   s: error string
-function die(s)
-  warn(s)
-  error()
-end
-
--- dieLine: Die with line number
---   s: error string
-function dieLine(s)
-  die(s .. " at line " .. line)
-end
-
--- affirm: Die with error if value is nil
---   v: value
---   s: error string
-function affirm(v, s)
-  if not v then
-    die(s)
-  end
-end
-
--- affirmLine: Die with error and line number if value is nil
---   v: value
---   s: error string
-function affirmLine(v, s)
-  if not v then
-    dieLine(s)
-  end
-end
-
--- debug: Print a debugging message
---   s: debugging message
-function debug(s)
-  if _DEBUG then
-    writeLine(_STDERR, s)
-  end
-end
-
-
-
--- File
-
--- lenFile: Find the length of a file
---   f: file name
--- returns
---   len: length of file
-function lenFile(f)
-  local h, len
-  h = openfile(f, "r")
-  len = seek(h, "end")
-  closefile(h)
-  return len
-end
-
--- readfrom: Guarded readfrom
---   [f]: file name
-function readfrom(f)
-  local h, err
-  if f then
-    h, err = %readfrom(f)
-  else
-    h, err = %readfrom()
-  end
-  affirm(h, "can't read from " .. (f or "stdin") .. ": " ..
-         (err or ""))
-  return h
-end
-
--- writeto: Guarded writeto
---   [f]: file name
-function writeto(f)
-  local h, err
-  if f then
-    h, err = %writeto(f)
-  else
-    h, err = %writeto()
-  end
-  affirm(h, "can't write to " .. (f or "stdout") .. ": " ..
-         (err or ""))
-  return h
-end
-
--- dofile: Guarded dofile
---   [f]: file name
--- returns
---   r: result of dofile
-function dofile(f)
-  local r = %dofile(f)
-  affirm(r, "error while executing " .. f)
-  return r
-end
-
--- seek: Guarded seek
---   f: file handle
---   w: whence to seek
---   o: offset
-function seek(f, w, o)
-  local ok, err
-  if o then
-    ok, err = %seek(f, w, o)
-  elseif w then
-    ok, err = %seek(f, w)
-  else
-    ok, err = %seek(f)
-  end
-  affirm(ok, "can't seek on " .. f .. ": " .. (err or ""))
-end
-
-
-
--- Environment
-
--- shell: Perform a shell command and return its output
---   c: command
--- returns
---   o: output
-function shell(c)
-  local input = _INPUT
-  local o, h
-  h = readfrom("|" .. c)
-  o = read("*a")
-  closefile(h)
-  _INPUT = input
-  return o
-end
-
--- processFiles: Process files specified on the command-line
---   f: function to process files with
---     name: the name of the file being read
---     i: the number of the argument
-function processFiles(f)
-  for i = 1, getn(arg) do
-    if arg[i] == "-" then
-      readfrom()
-    else
-      readfrom(arg[i])
-    end
-    file = arg[i]
-    f(arg[i], i)
-    readfrom() -- close file, if not already closed
-  end
-end
 
 
 -- Data structures
@@ -188,21 +25,190 @@ function id(x)
   return x
 end
 
+-- loop: Call a function with values from 1..n, returning a list of
+-- results
+--   n: upper limit of parameters to function
+--   f: function
+-- returns
+--   l: list {f(1) .. f(n)}
+function loop(n, f)
+  local l = {}
+  for i = 1, n do
+    tinsert(l, f(i))
+  end
+  return l
+end
 
--- Table and list functions
+
+-- Globals
+
+-- newGlobalType: Make a new global variable type
+--   get: getglobal tag method
+--   set: setglobal tag method
+-- returns
+--   tag: tag of new global type
+function newGlobalType(get, set)
+  local tag = newtag()
+  settagmethod(tag, "getglobal", get)
+  settagmethod(tag, "setglobal", set)
+  return tag
+end
+
+-- newGlobal: Make a special global variable
+-- If a tag is supplied, that type is used; otherwise, a uniquely
+-- tagged variable with the given methods is created
+--   (tag: tag of the special type
+--   ( or
+--   (get: get tag method
+--   (set: set tag method
+-- returns
+--   t: value of new global
+function newGlobal(get, set)
+  local t, tag = {}, get
+  if type(tag) ~= "number" then
+    tag = newGlobalType(get, set)
+  end
+  settag(t, tag)
+  return t
+end
+
+-- newMacro: Make a global to get and set an lvalue
+--   e: the expression to evaluate for the lvalue
+-- returns
+--   t: value of new global
+function newMacro(e)
+  return newGlobal(dostring("return function (n, v) return " .. e .. " end"),
+                   dostring("return function (n, o, v) " .. e .. " = v end"))
+end
+
+-- newReadOnlyMacro: Make a read-only global expression
+--   e: the expression to evaluate for the lvalue
+-- returns
+--   t: value of new global
+function newReadOnlyMacro(e)
+  return newGlobal(dostring("return function (n, v) return " .. e .. " end"),
+                   function (n, o, v) error("read-only value") end)
+end
+
+-- newConstant: Make a global constant
+--   c: value of the constant
+-- returns
+--   t: value of new global
+function newConstant(c)
+  return newGlobal(function (n, v) return %c end,
+                   function (n, o, v) error("constant value") end)
+end
+
+
+-- Tables
+
+-- Tag methods for tables
+-- table + table = merge
+settagmethod(tag({}), "add",
+             function (t, u)
+               if type(u) ~= "table" then
+                 die("table expected")
+               end
+               return merge(t, u)
+             end)
 
 -- tinsert: Wrapper for buggy tinsert (Lua 4.0)
 --   t: table
 --   ...: items to insert
-function tinsert(t, ...)
-  if arg.n == 1 then
-    %tinsert(t, arg[1])
-  elseif arg.n >= 2 then
-    %tinsert(t, arg[1], arg[2])
-  else
-    %tinsert(t)
+if _VERSION == "Lua 4.0" then
+  function tinsert(t, ...)
+    if arg.n == 1 then
+      %tinsert(t, arg[1])
+    elseif arg.n >= 2 then
+      %tinsert(t, arg[1], arg[2])
+    else
+      %tinsert(t)
+    end
   end
 end
+
+-- indices: Return a list of indices of a table
+--   t: table
+-- returns
+--   u: table of indices
+function indices(t)
+  local u = {}
+  for i, v in t do
+    tinsert(u, i)
+  end
+  return u
+end
+
+-- values: Return a list of values of a table
+--   t: table
+-- returns
+--   u: table of values
+function values(t)
+  local u = {}
+  for i, v in t do
+    tinsert(u, v)
+  end
+  return u
+end
+
+-- reindex: Change the keys of a table
+--   p: list of oldkey=newkey
+--   t: table to reindex
+-- returns
+--   u: reindexed table
+function reindex(p, t)
+  local u = {}
+  for o, n in p do
+    u[n] = t[o]
+  end
+  return u
+end
+
+-- assign: Execute the elements of a table as assignments (assumes the
+-- keys are strings)
+--   l: list
+function assign(l)
+  for i, v in l do
+    setglobal(i, v)
+  end
+end
+
+-- listify: Turn a table into a list of lists
+--   t: table {i1=v1 .. in=vn}
+-- returns
+--   ls: list {{i1, v1} .. {in, vn}}
+function listify(t)
+  local ls = {}
+  for i, v in t do
+    tinsert(ls, {i, v})
+  end
+  return ls
+end
+
+
+-- Lists
+
+-- Tag methods for lists
+-- list * number = repeat the list
+-- list .. list = concat
+settagmethod(tag({}), "concat",
+             function (t, u)
+               if type(u) ~= "table" then
+                 die("table expected")
+               end
+               return concat(t, u)
+             end)
+settagmethod(tag({}), "mul",
+             function (t, n)
+               if type(n) ~= "number" then
+                 die("number expected")
+               end
+               local u = {}
+               for i = 1, n do
+                 u = u .. t
+               end
+               return u
+             end)
 
 -- map: Map a function over a list
 --   f: function
@@ -239,41 +245,18 @@ function apply(f, l)
   end
 end
 
--- assign: Execute the members of a list as assignments (assumes the
--- keys are strings)
---   l: list
-function assign(l)
-  foreach(l,
-          function (i, v)
-            setglobal(i, v)
-          end)
-end
-
--- listify: Turn a table into a list of lists
---   t: table {i1=v1 .. in=vn}
--- returns
---   ls: list {{i1, v1} .. {in, vn}}
-function listify(t)
-  local ls = {}
-  foreach(t,
-          function (i, v)
-            tinsert(%ls, {i,v})
-          end)
-  return ls
-end
-
--- loop: Call a function with values from 1..n, returning a list of
--- results
---   n: upper limit of parameters to function
+-- foldl: Fold a binary function left to right through a list
 --   f: function
+--   e: element to place in left-most position
+--   l: list
 -- returns
---   l: list {f(1) .. f(n)}
-function loop(n, f)
-  local l = {}
-  for i = 1, n do
-    tinsert(l, f(i))
+--   r: result
+function foldr(f, e, l)
+  local r = e
+  for i = 1, getn(l) do
+    r = f(r, l[i])
   end
-  return l
+  return r
 end
 
 -- shift: remove elements from the front of a list
@@ -292,25 +275,23 @@ function shift(l, n)
   end
 end
 
--- concat: Concatenate two lists and return the result
+-- concat: Concatenate two lists
 --   l: list
 --   m: list
 -- returns
 --   n: result {l[1] .. l[getn(l)], m[1] .. m[getn(m)]}
 function concat(l, m)
   local n = {}
-  foreachi(l,
-           function (i, v)
-             tinsert(%n, v)
-           end)
-  foreachi(m,
-           function (i, v)
-             tinsert(%n, v)
-           end)
+  for i = 1, getn(l) do
+    tinsert(n, l[i])
+  end
+  for i = 1, getn(m) do
+    tinsert(n, m[i])
+  end
   return n
 end
 
--- reverse: Reverse a list and return the result
+-- reverse: Reverse a list
 --   l: list
 -- returns
 --   m: list {l[getn(l)] .. l[1]}
@@ -322,28 +303,10 @@ function reverse(l)
   return m
 end
 
--- zipWith: Zip lists together with a function
---   f: function
---   ls: list of lists
--- returns
---   m: {f(ls[1][1], .., ls[1][n]) ..
---         f(ls[getn(ls)][1], .., ls[getn(ls)][n])
-function zipWith(f, ls)
-  local m, len = {}, getn(ls)
-  for i = 1, call(max, map(getn, ls)) do
-    local t = {}
-    for j = 1, len do
-      tinsert(t, ls[j][i])
-    end
-    tinsert(m, call(f, t))
-  end
-  return m
-end
-
 -- transpose: Transpose a list of lists
 --   ls: {{l11 .. l1c} .. {lr1 .. lrc}}
 -- returns
---   ms: {{l11 .. l1r} .. {lc1 .. lrc}}
+--   ms: {{l11 .. lr1} .. {l1c .. lrc}}
 -- Also give aliases zip and unzip
 function transpose(ls)
   local ms, len = {}, getn(ls)
@@ -358,12 +321,31 @@ end
 zip = transpose
 unzip = transpose
 
--- Project a list of fields from a list of records
---   l: list of records
---   f: field to project
+-- zipWith: Zip lists together with a function
+--   f: function
+--   ls: list of lists
 -- returns
---   l_: list of f fields
-function project(l, f)
+--   m: {f(ls[1][1], .., ls[getn(ls)][1]) ..
+--         f(ls[1][N], .., ls[getn(ls)][N])
+--   where N = call(max, map(getn, ls))
+function zipWith(f, ls)
+  local m, len = {}, getn(ls)
+  for i = 1, call(max, map(getn, ls)) do
+    local t = {}
+    for j = 1, len do
+      tinsert(t, ls[j][i])
+    end
+    tinsert(m, call(f, t))
+  end
+  return m
+end
+
+-- project: Project a list of fields from a list of tables
+--   f: field to project
+--   l: list of tables
+-- returns
+--   p: list of f fields
+function project(f, l)
   local p = {}
   for i = 1, getn(l) do
     p[i] = l[i][f]
@@ -371,37 +353,71 @@ function project(l, f)
   return p
 end
 
--- makeIndex: Make an index for a list of tables on the given field
---   f: field
---   l: list of tables {{i1 = v11 .. in=v1n} .. {i1=vm1 .. in=vmn}}
+-- merge: Merge two tables
+-- If there are duplicate fields, the right hand table's will be used
+--   t, u: tables
 -- returns
---   ind: index {l[1][f] = 1 .. l[m][f] = m}
-function makeIndex(f, l)
+--   r: the merged table
+function merge(t, u)
+  local r = {}
+  for i, v in t do
+    r[i] = v
+  end
+  for i, v in u do
+    r[i] = v
+  end
+  return r
+end
+
+-- index: Make an index for a list of tables on the given field
+--   f: field
+--   l: list of tables {{i1=v11 .. in=v1n} .. {i1=vm1 .. in=vmn}}
+-- returns
+--   ind: index {l[1][f]=1 .. l[m][f]=m}
+function index(f, l)
   local ind = {}
   for i = 1, getn(l) do
-    ind[l[i][f]] = i
+    local v = l[i][f]
+    if v then
+      ind[v] = i
+    end
   end
   return ind
 end
 
+-- permute: Permute a list
+--   p: list of new positions
+--   l: list to permute
+-- returns
+--   m: permuted list
+permute = reindex
 
--- listToRec: Record constructor helper
--- turn a numbered list (list) into a record whose field names are
+-- permuteOn: Permute a list on a given field
+--   f: field whose value should be used as key
+--   l: list to permute
+-- returns
+--   m: permuted list
+function permuteOn(f, l)
+  return permute(project(f, l), l)
+end
+
+
+-- listToTab: Table constructor helper
+-- turn a numbered list (list) into a table whose field names are
 -- given by the list proto
 --   proto: {field1 .. fieldn}
 --   list: {v1 .. vn}
 -- returns
 --   t: {field1=v1 .. fieldn=vn}
-function listToRec(proto, list)
+function listToTab(proto, list)
   local t = {}
-  foreachi(proto,
-           function (i, v)
-             %t[v] = %list[i]
-           end)
+  for i = 1, getn(proto) do
+    t[proto[i]] = list[i]
+  end
   return t
 end
 
--- constructor: Make a prototype from a record constructor
+-- constructor: Make a prototype from a table constructor
 --   proto: {field1 .. fieldn}
 -- returns
 --   f:
@@ -410,7 +426,7 @@ end
 --     t: {field1=v1 .. fieldn=vn}
 function constructor(proto)
   return (function (...)
-            return listToRec(%proto, arg)
+            return listToTab(%proto, arg)
           end)
 end
 
@@ -426,15 +442,14 @@ function writeLine(fp, ...)
     tinsert(arg, 1, fp)
     fp = nil
   end
-  foreachi(arg,
-           function (i, v)
-             if %fp then
-               write(%fp, v)
-             else
-               write(v)
-             end
-             write("\n")
-           end)
+  for i = 1, getn(arg) do
+    if fp then
+      write(fp, arg[i])
+    else
+      write(arg[i])
+    end
+    write("\n")
+  end
 end
 
 -- chomp: Remove any final \n from a string
@@ -446,6 +461,7 @@ function chomp(s)
 end
 
 -- escapePattern: Escape a string to be used as a pattern
+-- TODO: rewrite for 4.1 using bracket notation
 --   s: string to process
 -- returns
 --   s_: processed string
@@ -456,6 +472,7 @@ end
 
 -- escapeShell: Escape a string to be used as a shell token (quote
 -- spaces and \s)
+-- TODO: rewrite for 4.1 using bracket notation
 --   s: string to process
 -- returns
 --   s_: processed string
@@ -498,14 +515,13 @@ end
 -- strcaps: Capitalise each word in a string
 --   s: string
 -- returns
---   t: capitalised string
--- TODO: rewrite for 4.1 to adjust the result of gsub to a single
--- value using bracket notation
+--   s_: capitalised string
+-- TODO: rewrite for 4.1 using bracket notation
 function strcaps(s)
   s = gsub(s, "(%w)([%w]*)",
-              function (l, ls)
-                return strupper(l) .. ls
-              end)
+           function (l, ls)
+             return strupper(l) .. ls
+           end)
   return s
 end
 
@@ -530,7 +546,7 @@ end
 --   ind: indent [0]
 --   ind1: indent of first line [ind]
 -- returns
---   s: wrapped paragraph
+--   s_: wrapped paragraph
 function wrap(s, w, ind, ind1)
   w = w or 78
   ind = ind or 0
@@ -626,6 +642,165 @@ end
 
 
 
+-- Assertions, warnings, errors and tracing
+
+-- warn: Give warning with the name of program and file (if any)
+--   s: warning string
+function warn(s)
+  if prog.name then
+    write(_STDERR, prog.name .. ":")
+  end
+  if prog.file then
+    write(_STDERR, prog.file .. ":")
+  end
+  if prog.line then
+    write(_STDERR, tostring(prog.line) .. ":")
+  end
+  if prog.name or prog.file or prog.line then
+    write(_STDERR, " ")
+  end
+  writeLine(_STDERR, s)
+end
+
+-- die: Die with error
+--   s: error string
+function die(s)
+  warn(s)
+  error()
+end
+
+-- affirm: Die with error if value is nil
+--   v: value
+--   s: error string
+function affirm(v, s)
+  if not v then
+    die(s)
+  end
+end
+
+-- debug: Print a debugging message
+--   s: debugging message
+function debug(s)
+  if _DEBUG then
+    writeLine(_STDERR, s)
+  end
+end
+
+
+
+-- File
+
+-- lenFile: Find the length of a file
+--   f: file name
+-- returns
+--   len: length of file
+function lenFile(f)
+  local h, len
+  h = openfile(f, "r")
+  len = seek(h, "end")
+  closefile(h)
+  return len
+end
+
+-- readfrom: Guarded readfrom
+--   [f]: file name
+-- returns
+--   h: handle
+local _readfrom = readfrom
+function readfrom(f)
+  local h, err
+  if f then
+    h, err = %_readfrom(f)
+  else
+    h, err = %_readfrom()
+  end
+  affirm(h, "can't read from " .. (f or "stdin") .. ": " ..
+         (err or ""))
+  return h
+end
+
+-- writeto: Guarded writeto
+--   [f]: file name
+-- returns
+--   h: handle
+local _writeto = writeto
+function writeto(f)
+  local h, err
+  if f then
+    h, err = %_writeto(f)
+  else
+    h, err = %_writeto()
+  end
+  affirm(h, "can't write to " .. (f or "stdout") .. ": " ..
+         (err or ""))
+  return h
+end
+
+-- dofile: Guarded dofile
+--   [f]: file name
+-- returns
+--   r: result of dofile
+local _dofile = dofile
+function dofile(f)
+  local r = %_dofile(f)
+  affirm(r, "error while executing " .. f)
+  return r
+end
+
+-- seek: Guarded seek
+--   f: file handle
+--   w: whence to seek
+--   o: offset
+local _seek = seek
+function seek(f, w, o)
+  local ok, err
+  if o then
+    ok, err = %_seek(f, w, o)
+  elseif w then
+    ok, err = %_seek(f, w)
+  else
+    ok, err = %_seek(f)
+  end
+  affirm(ok, "can't seek on " .. f .. ": " .. (err or ""))
+end
+
+
+
+-- Environment
+
+-- shell: Perform a shell command and return its output
+--   c: command
+-- returns
+--   o: output
+function shell(c)
+  local input = _INPUT
+  local o, h
+  h = readfrom("|" .. c)
+  o = read("*a")
+  closefile(h)
+  _INPUT = input
+  return o
+end
+
+-- processFiles: Process files specified on the command-line
+--   f: function to process files with
+--     name: the name of the file being read
+--     i: the number of the argument
+function processFiles(f)
+  for i = 1, getn(arg) do
+    if arg[i] == "-" then
+      readfrom()
+    else
+      readfrom(arg[i])
+    end
+    prog.file = arg[i]
+    f(arg[i], i)
+    readfrom() -- close file, if not already closed
+  end
+end
+
+
+
 -- Utilities
 
 -- tostring: Extend tostring to work better on tables
@@ -634,6 +809,7 @@ end
 --   x: object to convert to string
 -- returns
 --   s: string representation
+local _tostring = tostring
 function tostring(x)
   local s
   if type(x) == "table" then
@@ -648,16 +824,17 @@ function tostring(x)
     end
     return s .. "}"
   end
-  return %tostring(x)
+  return %_tostring(x)
 end
 
 -- print: Extend print to work better on tables
 --   arg: objects to print
+local _print = print
 function print(...)
   for i = 1, getn(arg) do
     arg[i] = tostring(arg[i])
   end
-  call(%print, arg)
+  call(%_print, arg)
 end
 
 -- traceCall: trace function calls

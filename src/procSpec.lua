@@ -14,7 +14,7 @@ writeLine("/* Instruction opcodes */\n",
           "#ifndef MITE_INSTENUM",
           "#define MITE_INSTENUM\n\n",
           "typedef enum {")
-instEnum = map(opify, project(inst, "name"))
+instEnum = map(opify, project("name", inst))
 instEnum[1] = instEnum[1] .. " = 0x01"
 writeWrapped(join(", ", instEnum))
 writeLine("} Opcode;\n",

@@ -63,9 +63,9 @@ Translator = constructor{
 r, w = dofile(readerFile), dofile(writerFile)
 
 -- Check the reader implements the correct opTypes
--- Need to implement set type to make the next line work
---affirm(set(project(opType, name)) ==
---         set(project(listify(r.opType), 1)),
+-- Need to implement set type to make the next bit work
+--affirm(set(project(name, opType)) ==
+--         set(project(1, listify(r.opType))),
 --         "operand type " .. tostring(i) .. " ('" ..
 --           r.opType[i].name .. "') should be '" .. opType[i].name ..
 --           "'") 
