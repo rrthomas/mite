@@ -1,25 +1,43 @@
--- Mite instruction table
+-- Mite's specification
 -- (c) Reuben Thomas 2001
 
--- The instruction tables for program and documentation are
--- generated from this table by mkinsts.lua.
 
--- The format of the table is as follows:
+-- Operand types
+--   * The table is a list of types
+--   * Encoding is given by list position (e.g. r = 0x1)
+--   * Each type has two fields:
+Type = constructor{
+  "name", -- as in the assembly language
+  "desc", -- informal description
+}
+
+type = {
+  Inst("r",    "register"),
+  Inst("i",    "immediate constant"),
+  Inst("l",    "label (any type)"),
+  Inst("L",    "label definition"),
+  Inst("b",    "branch label"),
+  Inst("s",    "subroutine label"),
+  Inst("d",    "data label"),
+}
+
+
+-- Instruction set
 --   * The table is a list of instructions
 --   * Opcode is given by list position (e.g. lab = 0x1)
 --   * Each instruction has three fields:
 Inst = constructor{
   "name", -- as in the assembly language
-  "ops",  -- list of operand types (see mite.tex)
+  "ops",  -- list of operand types (see types.lua)
   "desc", -- informal semantics
           -- (%n --> {ops[n]}_{n}; %% --> %; <- --> \gets)
 }
 
 inst = {
-  Inst("lab",    {"l", "n"},       "define a label"),
+  Inst("lab",    {"L"},            "define a label"),
   Inst("mov",    {"r", "r"},       "$%1<-%2$"),
   Inst("movi",   {"r", "i"},       "$%1<-%2$"),
-  Inst("ldl",    {"r", "n"},       "$%1<-%2$"),
+  Inst("ldl",    {"r", "d"},       "$%1<-%2$"),
   Inst("ld",     {"r", "r"},       "$%1<-M(%2)$"),
   Inst("st",     {"r", "r"},       "$M(%2)<-%1$"),
   Inst("gets",   {"r"},            "$%1<-S$"),
@@ -40,15 +58,15 @@ inst = {
   Inst("teq",    {"r", "r", "r"},  "$%1<-\\{%2=%3\\}$"),
   Inst("tlt",    {"r", "r", "r"},  "$%1<-\\{%2<%3\\}$"),
   Inst("tltu",   {"r", "r", "r"},  "$%1<-\\{%2<%3$ (unsigned)$\\}$"),
-  Inst("b",      {"n"},            "$P<-%1$"),
+  Inst("b",      {"b"},            "$P<-%1$"),
   Inst("br",     {"r"},            "$P<-%1$"),
-  Inst("bf",     {"r", "n"},       "if $%1=0$, $P<-%2$"),
-  Inst("bt",     {"r", "n"},       "if $%1\\neq0$, $P<-%2$"),
-  Inst("call",   {"n"},            "$S<-S+sw$; $M(S)<-P$; $P<-%1$"),
+  Inst("bf",     {"r", "b"},       "if $%1=0$, $P<-%2$"),
+  Inst("bt",     {"r", "b"},       "if $%1\\neq0$, $P<-%2$"),
+  Inst("call",   {"s"},            "$S<-S+sw$; $M(S)<-P$; $P<-%1$"),
   Inst("callr",  {"r"},            "$S<-S+sw$; $M(S)<-P$; $P<-%1$"),
   Inst("ret",    {},               "$P<-M(S)$; $S<-S-sw$"),
   Inst("calln",  {"r"},            "call native code at $%1$"),
   Inst("lit",    {"i"},            "a literal word"),
-  Inst("litl",   {"l", "n"},       "a literal label"),
+  Inst("litl",   {"l"},            "a literal label"),
   Inst("space",  {"i"},            "$%1$ zero words ($%1>0$)"),
 }
