@@ -32,11 +32,20 @@ struct Inst {
 /* Register type */
 typedef unsigned int Register;
 
+/* Register numbers */
+#define REGISTER_MAX 256        /* Biggest register number */
+#define REGISTER_S (REGISTER_MAX)
+#define REGISTER_F (REGISTER_MAX - 1)
+
+/* Size type */
+typedef unsigned int Size;
+#define SIZE_A (sizeof (Word))  /* Size of an address */
+
 /* Label types */
 typedef enum {
-  LABEL_B = 1, LABEL_S, LABEL_D
+  LABEL_B = 1, LABEL_S, LABEL_D, LABEL_F
 } LabelType;
-#define LABEL_TYPES LABEL_D
+#define LABEL_TYPES LABEL_F
 
 /* Label value */
 typedef union {
@@ -62,6 +71,11 @@ typedef struct _Dangle {
 #define FLAG_S 4
 #define FLAG_W 2
 #define FLAG_R 1
+
+/* Function argument type */
+typedef enum {
+  ARG_TYPE_R = 1, ARG_TYPE_F, ARG_TYPE_B
+} ArgType;
 
 /* Translator state */
 typedef struct {
