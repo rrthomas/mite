@@ -37,9 +37,9 @@ eval(Byte f, int n, uintptr_t v, uintptr_t r)
   }
 }
 
-#define Lab(ty, l) addDangle(t, ty, l); ensure(PTR_BYTE); t->wPtr += PTR_BYTE
-#define Imm(n) ensure(PTR_BYTE); *(uintptr_t *)t->wPtr = n; t->wPtr += PTR_BYTE
-#define Zero(n) l = n * PTR_BYTE; ensure(l); memset(t->wPtr, 0, l); \
+#define Lab(ty, l) addDangle(t, ty, l); bufEnsure(PTR_BYTE); t->wPtr += PTR_BYTE
+#define Imm(n) bufEnsure(PTR_BYTE); *(uintptr_t *)t->wPtr = n; t->wPtr += PTR_BYTE
+#define Zero(n) l = n * PTR_BYTE; bufEnsure(l); memset(t->wPtr, 0, l); \
   t->wPtr += l
 
 #define wrLab(L1, l2)          newLab(L1, l2)
@@ -79,7 +79,7 @@ eval(Byte f, int n, uintptr_t v, uintptr_t r)
 #define wrSpace(f, n, v, r)    Zero(eval(f, n, v, r))
 
 void
-resolve(Translator *t)
+resolve(TState *t)
 {
   Dangle *d;
   for (d = t->dangles->next; d; d = d->next)
