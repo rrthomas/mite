@@ -1,6 +1,9 @@
+Extend mkinsts.lua to handle readers and writers, which should be
+written in a yacc-like style.
+
 Make a file bundle release (just a tar of the contents of CVS).
 
-Clean up Mite: build it on a clean system, and expand out custom stuff
+Clean up: build Mite on a clean system, and expand out custom stuff
 (ctable, any other latex packages, hevea packages). Run nuweb on *.w
 and check in the results, and remove .w files.
 
