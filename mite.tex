@@ -1,7 +1,7 @@
 %
 % The Mite virtual machine
 %
-% Reuben Thomas   20/5/00-24/7/01
+% (c) Reuben Thomas 2000
 %
 
 % Work out what the possible error conditions are in verified code & list them.
@@ -14,26 +14,27 @@
 \usepackage{lypslatex}
 \usepackage{array}
 \usepackage{amstext}
-\usepackage{ctable}
 \usepackage{booktabs}
 \usepackage{url}
 
 % Settings for this document
-
-\makeatletter
 \urlstyle{rm}
-\def\UrlSpecials{\do\<{\langle}\do\>{\mathbin{\rangle}}\do\_{\_%
- \penalty\@m}\do\|{\mid}\do\{{\lbrace}\do\}{\mathbin{\rbrace}}\do
- \\{\char47\char47}%
- \do\~{\raise.6ex\hbox{\m@th$\scriptstyle\sim$}}%
- \do \ {\ }}%
-\makeatother
 
 % Macros for this document
 \newcommand{\cont}{\noindent}
 \newcommand{\synfont}{\sffamily}
 \newcommand{\syn}[1]{{\synfont #1}}
 \newcommand{\norm}[1]{\textrm{#1}}
+
+% Centred tables
+\newenvironment{ctabular}[1]%
+    {\begin{center}\begin{tabular}{#1}}%
+    {\end{tabular}\end{center}}
+\newcommand{\ctablecaption}{}
+\newenvironment{ctable}[3][tbp]%
+    {\renewcommand{\ctablecaption}{#2}%
+    \begin{table}[#1]\begin{center}\begin{tabular}{#3}}%
+    {\end{tabular}\caption{\ctablecaption}\end{center}\end{table}}
 
 % Instruction tables
 \newenvironment{insttab}[1]
@@ -45,16 +46,16 @@
 
 \title{The Mite virtual machine}
 \author{Reuben Thomas\\\url{rrt@sc3d.org}\\\url{http://sc3d.org/rrt/}}
-\date{24th July 2001}
+\date{3rd August 2001}
 \maketitle
 
 
 
 \section{Introduction}
 
-Mite is a general-purpose virtual machine. It is designed to be capable of
-efficient implementation, by interpretation or compilation, from a
-binary-portable object format. It has a flat linear memory, and
+Mite is a general-purpose virtual machine. It is designed to be
+capable of efficient implementation, by interpretation or compilation,
+from a binary-portable object format. It has a flat linear memory, and
 single-threaded, non-interruptable execution. The only external access
 provided is the ability to call machine code.
 
@@ -78,31 +79,32 @@ for a descending stack)
 
 \section{Registers and memory}
 
-Registers are word-sized. Mite has $g$ general registers \syn{1} to $g$, a
-program counter \syn{P}, and a stack pointer \syn{S}. The stack is a LIFO
-stack; \syn{S} points to the top-most item.
+Registers are word-sized. Mite has $g$ general registers \syn{1} to
+$g$, a program counter \syn{P}, and a stack pointer \syn{S}. The stack
+is a LIFO stack; \syn{S} points to the top-most item.
 
-The memory $M$ is an array of bytes. The stack resides in memory. $M(a)$
-denotes the word in memory starting at byte $a$; $a$ must be a multiple of
-$w$. Within a word, bytes may be stored in big or little-endian order. Two's
-complement number representation is used.
+The memory $M$ is an array of bytes. The stack resides in memory. 
+$M(a)$ denotes the word in memory starting at byte $a$; $a$ must be a
+multiple of $w$. Within a word, bytes may be stored in big or
+little-endian order. Two's complement number representation is used.
 
 
 
 \section{Execution}
 
-Mite repeatedly loads the instruction at \syn{P}, makes \syn{P} point to
-the next instruction, and executes the loaded instruction. Program addresses
-need not be addresses in $M$.
+Mite repeatedly loads the instruction at \syn{P}, makes \syn{P} point
+to the next instruction, and executes the loaded instruction. Program
+addresses need not be addresses in $M$.
 
 
 
 \section{Instructions}
 
-In the syntax, each operand is denoted by a letter subscripted by a number.
-The letter indicates the sort of operand required, as shown in
-table~\ref{optypetab}; the number shows the number of the operand. A name is
-a string of letters, digits and underscores, and may not start with a digit.
+In the syntax, each operand is denoted by a letter subscripted by a
+number. The letter indicates the sort of operand required, as shown in
+table~\ref{optypetab}; the number shows the number of the operand. A
+name is a string of letters, digits and underscores, and may not start
+with a digit.
 
 \begin{ctable}{Operand types\label{optypetab}}{>{$}c<{$}l}
 \toprule
@@ -113,27 +115,29 @@ n & a name\\
 \bottomrule
 \end{ctable}
 
-$\{P\}$ has the value $1$ if the predicate $P$ is true, and $0$ otherwise.
+$\{P\}$ has the value $1$ if the predicate $P$ is true, and $0$
+otherwise.
 
 
 \subsection{Labels}
 
-Labels are defined by the \syn{lab} instruction, shown in table~\ref{labtab}.
+Labels are defined by the \syn{lab} instruction, shown in
+table~\ref{labtab}.
 
 \begin{insttab}{Label definition\label{labtab}}
 \input{instLab}
 \end{insttab}
 
-There are three types of label: branch labels, denoted \syn{b}, subroutine
-labels, denoted \syn{s}, and data labels, denoted \syn{d}. Names must be
-unique within a translation unit.
+There are three types of label: branch labels, denoted \syn{b},
+subroutine labels, denoted \syn{s}, and data labels, denoted \syn{d}. 
+Names must be unique within a translation unit.
 
-The value of a code or subroutine label is the address of the instruction
-immediately following it. A data label's value is the address of the first
-datum stored after it by a data instruction.
+The value of a code or subroutine label is the address of the
+instruction immediately following it. A data label's value is the
+address of the first datum stored after it by a data instruction.
 
-Branch labels have no effect when they are executed; subroutine and data
-labels may not be executed.
+Branch labels have no effect when they are executed; subroutine and
+data labels may not be executed.
 
 
 \subsection{Computation}
@@ -145,28 +149,29 @@ labels may not be executed.
 The computational instructions are shown in table~\ref{comptab}.
 
 Immediate constants are of the form
-[\syn{e}][\syn{s}][\syn{w}]$n$[\syn{>\/>}$r$]. $n$ (and $r$, if present) is
-an integer. If \syn{e} (for ``endianness'') is present, $n$ is subtracted
-from $w$ on a big-endian Mite, or left unaltered otherwise; then if \syn{s}
-is present, it is multiplied by $s$, and if \syn{w} is present, it is
-multiplied by $w$. The final value is truncated to $8w$ bits, then if
+[\syn{e}][\syn{s}][\syn{w}]$n$[\syn{>\/>}$r$]. $n$ (and $r$, if
+present) is an integer. If \syn{e} (for ``endianness'') is present,
+$n$ is subtracted from $w$ on a big-endian Mite, or left unaltered
+otherwise; then if \syn{s} is present, it is multiplied by $s$, and if
+\syn{w} is present, it is multiplied by $w$. The final value is
+truncated to $8w$ bits, then if
 \syn{>\/>}$r$ is present, it is rotated by $r$ places, to the right if
 positive, and to the left if negative.
 
 
 \subsection{Data}
 
-The data instructions, shown in table~\ref{datatab}, allow literal data to
-be included in object code; they may not be executed. Data between two
-labels are stored contiguously in $M$.
+The data instructions, shown in table~\ref{datatab}, allow literal
+data to be included in object code; they may not be executed. Data
+between two labels are stored contiguously in $M$.
 
 \begin{insttab}{Data instructions\label{datatab}}
 \input{instData}
 \end{insttab}
 
-\syn{lit} causes its operand to be truncated to a word and stored in the
-next word of memory. \syn{litl} causes the values of the given label to be
-stored in the next word of memory.
+\syn{lit} causes its operand to be truncated to a word and stored in
+the next word of memory. \syn{litl} causes the values of the given
+label to be stored in the next word of memory.
 
 \syn{space} causes the given number of zero words to be stored in
 consecutive locations.
@@ -175,8 +180,8 @@ consecutive locations.
 
 \section{Object format}
 
-In the description below, hexadecimal numbers are indicated by a leading
-``0x''.
+In the description below, hexadecimal numbers are indicated by a
+leading ``0x''.
 
 Object code consists of a series of instructions.
 
@@ -192,29 +197,32 @@ Object code consists of a series of instructions.
 \subsection{Instructions} \label{objinst}
 
 Instructions are encoded as the opcode followed by the operands, in
-numerical order. Instructions that do not end on a $4$-byte boundary are
-padded to the next such boundary with zero bytes.
+numerical order. Instructions that do not end on a $4$-byte boundary
+are padded to the next such boundary with zero bytes.
 
-Opcodes, registers and label types are encoded as one byte. The instruction
-opcodes are shown in table~\ref{opcodetab}. Opcodes 0x25--0x7F are reserved
-for future expansion. Registers are encoded by their number. Label types are
-encoded as $1$ for \syn{b}, $2$ for \syn{s}, and $3$ for \syn{d}.
+Opcodes, registers and label types are encoded as one byte. The
+instruction opcodes are shown in table~\ref{opcodetab}. Opcodes
+0x25--0x7f are reserved for future expansion. Registers are encoded by
+their number. Label types are encoded as $1$ for \syn{b}, $2$ for
+\syn{s}, and $3$ for \syn{d}.
 
-Labels are encoded as a long number (see section~\ref{longnums}). Labels of
-each type are numbered consecutively from $1$ from the start of the
-translation unit, according to the order in which they are declared. For a
+Labels are encoded as a long number (see section~\ref{longnums}). 
+Labels of each type are numbered consecutively from $1$ from the start
+of the translation unit, according to the order in which they are
+declared. For a
 \syn{lab} instruction, only the label type is encoded (the number is
 redundant).
 
-Immediate constants are encoded as a byte encoding the modifiers followed by
-a byte encoding the rotation (if any), followed by the basic value encoded
-as a long number. The modifiers are encoded as binary flags, as shown in
-table~\ref{modenctab}; the unused bits are zeroed.
+Immediate constants are encoded as a byte encoding the modifiers
+followed by a byte encoding the rotation (if any), followed by the
+basic value encoded as a long number. The modifiers are encoded as
+binary flags, as shown in table~\ref{modenctab}; the unused bits are
+zeroed.
 
 \begin{ctable}{Constant modifiers encoding\label{modenctab}}{>{\synfont}cc}
 \toprule
 \bf Modifier & \bf Bit position \\ \midrule
-r & 0 \\
+\textrm{rotation} & 0 \\
 w & 1 \\
 s & 2 \\
 e & 3 \\
@@ -227,28 +235,30 @@ e & 3 \\
 Long numbers are encoded as follows:
 
 \begin{enumerate}
-\item Left-truncate the number to the minimum number of bits in which it can
-be represented.
+\item Left-truncate the number to the minimum number of bits in which
+      it can be represented.
 
-\item Remove an $8n-1$-bit word from the most significant end of the number,
-where $n$ is the number of bytes left in the current instruction word. If
-there are fewer than $8n-1$ bits in the number then sign-extend it to that
-length first.
+\item Remove an $8n-1$-bit word from the most significant end of the
+      number, where $n$ is the number of bytes left in the current
+      instruction word. If there are fewer than $8n-1$ bits in the
+      number then sign-extend it to that length first.
 
-\item Add a bit to the most significant end of the word, which should be
-zero if more bits remain in the number, and one otherwise.
+\item Add a bit to the most significant end of the word, which should
+      be zero if more bits remain in the number, and one otherwise.
 
 \item Store the word, with the bytes in big-endian order.
 
-\item While there are still bits in the number, repeat the following steps:
+\item While there are still bits in the number, repeat the following
+      steps:
 
 \begin{enumerate}
 
-\item Remove a $31$-bit word from the most significant end of the number,
-padding with zeroes if there are fewer than $31$ bits left.
+\item Remove a $31$-bit word from the most significant end of the
+      number, padding with zeroes if there are fewer than $31$ bits
+      left.
 
-\item Add a bit to the most significant end of the word, which should be
-zero if more bits remain in the number, and one otherwise.
+\item Add a bit to the most significant end of the word, which should
+      be zero if more bits remain in the number, and one otherwise.
 
 \item Store the word, with the bytes in big-endian order.
 \end{enumerate}
@@ -259,14 +269,13 @@ zero if more bits remain in the number, and one otherwise.
 
 \section{Acknowledgements}
 
-Martin Richards introduced me to Cintcode~\cite{cintcode}, which kindled my
-interest in virtual machines, and led to Beetle~\cite{beetledis} and an
-earlier version of Mite~\cite{mite}, of which the current Mite is a sort of
-synthesis. GNU~\emph{lightning}~\cite{lightning} helped inspire me to
-greater simplicity, while still aiming for good performance. Julian Seward
-helped me think about Mite's usefulness as a compiler target, and
-interpretive performance. Alistair Turnbull has been a fount of criticism
-for all my work on virtual machines.
+Martin Richards introduced me to Cintcode~\cite{cintcode}, which
+kindled my interest in virtual machines, and led to
+Beetle~\cite{beetledis} and an earlier version of Mite~\cite{mite}, of
+which the current Mite is a sort of synthesis. 
+GNU~\emph{lightning}~\cite{lightning} helped inspire me to greater
+simplicity, while still aiming for good performance. Alistair Turnbull
+has been a fount of criticism for all my work on virtual machines.
 
 
 \bibliographystyle{plain}
