@@ -2,10 +2,6 @@
 -- Generate a C file for a collection of translators
 -- (c) Reuben Thomas 2002
 
--- TODO: Add a function to put in a block of code with start and end
--- comments; use it for all single string blocks of code that are
--- inserted. Add rest of instrumentation blocks of code.
-
 
 transListFile, transFile = arg[1], arg[2]
 
@@ -33,8 +29,9 @@ instWidth = 36
 --   trans: writer-specific parts of translator function
 
 -- Instrumenter type
---   instruments: the instrumentation provided
+--   instrument: the instrumentation provided
 --   prelude: literal source code
+--   macros: instrumenter macros
 --   inst: instruction table
 --   trans: instrumenter-specific parts of translator function
 
@@ -74,9 +71,19 @@ Translator = Object {_init = {
 }}
 
 
+-- Code construction helper functions
+
 function transFunc (reads, writes)
   return reads .. "To" .. strcaps (writes)
 end
+
+function mkBlock (title, code, indent)
+  return format ("%s/* %s */\n%s%s\n%s/* end of %s */\n",
+                 indent, title, indent, code, indent, title)
+end
+
+
+-- Main code construction function
 
 function mkTrans (arg)
   local reads, writes, instrumentation = arg[1], arg[2], arg[3]
@@ -84,21 +91,44 @@ function mkTrans (arg)
   -- Load the reader and writer
   local r = readers[reads]
   local w = writers[writes]
+  local instrum = {n = 0}
+  if instrumentation then
+    for i = 1, getn (instrumentation) do
+      tinsert (instrum, instrumenters[instrumentation[i]])
+    end
+  end
   local transFunc = transFunc (reads, writes)
   local resolveFunc = "resolveDangles" .. strcaps (transFunc)
   local rstate, wstate = reads .. "R_State", writes .. "W_State"
   local inputType = reads .. "R_Input"
   local outputType = writes .. "W_Output"
 
+  local mkInstrumentation =
+    function (title, path, indent)
+      local out = ""
+      for i = 1, getn (%instrum) do
+        out = out .. mkBlock (%instrum[i].instrument .. " " .. title,
+                              lookup (%instrum[i], path), indent)
+      end
+      return out
+    end
+
+  local mkInsert =
+    function (title, field, indent)
+      return mkBlock ("reader " .. title, %r.trans[field], indent) ..
+        mkBlock("writer " .. title, %w.trans[field], indent) ..
+        %mkInstrumentation (title, {"trans", field}, indent)
+    end
+
   -- Check the reader implements the correct opTypes
-  affirm (setequal (Set (project ("name", opType)),
+  assert (setequal (Set (project ("name", opType)),
                   Set (project (1, enpair (r.opType)))),
          "incorrect opType in " .. r.reads .. " reader")
 
   -- Check the writer implements the correct instructions
   for i = 1, getn (inst) do
-    affirm (w.inst[i], "instruction " .. inst[i].name .. " missing")
-    affirm (w.inst[i].name == inst[i].name,
+    assert (w.inst[i], "instruction " .. inst[i].name .. " missing")
+    assert (w.inst[i].name == inst[i].name,
            "instruction " .. tostring (i) .. " ('" .. w.inst[i].name ..
              "') should be '" .. inst[i].name .. "'")
   end
@@ -141,12 +171,11 @@ function mkTrans (arg)
   end
 
   -- Writer Macros
-  out = out .. "/* Writer macros */\n\n" ..
-    w.macros ..
-    "\n/* end of writer macros */\n\n"
+  out = out .. mkBlock ("writer macros", w.macros, "") ..
+    mkInstrumentation ("macros", {"macros"}, "")
 
   -- Head of the translator function
-  out = out .. outputType .. " *\n" ..
+  out = out .. "\n" .. outputType .. " *\n" ..
     transFunc .. "(" .. inputType .. " *inp)\n" ..
 [[{
   TState *T = translatorNew ();
@@ -156,38 +185,14 @@ function mkTrans (arg)
   "  " .. outputType .. " *out = new (" .. outputType .. ");\n" ..
 [[  LabelType ty;
   Opcode o;
-  /* reader declarations */
 ]] ..
- "  " .. r.trans.decls .. "\n" ..
- "  /* end of reader declarations */\n" ..
- "  /* writer declarations */\n" ..
- "  " .. w.trans.decls .. "\n" ..
- "  /* end of writer declarations */\n"
-  if instrumentation then
-    for i = 1, getn (instrumentation) do
-      local ins = instrumentation[i]
-      out = out .. "  /* " .. ins .. " declarations */\n" ..
-        ins.trans.decls .. "\n" ..
-        "  /* end of " .. ins .. " declarations */\n"
-    end
-  end
-  out = out ..
+  mkInsert ("declarations", "decls", "  ") ..
 [[  for (ty = 0; ty < LABEL_TYPES; ty++)
     T->labels[ty] = 0;
-  /* reader initialisation */
 ]] ..
- "  " .. r.trans.init .. "\n" ..
- "  /* end of reader initialisation */\n" ..
- "  /* writer initialisation */\n" ..
- "  " .. w.trans.init .. "\n" ..
- "  /* end of writer initialisation */\n" ..
+ mkInsert ("initialisation", "init", "  ") ..
  "  while (R->ptr < R->end) {\n" ..
- "    /* reader update */\n" ..
- "    " .. r.trans.update .. "\n" ..
- "    /* end of reader update */\n" ..
- "    /* writer update */\n" ..
- "    " .. w.trans.update .. "\n" ..
- "    /* end of writer update */\n" ..
+ mkInsert ("update", "update", "    ") ..
  "    switch (o) {\n"
 
   -- The instruction cases
@@ -209,6 +214,9 @@ function mkTrans (arg)
         out = out .. "        " .. code .. "\n"
       end
     end
+    for j = 1, getn (instrum) do
+      out = out .. "        " .. instrum[j].inst[i].def .. ";\n"
+    end
     out = out .. "        " .. w.inst[i].def .. ";\n" ..
       "        break;\n" ..
       "      }\n"
@@ -226,16 +234,9 @@ function mkTrans (arg)
 ]]
   if w.resolve then
     out = out .."  " .. resolveFunc ..
-      "(T, R, W, RESOLVE_IMG, RESOLVE_PTR);"
+      "(T, R, W, RESOLVE_IMG, RESOLVE_PTR);\n"
   end
-  out = out ..
-[[  /* reader finish */
-]] ..
-"  " .. r.trans.finish .. "\n" ..
-"  /* end of reader finish*/\n" ..
-"  /* writer finish */\n" ..
-"  " .. w.trans.finish .. "\n" ..
-"  /* end of writer finish */\n" ..
+  out = out .. mkInsert ("finish", "finish", "  ") ..
 [[  return out;
 }]]
 
@@ -255,6 +256,11 @@ writers = Set (project (2, translators))
 for i, _ in writers do
   writers[i] = dofile (i .. "Write.lua")
 end
+instrumenters = Set (flatten (project (3, translators)))
+for i, _ in instrumenters do
+  instrumenters[i] = dofile (i .. ".lua")
+end
+
 
 -- Write the header file
 writeto (transFile .. ".h") -- open the output file
@@ -304,19 +310,23 @@ writeLine ("#include \"translate.c\"")
 -- Write the preludes and resolver macros
 function writeBlock (s, f, t)
   if t[f] then
-    writeLine ("\n\n/* " .. (t.reads or t.writes) .. " " .. s .. " */",
-              t[f],
-              "/* end of " .. (t.reads or t.writes) .. " " .. s ..
-                " */")
+    writeLine ("\n" .. mkBlock ((t.reads or t.writes or t.instrument)
+                                .. " " .. s,
+                                t[f], ""))
   end
 end
 
-map (curry (writeBlock, "prelude", "prelude"), values (readers))
-map (curry (writeBlock, "prelude", "prelude"), values (writers))
-map (curry (writeBlock, "resolver macros", "resolve"), values (writers))
+map (curry (writeBlock, "reader prelude", "prelude"),
+     values (readers))
+map (curry (writeBlock, "writer prelude", "prelude"),
+     values (writers))
+map (curry (writeBlock, "prelude", "prelude"),
+     values (instrumenters))
+map (curry (writeBlock, "resolver macros", "resolve"),
+     values (writers))
 
 -- Write the translator functions
 map (compose (writeLine, mkTrans), translators)
 
 -- Mark the end
-writeLine ("\n\n/* End of Mite translator */")
+writeLine ("\n\n/* end of Mite translator */")
