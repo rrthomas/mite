@@ -1,17 +1,13 @@
-Make procSpec.lua generate readers and writers, or have another script
-which will (re)generate a particular reader or writer.
+Use automake or some other more intelligent build system that can be
+easily taught about readers, writers and generated sources, so the
+Makefile isn't such a mess.
 
-The format of a reader or writer is:
+Make something that can easily be compiled with any ANSI C compiler
+(preferably a single file).
 
-name = Reader/Writer{
-  lab = "...",
-  ...
-}
-
-Check that there are no missing or extra entries. Also need some extra
-fields for utility functions and macros. In reader, need the shell of
-the translation function; it'd be nice if this could be automatically
-generated too, but might be too fiddly to be worth it.
+Write a Lua script to process LaTeX files semi-intelligently, i.e. 
+search for "bibliography" and if not found, just run latex twice;
+otherwise, run latex, bibtex, latex, latex.
 
 Make a file bundle release (just a tar of the contents of CVS).
 
