@@ -1,18 +1,15 @@
-Use mmm-mode to syntax colour C in Lua: all [[ .. ]] and "..." strings
-should be coloured as C (leave '..' for normal use).
+Get build working with cook or cons (?).
 
-Get build working with cook or cons.
-
-Make something that can easily be compiled with any ANSI C compiler
-(preferably a single file).
+Make a distribution that can easily be compiled with any ANSI C
+compiler.
 
 Write a Lua script to process LaTeX files semi-intelligently, i.e. 
 search for "bibliography" and if not found, just run latex twice;
-otherwise, run latex, bibtex, latex, latex.
+otherwise, run latex, bibtex, latex, latex. Look in l2web.
 
 Make a file bundle release (just a tar of the contents of CVS).
 
-Check out & build Mite on a clean system (e.g. basil, or pcbox).
+Check out & build Mite on a clean system.
 
 Reduce the number of warnings given by gcc.
 
@@ -52,7 +49,7 @@ work at least for the standard C library.
 
 FP instruction set (using new reg set, use only 64-bit IEEE numbers).
 
-Higher level calling: use Swig or libffi
+Higher level calling: use SWIG or libffi
 
 
 Separate compilation of Mite code
@@ -60,7 +57,8 @@ Separate compilation of Mite code
 Use a custom format, and dynamic linking.
 
 Allow dynamic linking? Mite code could be DLed to native code. Would
-need to distinguish Mite symbols from native ones.
+need to distinguish Mite symbols from native ones. Review work on
+dynamic loading in Lua to find a good method.
 
 Mite starts by loading a single object file. All other facilities can
 be provided in virtual code; just need to add access to libffi/Swig. 
