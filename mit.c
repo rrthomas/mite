@@ -15,7 +15,7 @@
 
 
 #if CHAR_BIT != 8
-  #error "Mite needs 8-bit chars"
+#  error "Mite needs 8-bit chars"
 #endif
 
 char *progName;
@@ -60,12 +60,12 @@ readFile(const char *file, Byte **data)
     bufShrink(*data, len + 1);
   } else {
     fp = fopen(file, "rb");
-    if (!fp) throw("could not open file");
+    if (!fp) throw("could not open `%s'", excFile);
     if ((len = flen(fp)) < 0) throw("error getting length of file");
-    if (len == 0) throw("empty file %s", excFile);
+    if (len == 0) throw("empty file `%s'", excFile);
     *data = excMalloc(len + 1);
     if (fread(*data, sizeof(Byte), len, fp) != (uintptr_t)len)
-      throw("error reading '%s'", file);
+      throw("error reading `%s'", file);
   }
   (*data)[len] = '\0';
   fclose(fp);
@@ -77,7 +77,7 @@ writeFile(const char *file, Byte *data, long len)
 {
   FILE *fp = *file == '-' && (file[1] == '\0' || file[1] == '.') ?
     stdout : fopen(file, "wb");
-  if (!fp) throw("could not open file");
+  if (!fp) throw("could not open `%s'", file);
   if (fwrite(data, sizeof(Byte), len, fp) != (uintptr_t)len)
     throw("error writing '%s'", file);
   if (fp != stdout) fclose(fp);
@@ -89,7 +89,7 @@ main(int argc, char *argv[])
   Byte *img;
   const char *rSuff, *wSuff;
   long len;
-  TState *t;
+  TState *t = NULL;
   unsigned int r, w;
   progName = argv[0];
   excInit();
@@ -101,21 +101,22 @@ main(int argc, char *argv[])
   len = readFile(excFile, &img);
   rSuff = suffix(argv[1]);
   if ((r = typeFromSuffix(rSuff)) == None)
-    die("unknown input file type '%s'", rSuff ? rSuff : "");
+    die("unknown input file type `%s'", rSuff ? rSuff : "");
   if (argc == 3) {
     wSuff = suffix(argv[2]);
     if ((w = typeFromSuffix(wSuff)) == None)
-      die("unknown output file type '%s'", wSuff ? wSuff : "");
+      die("unknown output file type `%s'", wSuff ? wSuff : "");
   } else w = Asm;
   excLine = 1;
-  if (r == Asm)
-    if (w == Obj) t = asmToObj(img, img + len);
-    else {
-      if (w == Asm) t = asmToAsm(img, img + len);
-      else die("can only translate assembly to assembly or object");
-      /* Translate by more than one step */
+  switch (r) {
+  case Asm: if (w == Obj) t = asmToObj(img, img + len); break;
+  case Obj:
+    switch (w) {
+    case Asm: t = objToAsm(img, img + len); break;
     }
-  else t = objToObj(img, img + len);
+  }
+  if (!t) die("no translator from `%s' to `%s'", rSuff, wSuff);
+  /* Translate by more than one step */
   free(img);
   writeFile(argc == 3 ? argv[2] : "-", t->wImg, (long)(t->wPtr - t->wImg));
   return EXIT_SUCCESS;
