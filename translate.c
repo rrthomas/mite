@@ -66,17 +66,12 @@ align(TState *t)
 }
 
 void
-nullLabNew(TState *t, unsigned int ty, uintptr_t n)
-{
-}
-
-void
-addDangle(TState *t, unsigned int ty, uintptr_t n)
+addDangle(TState *t, unsigned int ty, LabelValue v)
 {
   Dangle *d = new(Dangle);
   Label *l = new(Label);
   l->ty = ty;
-  l->v.n = n;
+  l->v = v;
   d->l = l;
   d->ins = t->wPtr - t->wImg;
   t->dangleEnd->next = d;
@@ -90,10 +85,10 @@ resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
 	      LabelValue (*labelMap)(TState *t, Label *l))
 {
   Dangle *d;
-  uintptr_t prev = 0, extras, n;
+  uintptr_t prev = 0, extras, n, off = finalPtr - finalImg;
   for (d = t->dangles->next, n = 0; d; d = d->next, n++);
-  finalImg = excRealloc(finalImg, (finalPtr - finalImg) +
-                        t->wPtr - t->wImg + n * maxlen);
+  finalImg = excRealloc(finalImg, t->wPtr - t->wImg + n * maxlen + off);
+  finalPtr = finalImg + off;
   for (d = t->dangles->next; d; d = d->next) {
     memcpy(finalPtr, t->wImg + prev, d->ins - prev);
     finalPtr += d->ins - prev;
@@ -119,4 +114,3 @@ translatorNew(Byte *img, Byte *end)
   t->dangleEnd = t->dangles;
   return t;
 }  
-
