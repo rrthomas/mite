@@ -155,6 +155,14 @@ end
 
 -- Table and list functions
 
+-- Wrapper for buggy tinsert (Lua 4.0)
+function tinsert(t, ...)
+  if arg.n == 1 then %tinsert(t, arg[1])
+  elseif arg.n >= 2 then %tinsert(t, arg[2], arg[2])
+  else %tinsert(t)
+  end
+end
+
 -- Map a function over a list
 function map(f, l)
   local m = {}
@@ -274,14 +282,6 @@ end
 
 
 -- Text processing
-
--- Wrapper for buggy tinsert (Lua 4.0)
-function tinsert(t, ...)
-  if arg.n == 1 then %tinsert(t, arg[1])
-  elseif arg.n >= 2 then %tinsert(t, arg[2], arg[2])
-  else %tinsert(t)
-  end
-end
 
 -- Write a line adding \n to the end
 --   [fp]: file handle
