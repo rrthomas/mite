@@ -1,16 +1,9 @@
--- Documentation generator
+-- Generate documentation tables from specification
 -- (c) Reuben Thomas 2001
-
--- Take the specifications and generate the documentation tables
--- instLab.tex, instComp.tex, instData.tex, instOpcode.tex and
--- types.tex
 
 
 -- Make a name->instruction index
 nameToInst = makeIndex("name", inst)
-
--- Global formatting parameters
-width = 72 -- max width of output files
 
 -- Expand the effect fields of the instructions
 for i = 1, getn(inst) do
