@@ -11,32 +11,26 @@
 
 #include "except.h"
 #include "buffer.h"
-#include "Translate.h"
+#include "translate.h"
 
 
-/* maximum number of octal digits in a uintptr_t */
-#define SIZE_T_MAXLEN (sizeof(uintptr_t) * CHAR_BIT / 3)
+/* maximum number of octal digits in a Word */
+#define WORD_MAXLEN (sizeof(Word) * CHAR_BIT / 3)
 
 /* Instructions indexed by opcode */
 static const char *inst[] = {
-  "", /* opcodes start at 0x01 */
-  "lab",   "mov",   "movi",  "ldl",   "ld",    "st",
-  "gets",  "sets",  "pop",   "push",  "add",   "sub",
-  "mul",   "div",   "rem",   "and",   "or",    "xor",
-  "sl",    "srl",   "sra",   "teq",   "tlt",   "tltu",
-  "b",     "br",    "bf",    "bt",    "call",  "callr",
-  "ret",   "calln", "lit",   "litl",  "space"
+#include "opToName.h"
 };
 
 static void
-putChar(Translator *t, char c)
+putChar(TState *t, char c)
 {
   bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + 1U);
   *t->wPtr++ = c;
 }
 
 static void
-putStr(Translator *t, const char *s, uintptr_t len)
+putStr(TState *t, const char *s, uintptr_t len)
 {
   bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + len);
   memcpy(t->wPtr, s, len);
@@ -56,14 +50,14 @@ writeNum(char *s, uintptr_t n)
 }
 
 static void
-putNum(Translator *t, uintptr_t n)
+putNum(TState *t, uintptr_t n)
 {
-  bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + SIZE_T_MAXLEN);
+  bufEnsure(WORD_MAXLEN);
   t->wPtr += writeNum(t->wPtr, n);
 }
 
 static void
-putLabTy(Translator *t, unsigned int ty)
+putLabTy(TState *t, unsigned int ty)
 {
   switch (ty) {
     case LABEL_B: putChar(t, 'b');  return;
@@ -73,83 +67,88 @@ putLabTy(Translator *t, unsigned int ty)
 }
 
 static void
-putLab(Translator *t, Label *l)
+putLab(TState *t, Label *l)
 {
   putChar(t, ' ');
   putLabTy(t, l->ty);
-  putNum(t, t->reader->labelMap(t, l).n);
+  putNum(t, labelMap(t, l).n);
 }
 
-static void
-putLabDangle(Translator *t, Label *l)
-{
-  putLabTy(t, l->ty);
-  addDangle(t, l);
-}
+#define S(s) putStr(t, s, sizeof(s) / sizeof(char))
 
 static void
-putImm(Translator *t, Immediate *i)
+putImm(TState *t, f, n, v, r)
 {
-  if (i->e) putChar(t, 'e');
-  if (i->s) putChar(t, 's');
-  if (i->w) putChar(t, 'w');
-  if (i->n) putChar(t, '-');
-  putNum(t, i->v);
-  if (i->r) {
-    putStr(t, ">>", 2);
-    putNum(t, i->r);
+  if (f & FLAG_E) putChar(t, 'e');
+  if (f & FLAG_S) putChar(t, 's');
+  if (f & FLAG_W) putChar(t, 'w');
+  if (n) putChar(t, '-');
+  putNum(t, v);
+  if (f & FLAG_R) {
+    S(">>");
+    putNum(t, r);
   }
 }
 
-static void
-putOp(Translator *t, MiteValue op, unsigned int ty)
-{
-  switch (ty) {
-    case op_r: putNum(t, op.r); break;
-    case op_l: putLabTy(t, op.l->ty); putLabDangle(t, op.l); break;
-    case op_L: putLabTy(t, op.l->ty); putLab(t, op.l); break;
-    case op_b: putLabDangle(t, op.l); break;
-    case op_s: putLabDangle(t, op.l); break;
-    case op_d: putLabDangle(t, op.l); break;
-    case op_i: putImm(t, op.i); break;
-  }
-}
+#define R(r) putNum(r)
+#define NL bufEnsure(sizeof(char)); *(*t->wPtr++) = '\n'
+#define LabTy(L) putLabTy(t, L)
+#define Lab(ty, l) addDangle(t, ty, l)
+#define Imm(f, n, v, r) putImm(f, n, v, r)
 
-static void
-putInst(Translator *t, unsigned int i, MiteValue op1, MiteValue op2,
-	MiteValue op3)
-{
-  unsigned int ops;
-  putStr(t, inst[i], strlen(inst[i]));
-  putChar(t, ' ');
-  ops = opType[i];
-  if (OP1(ops))
-    putOp(t, op1, OP1(ops));
-  if (OP2(ops)) {
-    putChar(t, ' ');
-    putOp(t, op2, OP2(ops));
-  }
-  if (OP3(ops)) {
-    putChar(t, ' ');
-    putOp(t, op3, OP3(ops));
-  }
-  putChar(t, '\n');
-}
+#define putInt(t, sgn, n) t->wPtr += writeInt(t->wPtr, sgn, n)
+#define putUInt(t, n) putInt(t, 0, n)
+
+#define wrLab(L1, l2)          S("lab"); LabTy(L1); NL
+#define wrMov(r1, r2)          S("mov"); R(r1); R(r2); NL
+#define wrMovi(r1, f, n, v, r) S("movi"); R(r1); Imm(f, n, v, r); NL
+#define wrLdl(r1, l2)          S("ldl"); R(r1); Lab(LABEL_D, l2); NL
+#define wrLd(r1, r2)           S("ld"); R(r1); R(r2); NL
+#define wrSt(r1, r2)           S("st"); R(r1); R(r2); NL
+#define wrGets(r1)             S("gets"); R(r1); NL
+#define wrSets(r1)             S("sets"); R(r1); NL
+#define wrPop(r1)              S("pop"); R(r1); NL
+#define wrPush(r1)             S("push"); R(r1); NL
+#define wrAdd(r1, r2, r3)      S("add"); R(r1); R(r2); R(r3); NL
+#define wrSub(r1, r2, r3)      S("sub"); R(r1); R(r2); R(r3); NL
+#define wrMul(r1, r2, r3)      S("mul"); R(r1); R(r2); R(r3); NL
+#define wrDiv(r1, r2, r3)      S("div"); R(r1); R(r2); R(r3); NL
+#define wrRem(r1, r2, r3)      S("rem"); R(r1); R(r2); R(r3); NL
+#define wrAnd(r1, r2, r3)      S("and"); R(r1); R(r2); R(r3); NL
+#define wrOr(r1, r2, r3)       S("or"); R(r1); R(r2); R(r3); NL
+#define wrXor(r1, r2, r3)      S("xor"); R(r1); R(r2); R(r3); NL
+#define wrSl(r1, r2, r3)       S("sl"); R(r1); R(r2); R(r3); NL
+#define wrSrl(r1, r2, r3)      S("srl"); R(r1); R(r2); R(r3); NL
+#define wrSra(r1, r2, r3)      S("sra"); R(r1); R(r2); R(r3); NL
+#define wrTeq(r1, r2, r3)      S("teq"); R(r1); R(r2); R(r3); NL
+#define wrTlt(r1, r2, r3)      S("tlt"); R(r1); R(r2); R(r3); NL
+#define wrTltu(r1, r2, r3)     S("tltu"); R(r1); R(r2); R(r3); NL
+#define wrB(l1)                S("b"); Lab(LABEL_B, l1); NL
+#define wrBr(r1)               S("br"); R(r1); NL
+#define wrBf(r1, l2)           S("bf"); R(r1); Lab(LABEL_B, l2); NL
+#define wrBt(r1, l2)           S("bt"); R(r1); Lab(LABEL_B, l2); NL
+#define wrCall(l1)             S("call"); Lab(LABEL_S, l1); NL
+#define wrCallr(r1)            S("callr"); R(r1); NL
+#define wrRet()                S("ret"); NL
+#define wrCalln(r1)            S("calln"); R(r1); NL
+#define wrLit(f, n, v, r)      S("lit"); Imm(f, n, v, r); NL
+#define wrLitl(L1, l2)         S("litl"); Lab(L1, l2); NL
+#define wrSpace(f, n, v, r)    S("space"); Imm(f, n, v, r); NL
 
 static uintptr_t
-insertNum(Byte **s, uintptr_t n)
+writeUInt(Byte **s, uintptr_t n)
 {
   *s += writeNum((char *)*s, n);
   return 0;
 }
 
 static void
-resolve(Translator *t)
+resolve(TState *t, LabelValue (*labelMap)(TState *t, Label *l))
 {
-  Byte *fImg;
+  Byte *finalImg;
   Dangle *d;
   uintptr_t n;
   for (d = t->dangles->next, n = 0; d; d = d->next, n++);
-  fImg = excMalloc(t->wPtr - t->wImg + n * SIZE_T_MAXLEN);
-  insertDangles(t, fImg, fImg, insertNum);
+  finalImg = excMalloc(t->wPtr - t->wImg + n * WORD_MAXLEN);
+  insertDangles(t, finalImg, finalImg, writeUInt, labelMap);
 }
