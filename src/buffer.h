@@ -8,6 +8,8 @@
 
 
 #include "except.h"
+#include "util.h"
+
 
 #define bufNew(size, init) \
   excMalloc(((size)= (init)))
