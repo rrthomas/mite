@@ -1,28 +1,22 @@
+Add the list of instrumenters to translators.c.
+
 Get interpreter working.
 
-Add a debugger. If a translator has a third argument in transList, use
-that as a debugger. It should have the same form as a writer.
-
-
-to the interpreter. At each instruction entry, have D. 
-This can call the debugging function with the current WState and
-RState. The WState can include all debugging information. Also have
-D_Init and D_Finalise, which can provide the rest. Actually write the
-debugger in a separate file, which is #included if debugging turned
-on.
-
 Add debugging and optimised builds to Makefile.
+
+Allow translators to be named so that a given reader-writer pair can
+be built with different sets of instrumentation.
 
 Make Mite into a library, with a public header.
 
 Document code properly, using something like doxygen (preferably
 coping with Lua as well, or at least with the option to cope with
-OCaml).
+Python).
 
 Construct a util.lua to avoid relying on my std lib.
 
-Rewrite scripts in OCaml for better definition of the type of a reader
-and writer, and easier debugging in future.
+Rewrite scripts in Python for better definition of the type of a
+reader and writer, and easier debugging in future.
 
 Make a distribution that can easily be compiled with any ANSI C
 compiler (preferably a single C file).
