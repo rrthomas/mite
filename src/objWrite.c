@@ -61,13 +61,13 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 #endif /* LITTLE_ENDIAN */
 
 #define Lab(ty, l) \
-  addDangle(t, ty, l);
+  addDangle(t, ty, l); \
   align(t)
 
 #define Imm(f, n, v, r) \
-  *t->wPtr++ = (Byte)(f);
+  *t->wPtr++ = (Byte)(f); \
   if (r) \
-    *t->wPtr++ = (Byte)r;
+    *t->wPtr++ = (Byte)r; \
   putInt(t, n, v)
 
 #define putInt(t, sgn, n) \
