@@ -1,6 +1,25 @@
 Get interpreter working.
 
-Use a better build tool: cook or cons (?).
+Add a debugger to the interpreter. At each instruction entry, have D. 
+This can call the debugging function with the current WState and
+RState. The WState can include all debugging information. Also have
+D_Init and D_Finalise, which can provide the rest. Actually write the
+debugger in a separate file, which is #included if debugging turned
+on.
+
+Change reader and writer files so that they have foo = ... for each
+field, rather than just listing the fields. Use the new standard
+library stuff for this. Might also want to construct a util.lua to
+avoid relying on my std lib.
+
+Rather than having a resolve flag, have a resolve string containing
+the macros & functions needed for resolution, and don't generate the
+resolution function if it's empty.
+
+
+Use a better build tool: cook or cons (?). Rewrite scripts in OCaml
+for better definition of the type of a reader and writer, and easier
+debugging in future (plus more people know OCaml than Lua!).
 
 Make a distribution that can easily be compiled with any ANSI C
 compiler.
@@ -16,8 +35,8 @@ Check out & build Mite on a clean system.
 Reduce the number of warnings given by gcc.
 
 
-Shifts of type size (e.g. 32 bits for a word) are not allowed; make
-sure they are not assumed.
+Check whether shifts of type size are allowed, and stop using them if
+not.
 
 
 Test system:
@@ -52,6 +71,11 @@ work at least for the standard C library.
 FP instruction set (using new reg set, use only 64-bit IEEE numbers).
 
 Higher level calling: use SWIG or libffi
+
+Safe memory access (just ld/st): to do this, only allow addresses in
+range of static data area or areas returned by special malloc function
+(which can just be a wrapper for malloc, or for greater efficiency,
+malloc recompiled to allocate in an area provided by mit).
 
 
 Separate compilation of Mite code
