@@ -1,24 +1,10 @@
--- Code generator
+-- Generate code & data tables from Mite specification
 -- (c) Reuben Thomas 2001
 
 -- Take the specifications and generate:
---   * The opcode enumeration [opEnum.h]
+--   * The opcode enumeration [instEnum.h]
 --   * The name -> opcode map [insts.gperf]
 
-
--- Global formatting parameters
-width = 72 -- max width of output files
-indent = 2 -- indent of data structures
-
--- write a string wrapped with the above parameters, with a
--- terminating newline
-function writeWrapped(s)
-  writeLine(wrap(s, width, indent, indent))
-end
-
-
--- list of instruction names in opcode order
-name = project(inst, "name")
 
 -- instEnum.h
 -- enumeration of opcodes
@@ -28,7 +14,7 @@ writeLine("/* Instruction opcodes */\n",
           "#ifndef MITE_INSTENUM",
           "#define MITE_INSTENUM\n\n",
           "typedef enum {")
-instEnum = map(opify, name)
+instEnum = map(opify, project(inst, "name"))
 instEnum[1] = instEnum[1] .. " = 0x01"
 writeWrapped(join(", ", instEnum))
 writeLine("} Opcode;\n",
@@ -43,5 +29,5 @@ writeLine("%{",
           "struct Inst { const char *name; Opcode opcode; };",
           "%%")
 for i = 1, getn(inst) do
-  writeLine(name[i] .. ", " .. opify(name[i]))
+  writeLine(inst[i].name .. ", " .. opify(inst[i].name))
 end

@@ -2,8 +2,7 @@
    (c) Reuben Thomas 2001
 */
 
-/* Things to verify:
-     Also need a post-pass to verify everything else (what is there?) */
+/* Need a post-pass to verify everything else (what is there?) */
 
      
 #include <stdint.h>

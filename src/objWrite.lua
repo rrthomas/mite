@@ -65,11 +65,11 @@ writeInt(Byte *p, int sgn, uintptr_t n)
   addDangle(t, ty, l); \
   align(t)
 
-#define Imm(f, n, v, r) \
+#define Imm(f, sgn, v, r) \
   *t->wPtr++ = (Byte)(f); \
   if (r) \
     *t->wPtr++ = (Byte)r; \
-  putInt(t, n, v)
+  putInt(t, sgn, v)
 
 #define putInt(t, sgn, n) \
   t->wPtr += writeInt(t->wPtr, sgn, n)
@@ -91,7 +91,7 @@ writeUInt(Byte **p, uintptr_t n)
   {
     Inst("lab",    "W(OP_LAB, t1, 0, 0)"),
     Inst("mov",    "W(OP_MOV, r1, r2, 0)"),
-    Inst("movi",   "B(OP_MOVI); B(r1); Imm(f, n, v, r)"),
+    Inst("movi",   "B(OP_MOVI); B(r1); Imm(i2_f, i2_sgn, i2_v, i2_r)"),
     Inst("ldl",    "B(OP_LDL); B(r1); Lab(LABEL_D, l2)"),
     Inst("ld",     "W(OP_LD, r1, r2, 0)"),
     Inst("st",     "W(OP_ST, r1, r2, 0)"),
@@ -121,8 +121,8 @@ writeUInt(Byte **p, uintptr_t n)
     Inst("callr",  "W(OP_CALLR, r1, 0, 0)"),
     Inst("ret",    "W(OP_RET, 0, 0, 0)"),
     Inst("calln",  "W(OP_CALLN, r1, 0, 0)"),
-    Inst("lit",    "B(OP_LIT); Imm(f, n, v, r)"),
+    Inst("lit",    "B(OP_LIT); Imm(i1_f, i1_sgn, i1_v, i1_r)"),
     Inst("litl",   "B(OP_LITL); B(t1); Lab(t1, l2)"),
-    Inst("space",  "B(OP_SPACE); Imm(f, n, v, r)"),
+    Inst("space",  "B(OP_SPACE); Imm(i1_f, i1_sgn, i1_v, i1_r)"),
   }
 )

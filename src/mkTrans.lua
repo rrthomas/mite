@@ -19,16 +19,27 @@ Reader = constructor{
   "trans",       -- reader-specific parts of translator function  
 }
 
-OpType = constructor{
-  "name",  -- operand type name
-  "cType", -- C representation type
-  "def",   -- definition
-}
+OpType = function(decls, code)
+  -- decls: declarations for the operand reading code
+  -- code: code to read an operand of the given type
+  -- either a string, or a function (inst, op_no) -> string in both
+  -- decls and code, the name of the operand is substituted for %o
+           function funcify(f)
+             if type(f) ~= "function" then
+               return function (inst, op)
+                        return %f
+                      end
+             end
+             return f
+           end
+           local t = {decls = funcify(decls), code = funcify(code)}
+           return t
+         end
 
 Translator = constructor{
   "decls",         -- extra variable declarations
   "init",          -- extra initialisation
-  "updateExcLine", -- code to increment excLine
+  "update",        -- update after reading each instruction
   "maxInstLen",    -- max. no. of bytes required by next instruction
 }
 
@@ -70,11 +81,12 @@ end
 r, w = dofile(readerFile), dofile(writerFile)
 
 -- Check the reader implements the correct opTypes
-for i = 1, getn(opType) do
-  affirm(r.opType[i].name == opType[i].name,
-         "operand type " .. tostring(i) .. " ('" .. r.opType[i].name ..
-           "') should be '" .. opType[i].name .. "'")
-end
+-- Need to implement set type to make the next line work
+--affirm(set(project(opType, name)) ==
+--         set(project(listify(r.opType), 1)),
+--         "operand type " .. tostring(i) .. " ('" ..
+--           r.opType[i].name .. "') should be '" .. opType[i].name ..
+--           "'") 
 
 -- Check the writer implements the correct instructions
 for i = 1, getn(inst) do
@@ -88,6 +100,7 @@ end
 
 writeto(transFunc .. ".c") -- open the output file
 writeLine("/* " .. r.reads .. " to " .. w.writes .. " translator */\n")
+writeLine("#include \"translators.h\"")
 
 -- Reader prelude and macros
 writeLine(r.prelude,
@@ -105,35 +118,42 @@ writeLine("TState *",
           transFunc .. "(Byte *rImg, Byte *rEnd)",
           "{",
           "  TState *t = translatorNew(rImg, rEnd);",
-          "  LabelType l;",
+          "  LabelType ty;",
           "  Opcode o;",
-          r.trans.decls,
-          "  for (l = 0; l < LABEL_TYPES; l++)",
-          "    t->labels[l] = 0;",
-          r.trans.init,
+          "  " .. r.trans.decls,
+          "  for (ty = 0; ty < LABEL_TYPES; ty++)",
+          "    t->labels[ty] = 0;",
+          "  " .. r.trans.init,
           "  while (t->rPtr < t->rEnd) {",
-          "    o = rdInst(t)",
-          r.trans.updateExcLine,
+          "    o = rdInst(t);",
+          "    " .. r.trans.update,
           "    ensure(" .. r.trans.maxInstLen .. ");",
           "    switch (o) {")
 
 -- The instruction cases
 for i = 1, getn(inst) do
+  function substOp(s, op)
+    return gsub(s, "%%o", op)
+  end
   writeLine("    case " .. opify(inst[i].name) .. ":",
             "      {")
   local inst = inst[i]
   for j = 1, getn(inst.ops) do
     local opType = inst.ops[j]
     local opTypeInfo = r.opType[opType]
-    write("      ")
-    if opTypeInfo.cType ~= "" then
-      write(opTypeInfo.cType .. " " .. opType ..
-            tostring(j) .. " = ")
+    local decls = opTypeInfo.decls(inst, j)
+    local code = opTypeInfo.code(inst, j)
+    local opVar = opType .. tostring(j)
+    if decls ~= "" then
+      writeLine("        " .. substOp(decls, opVar))
     end
-    writeLine(opTypeInfo.def .. ";")
+    if code ~= "" then
+      writeLine("        " .. substOp(code, opVar))
+    end
   end
-  writeLine("      " .. w.inst[i].def .. ";",
-            "      break;")
+  writeLine("        " .. w.inst[i].def .. ";",
+            "        break;",
+            "      }")
 end
 writeLine("    default:",
           "      throw(\"bad instruction\");")

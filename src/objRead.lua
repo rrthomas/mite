@@ -1,199 +1,200 @@
--- Mite assembly reader
+-- Mite object reader
 -- (c) Reuben Thomas 2000
 
+
 return Reader(
-  "Mite assembly",
+  "Mite object code",
   [[
+/* Need a post-pass to verify everything else (what is there?) */
+
+     
 #include <stdint.h>
 #include <limits.h>
-#include <ctype.h>
-#include <errno.h>
-#include <string.h>
 
+#include "endian.h"
 #include "except.h"
-#include "hash.h"
-#include "string.h"
 #include "translate.h"
 
 
-static int
-issym(int c)
+/* set excLine to the current offset into the image, then throw an
+   exception */ 
+static void
+throwPos(TState *t, const char *fmt, ...)
 {
-  return isalnum(c) || (c == '_');
+  va_list ap;
+  va_start(ap, fmt);
+  excLine = t->rPtr - t->rImg;
+  vThrow(fmt, ap);
+  va_end(ap);
 }
 
+/* find the number of 1s in a 7-bit number using octal accumulators
+   (no. of ones in a 3-bit no. is n - floor(n/2) - floor(n/4)) */
 static int
-isimm(int c)
+bits(int n)
 {
-  return isxdigit(c) || strchr(">-_swx", c);
+  int n2, m = 033; /* mask */
+  n -= (n2 = (n >> 1) & m);  /* n - floor(n/2) */
+  n -= (n2 = (n2 >> 1) & m); /* n - floor(n/2) - floor(n/4) */
+  return ((n + (n >> 3)) & 0x7) + (n >> 6);
+    /* add 3-bit sub-totals and 7th bit */
 }
 
-/* Read next token consisting of characters for which f() returns true into
-   *tok, advancing t->rPtr past it, and discarding leading non-f() characters
-   and comments */
 static uintptr_t
-rdTok(TState *t, char **tok, int (*f)(int))
-{ 
+getBits(TState *t, uintptr_t n)
+{
 #define p t->rPtr
-  if (t->eol) {
-    excLine++;
-    t->eol = 0;
-  }
-  while (*p && (isspace((char)*p) || (char)*p == '#')) {
-    if ((char)*p == '#')
+  int i, endBit, bits;
+  uint32_t w;
+  if (p < t->rEnd) {
+    do {
+      w = 0;
+      bits = -1;
+      i = WORD_BYTES_LEFT(p);
+      endBit = *p & (1 << (BYTE_BIT - 1));
       do {
-        p++;
-      } while (*p && (char)*p != '\n');
-    if ((char)*p == '\n')
-      excLine++;
-    p++;
+	w = (w << BYTE_BIT) | *p++;
+	bits += BYTE_BIT;
+	i--;
+      } while (i);
+      n = (n << (WORD_BIT - 1)) + w;
+    } while (endBit == 0 && p < t->rEnd);
+    n -= 1 << bits;
   }
-  *tok = (char *)p;
-  while (f((char)*p)) p++;
-  if (*tok == (char *)p)
-    throw("missing token");
-  if (!isspace((char)*p))
-    throw("bad character");
-  if ((char)*p == '\n')
-    t->eol = 1;
-  *p = (Byte)'\0';
-  return p++ - (Byte *)*tok;
+  if (endBit == 0 && p == t->rEnd)
+    throwPos(t, "badly encoded or missing quantity");
+  return n;
 #undef p
 }
 
-static Opcode
-rdInst(TState *t)
+static uintptr_t
+getNum(TState *t, int *sgnRet)
 {
-  char *tok;
-  uintptr_t len = rdTok(t, &tok, issym);
-  struct Inst *i = findInst(tok, len);
-  if (i == NULL)
-    throw("bad instruction");
-  return i->opcode;
+#define p t->rPtr
+  Byte *start = p;
+  uint32_t h = *p & (BYTE_SIGN_BIT - 1);
+  uintptr_t n;
+  int sgn;
+  unsigned int len;
+  sgn = -(h >> (BYTE_BIT - 2));
+  n = getBits(t, (uintptr_t)sgn);
+  len = (unsigned int)(p - start - 1); /* Don't count first byte,
+                                          which is in h */
+  if ((BYTE_BIT - 1) * len +
+      bits((int)(sgn == 0 ? h : ~h & (BYTE_SIGN_BIT - 1)))
+      > WORD_BIT + sgn)
+    throwPos(t, "number too large");
+      /* (BYTE_BIT - 1) * len is the no. of significant bits in the
+         bottom bytes bits(...) is the number in the most significant
+         byte if we're reading a negative number, the maximum size is
+         one less */
+  *sgnRet = sgn;
+  return sgn ? (uintptr_t)(-(intptr_t)n) : n;
+#undef p
 }
 
-#undef isdigit /* use the function, not the macro */
-static Register
-rdReg(TState *t)
-{
-  char *tok, *nend;
-  Register r;
-  uintptr_t len = rdTok(t, &tok, isdigit);
-  r = strtoul(tok, &nend, 10);
-  if (r > UINT_MAX || (uintptr_t)(nend - tok) != len)
-    throw("bad register");
-  return r;
-}
+static const char *badReg = "bad register",
+  *badLab = "negative label",
+  *badLabTy = "bad label type",
+  *badFlags = "bad immediate flags";
 
-static LabelType
-rdLabTy(TState *t)
-{
-  char *tok;
-  uintptr_t len = rdTok(t, &tok, isalpha);
-  if (len == 1)
-    switch (*tok) {
-    case 'b':
-      return LABEL_B;
-    case 's':
-      return LABEL_S;
-    case 'd':
-      return LABEL_D;
-    }
-  throw("bad label type");
-}
+#define CHECK__(op)
+#define CHECK_l(op)
+#define CHECK_n(op)
+#define CHECK_f(op) \
+  if (op & ~(FLAG_R | FLAG_S | FLAG_W | FLAG_E)) throwPos(t, badFlags)
+#define CHECK_r(op) \
+  if (op == 0 || op > UINT_MAX) throwPos(t, badReg)
+#define CHECK_t(op) \
+  if (op == 0 || op > LABEL_TYPES) throwPos(t, badLabTy)
 
-static Label *
-rdLab(TState *t, LabelType ty)
-{
-  Label *l = new(Label);
-  l->ty = ty;
-  rdTok(t, (char **)&l->v.p, issym);
-  return l;
-}
+#define OPS(a, b, c) \
+  CHECK_ ## a(op1); \
+  CHECK_ ## b(op2); \
+  CHECK_ ## c(op3)
 
-static Immediate
-rdImm(TState *t)
-{
-  Immediate *i = new(Immediate);
-  int rsgn;
-  long rl;
-  char *tok, *nend;
-  rdTok(t, &tok, isimm);
-  i->f = 0;
-  if (*tok == 'e') {
-    tok++;
-    i->f |= FLAG_E;
-  }
-  if (*tok == 's') {
-    tok++;
-    i->f |= FLAG_S;
-  }
-  if (*tok == 'w') {
-    tok++;
-    i->f |= FLAG_W;
-  }
-  if (*tok == '-') {
-    tok++;
-    i->sgn = 1;
-  } else
-    i->sgn = 0;
-  errno = 0;
-  i->v = strtoul(tok, &nend, 0);
-  if (errno == ERANGE || (i->sgn && i->v > (unsigned long)(LONG_MAX) + 1))
-    /* rather than -LONG_MIN; we're assuming two's complement anyway, and
-       negating LONG_MIN overflows long */
-    throw("immediate value out of range");
-  tok = nend;
-  rsgn = 0;
-  if (*tok == '>' && tok[1] == '>') {
-    tok += 2;
-    i->f |= FLAG_R;
-    errno = 0;
-    if (*tok == '-') {
-	tok++;
-	rsgn = -1;
-    }
-    rl = strtoul(tok, &nend, 0);
-    if (rl + rsgn > 127 || errno == ERANGE)
-      throw("immediate rotation out of range");
-    tok = nend;
-    i->r = rsgn ? -(int)rl : (int)rl;
-  } else
-    i->r = 0;
-  if (*tok)
-    throw("bad immediate");
-  return i;
-}
 
-static LabelValue
-labelAddr(TState *t, Label *l)
-{
-  LabelValue ret;
-  ret.p = hashFind(t->labelHash, l->v.p);
-  return ret;
-}
+#ifdef LITTLE_ENDIAN
+
+#  define OPCODE(w) \
+     (w) & BYTE_MASK
+
+#  define OP(p) \
+     (w >> (BYTE_BIT * (p))) & BYTE_MASK
+
+#else /* !LITTLE_ENDIAN */
+
+#  define OPCODE(w) \
+     (w >> (BYTE_BIT * 3)) & BYTE_MASK
+
+#  define \
+     OP(p) (w >> (BYTE_BIT * (WORD_BYTE - (p)))) & BYTE_MASK
+
+#endif /* LITTLE_ENDIAN */
+
+
+#define GET_LAB(p) \
+  t->rPtr -= 4 - (p); \
+  l.n = getNum(t, &sgn); \
+  if (sgn) \
+    throwPos(t, badLab)
+
+    w = *(Word *)t->rPtr;
+    case OP_LAB:
+      OPS(L,_,_);
+      l.n = ++t->labels[op1];
+      wrLab(op1, l);
+      break;
   ]],
   "rdInst(t)", -- rdInst(t)
-  "labelMap(t, l)", -- labelMap(t, l)
+  "l->v",      -- labelAddr(t, l)
   {
-    OpType("r", "Register", "rdReg(t)"),
-    OpType("i", "Immediate", "rdImm(t)"),
-    OpType("t", "Label", "rdLab(t, rdLabTy(t))"),
-    OpType("l", "", ""),
-    OpType("n", "", -- relies on n always being in position 2
-           [[t->labels[t1->ty]++;
-      if ((old = hashFind(t->labelHash, t1->v.p))) {
-        if (old->ty != t1->ty)
-          throw("inconsistent label");
-      } else
-        hashInsert(t->labelHash, t1->v.p,
-                   (void *)(t->labels[t1->ty]))]]),
+    r = OpType("Register %o = rdReg(t);", ""),
+    i = OpType([[Byte %o_f = ;
+        SByte %o_sgn;
+        uintptr_t %o_v;
+        int %o_r;]],
+    function (inst, op)
+                 
+      
+#define GET_IMM1 \
+  r = (op1 & FLAG_R) ? (t->rPtr--, op2) : ((t->rPtr -= 2), 0); \
+  n = getNum(t, &sgn)
+
+#define GET_IMM2 \
+  r = (op2 & FLAG_R) ? op3 : (t->rPtr--, 0); \
+  n = getNum(t, &sgn)
+
+OpType([[Byte %o_f;
+        SByte %o_sgn;
+        uintptr_t %o_v;
+        int %o_r;]],
+        "rdImm(t, &%o_f, &%o_sgn, &%o_v, &%o_r);"),
+    t = OpType("LabelType %o = rdLabTy(t);", ""),
+    l = OpType(function (inst, op)
+                 local ty = labelType(inst, op)
+                 return "HashNode *%o_hn = rdLab(t, " .. ty .. [[);
+        LabelValue %o;]]
+               end,
+        "%o.p = (Byte *)%o_hn->key;"),
+    n = OpType(function (inst, op)
+                 local ty = labelType(inst, op)
+                 return "HashNode *%o_hn = rdLab(t, " .. ty .. ");"
+               end,
+               function (inst, op)
+                 local ty = labelType(inst, op)
+                 return [[l = %o_hn->body;
+        t->labels[]] .. ty .. [[]++;
+        if (l->v.n != 0)
+          throw("duplicate definition for `%s'", %o_hn->key);
+        l->v.n = t->labels[]] .. ty .. "];"
+               end),
   },
-  {
-    "Label *old;", -- decls
-    [[t->labelHash = hashNew(4096, hashStrHash, hashStrcmp);
-      t->eol = 0;]], -- init
-    "excLine += 1;", -- updateExcLine
-    "INST_MAXLEN", -- maxInstLen
-  }
+  Translator(
+    "Word w;",               -- decls
+    [[t->labelHash = hashNew(4096);
+  t->eol = 0;]],             -- init
+    "t->rPtr += WORD_BYTE;", -- update
+    "INST_MAXLEN"            -- maxInstLen
+  )
 )

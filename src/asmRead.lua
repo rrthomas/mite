@@ -1,6 +1,27 @@
 -- Mite assembly reader
 -- (c) Reuben Thomas 2000
 
+
+-- Return type for a given label operand
+-- either a type variable, or determined by the instruction
+function labelType(inst, op)
+  local ty
+  if op > 1 and inst.ops[op - 1] == "t" then
+    ty = "t" .. tostring(op - 1)
+  else
+    local tyToNum = {
+      ldl  = "LABEL_D",
+      b    = "LABEL_B",
+      bf   = "LABEL_B",
+      bt   = "LABEL_B",
+      call = "LABEL_S"
+    }
+    ty = tyToNum[inst.name]
+  end
+  return ty
+end
+
+
 return Reader(
   "Mite assembly",
   [[
@@ -102,44 +123,55 @@ rdLabTy(TState *t)
   throw("bad label type");
 }
 
-static Label *
+static HashNode *
 rdLab(TState *t, LabelType ty)
 {
-  Label *l = new(Label);
-  l->ty = ty;
-  rdTok(t, (char **)&l->v.p, issym);
-  return l;
+  char *tok;
+  Label *l;
+  HashLink hl;
+  rdTok(t, &tok, issym);
+  hashGet(t->labelHash, tok, &hl);
+  if (hl.found) {
+    l = hl.curr->body;
+    if (l->ty != ty)
+      throw("inconsistent label");
+    return hl.curr;
+  } else {
+    l = new(Label);
+    l->ty = ty;
+    l->v.n = 0;
+    return hashSet(t->labelHash, &hl, tok, l);
+  }
 }
 
-static Immediate
-rdImm(TState *t)
+static void
+rdImm(TState *t, Byte *f, SByte *sgn, uintptr_t *v, int *r)
 {
-  Immediate *i = new(Immediate);
   int rsgn;
   long rl;
   char *tok, *nend;
   rdTok(t, &tok, isimm);
-  i->f = 0;
+  *f = 0;
   if (*tok == 'e') {
     tok++;
-    i->f |= FLAG_E;
+    *f |= FLAG_E;
   }
   if (*tok == 's') {
     tok++;
-    i->f |= FLAG_S;
+    *f |= FLAG_S;
   }
   if (*tok == 'w') {
     tok++;
-    i->f |= FLAG_W;
+    *f |= FLAG_W;
   }
   if (*tok == '-') {
     tok++;
-    i->sgn = 1;
+    *sgn = 1;
   } else
-    i->sgn = 0;
+    *sgn = 0;
   errno = 0;
-  i->v = strtoul(tok, &nend, 0);
-  if (errno == ERANGE || (i->sgn && i->v > (unsigned long)(LONG_MAX) + 1))
+  *v = strtoul(tok, &nend, 0);
+  if (errno == ERANGE || (*sgn && *v > (unsigned long)(LONG_MAX) + 1))
     /* rather than -LONG_MIN; we're assuming two's complement anyway, and
        negating LONG_MIN overflows long */
     throw("immediate value out of range");
@@ -147,7 +179,7 @@ rdImm(TState *t)
   rsgn = 0;
   if (*tok == '>' && tok[1] == '>') {
     tok += 2;
-    i->f |= FLAG_R;
+    *f |= FLAG_R;
     errno = 0;
     if (*tok == '-') {
 	tok++;
@@ -157,43 +189,56 @@ rdImm(TState *t)
     if (rl + rsgn > 127 || errno == ERANGE)
       throw("immediate rotation out of range");
     tok = nend;
-    i->r = rsgn ? -(int)rl : (int)rl;
+    *r = rsgn ? -(int)rl : (int)rl;
   } else
-    i->r = 0;
+    *r = 0;
   if (*tok)
     throw("bad immediate");
-  return i;
 }
 
 static LabelValue
 labelAddr(TState *t, Label *l)
 {
   LabelValue ret;
-  ret.p = hashFind(t->labelHash, l->v.p);
+  HashLink hl;
+  hashGet(t->labelHash, (char *)l->v.p, &hl);
+  ret.p = hl.found ? ((Label *)hl.curr->body)->v.p : NULL;
   return ret;
 }
   ]],
-  "rdInst(t)", -- rdInst(t)
-  "labelMap(t, l)", -- labelMap(t, l)
+  "rdInst(t)",       -- rdInst(t)
+  "labelAddr(t, l)", -- labelAddr(t, l)
   {
-    OpType("r", "Register", "rdReg(t)"),
-    OpType("i", "Immediate", "rdImm(t)"),
-    OpType("t", "Label", "rdLab(t, rdLabTy(t))"),
-    OpType("l", "", ""),
-    OpType("n", "", -- relies on n always being in position 2
-           [[t->labels[t1->ty]++;
-      if ((old = hashFind(t->labelHash, t1->v.p))) {
-        if (old->ty != t1->ty)
-          throw("inconsistent label");
-      } else
-        hashInsert(t->labelHash, t1->v.p,
-                   (void *)(t->labels[t1->ty]))]]),
+    r = OpType("Register %o = rdReg(t);", ""),
+    i = OpType([[Byte %o_f;
+        SByte %o_sgn;
+        uintptr_t %o_v;
+        int %o_r;]],
+        "rdImm(t, &%o_f, &%o_sgn, &%o_v, &%o_r);"),
+    t = OpType("LabelType %o = rdLabTy(t);", ""),
+    l = OpType(function (inst, op)
+                 local ty = labelType(inst, op)
+                 return "HashNode *%o_hn = rdLab(t, " .. ty .. [[);
+        LabelValue %o;]]
+               end,
+        "%o.p = (Byte *)%o_hn->key;"),
+    n = OpType(function (inst, op)
+                 local ty = labelType(inst, op)
+                 return "HashNode *%o_hn = rdLab(t, " .. ty .. ");"
+               end,
+               function (inst, op)
+                 local ty = labelType(inst, op)
+                 return [[l = %o_hn->body;
+        if (l->v.n)
+          throw("duplicate definition for `%s'", %o_hn->key);
+        l->v.n = ++t->labels[]] .. ty .. "];"
+               end),
   },
   Translator(
-    "Label *old;", -- decls
-    [[t->labelHash = hashNew(4096, hashStrHash, hashStrcmp);
-      t->eol = 0;]], -- init
-    "excLine += 1;", -- updateExcLine
-    "INST_MAXLEN" -- maxInstLen
+    "Label *l;",     -- decls
+    [[t->labelHash = hashNew(4096);
+  t->eol = 0;]],     -- init
+    "excLine += 1;", -- update
+    "INST_MAXLEN"    -- maxInstLen
   )
 )
