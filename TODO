@@ -1,6 +1,7 @@
-Use automake or some other more intelligent build system that can be
-easily taught about readers, writers and generated sources, so the
-Makefile isn't such a mess.
+Use mmm-mode to syntax colour C in Lua: all [[ .. ]] and "..." strings
+should be coloured as C (leave '..' for normal use).
+
+Get build working with cook.
 
 Make something that can easily be compiled with any ANSI C compiler
 (preferably a single file).
@@ -11,9 +12,7 @@ otherwise, run latex, bibtex, latex, latex.
 
 Make a file bundle release (just a tar of the contents of CVS).
 
-Expand out bibliographic database.
-
-Check out & build Mite on a clean system.
+Check out & build Mite on a clean system (e.g. basil, or pcbox).
 
 Reduce the number of warnings given by gcc.
 
