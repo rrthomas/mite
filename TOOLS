@@ -1,0 +1,19 @@
+Required tools (to build)
+
+make (must support include)
+mkdep
+rm
+lmk [get rid of this]
+
+
+Useful tools (for dist, docs &c.)
+
+zip
+gperf
+ghostscript
+hevea
+
+
+Things that need changing if you don't have default tools
+
+Makefile: need to change C compiler settings if you don't have gcc.
