@@ -1,4 +1,4 @@
-/* Linked lists
+/* Singly-linked lists
    (c) Reuben Thomas 1997
 */
 
@@ -8,7 +8,6 @@
 
 
 struct _List {
-    struct _List *prev;
     struct _List *next;
     void *item;
 };

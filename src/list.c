@@ -12,7 +12,7 @@ List *
 listNew(void)
 {
   List *l = new(List);
-  l->next = l->prev = l;
+  l->next = l;
   l->item = NULL;
   return l;
 }
@@ -28,9 +28,7 @@ listPrefix(List *l, void *i)
 {
   List *n = new(List);
   n->next = l->next;
-  n->prev = l;
   n->item = i;
-  l->next->prev = n;
   l->next = n;
   return n;
 }
@@ -43,7 +41,6 @@ listBehead(List *l)
   if ((d = l->next) == l) return NULL;
   i = d->item;
   l->next = l->next->next;
-  l->next->prev = l;
   free(d);
   return i;
 }
