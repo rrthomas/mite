@@ -40,7 +40,7 @@ Inst{"calln",  {"r"},            "call native code at $%1$"},
 
 Test system:
 
-Have a Lua script which takes a file of the form:
+Describe tests in the form:
 
 test = {
   input = "<input>",
@@ -50,7 +50,7 @@ test = {
   output = { <list-of-outputs> }
 }
 
-and runs
+and run
 
   mit <flags to mit> -.<in type> -.<out type> 2>1
 
