@@ -61,9 +61,9 @@ runW_writerNew (void)
     Inst {"mov",    "r[o1] = r[o2]"},
     Inst {"movi",   "r[o1] = objR_getNum (R, &o2)"},
     Inst {"ldl",    "r[o1] = inp->labAddr[LABEL_D][o2]"},
-    Inst {"ld",     "if (r[o2] & WORD_MASK) returnWith (ExcBadAddr); " ..
+    Inst {"ld",     "if (r[o2] & WORD_MASK) returnWith (ExcBadAddress); " ..
                     "r[o1] = *(SWord *)r[o2]"},
-    Inst {"st",     "if (r[o2] & WORD_MASK) returnWith (ExcBadAddr); " ..
+    Inst {"st",     "if (r[o2] & WORD_MASK) returnWith (ExcBadAddress); " ..
                     "*(SWord *)r[o1] = r[o2]"},
     Inst {"gets",   "r[o1] = (SWord)S"},
     Inst {"sets",   "setS (r[o1])"},
