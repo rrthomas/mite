@@ -9,6 +9,8 @@ MITE_TOP = ..
 
 HEVEA_FLAGS = -I texmf
 
+RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
+
 
 # Suffix rules
 
@@ -18,10 +20,10 @@ HEVEA_FLAGS = -I texmf
 #	latex $<
 	latex $<
 
-%.ps: %.dvi:
+%.ps: %.dvi
 	dvips $<
 
-%.ps: %.pdf:
+%.pdf: %.ps
 	ps2pdf $<
 
 %.html: %.tex
@@ -48,7 +50,7 @@ dist-clean:
 # File dependencies
 
 $(TEX_TABLES): $(MITE_TOP)/spec.lua procSpec.lua
-	lua -f procSpec.lua $(MITE_TOP)
+	$(RUNLUA) procSpec.lua
 	touch mite.tex
 
 mite.tex: $(TEX_TABLES)
