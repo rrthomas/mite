@@ -1,7 +1,7 @@
 Use mmm-mode to syntax colour C in Lua: all [[ .. ]] and "..." strings
 should be coloured as C (leave '..' for normal use).
 
-Get build working with cook.
+Get build working with cook or cons.
 
 Make something that can easily be compiled with any ANSI C compiler
 (preferably a single file).
