@@ -9,13 +9,14 @@
 #include <stdint.h>
 #include <limits.h>
 
+#include "endian.h"
 #include "except.h"
 #include "translate.h"
 
 
 /* set excLine to the current offset into the image, then throw an exception */
 static void
-throwPos(Translator *t, const char *fmt, ...)
+throwPos(TState *t, const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
@@ -37,7 +38,7 @@ bits(int n)
 }
 
 static uintptr_t
-getBits(Translator *t, uintptr_t n)
+getBits(TState *t, uintptr_t n)
 {
 #define p t->rPtr
   int i, endBit, bits;
@@ -64,7 +65,7 @@ getBits(Translator *t, uintptr_t n)
 }
 
 static uintptr_t
-getNum(Translator *t, int *sgnRet)
+getNum(TState *t, int *sgnRet)
 {
 #define p t->rPtr
   Byte *start = p;
@@ -120,15 +121,15 @@ static const char *badReg = "bad register",
 #endif /* LITTLE_ENDIAN */
 
 static LabelValue
-labelMap(Translator *t, Label *l)
+labelMap(TState *t, Label *l)
 {
   return l->v;
 }
 
-Translator *
+TState *
 TRANSLATOR(Byte *rImg, Byte *rEnd)
 {
-  Translator *t = translatorNew(rImg, rEnd);
+  TState *t = translatorNew(rImg, rEnd);
   Word w;
   Byte op1, op2, op3;
   SByte r;
