@@ -1,6 +1,7 @@
 -- Lua utilities
 -- (c) Reuben Thomas 2000
 
+
 -- TODO: LuaDocify, LTN7-ify
 -- TODO: Add a set table type with elem, ==, + (union), - (set
 --   difference) and / (intersection) operations
@@ -8,10 +9,14 @@
 --   indices and values of a table
 -- TODO: Implement hslibs pretty-printing (sdoc) routines (have .. for
 --   <> and + for <+>)
--- TODO: Separate this file into one file per section
+-- TODO: Separate this file into one file per module
 -- TODO: When Lua 4.1 is released, kick this out of Mite SF and have a
 --   new SF project StdLua (require should use LUALIB env var as a
 --   path variable)
+-- TODO: change return value variables to names ending in _
+-- TODO: write a style guide (indenting, capitalisation, variable
+--   names, how to wrap standard routines)
+
 
 
 -- Assertions, warnings, errors and tracing
@@ -357,7 +362,7 @@ unzip = transpose
 --   l: list of records
 --   f: field to project
 -- returns
---   l: list of f fields
+--   l_: list of f fields
 function project(l, f)
   local p = {}
   for i = 1, getn(l) do
@@ -435,7 +440,7 @@ end
 -- chomp: Remove any final \n from a string
 --   s: string to process
 -- returns
---   s: processed string
+--   s_: processed string
 function chomp(s)
   return gsub(s, "\n$", "")
 end
@@ -443,7 +448,7 @@ end
 -- escapePattern: Escape a string to be used as a pattern
 --   s: string to process
 -- returns
---   s: processed string
+--   s_: processed string
 function escapePattern(s)
   s = gsub(s, "(%W)", "%%%1")
   return s
@@ -453,7 +458,7 @@ end
 -- spaces and \s)
 --   s: string to process
 -- returns
---   s: processed string
+--   s_: processed string
 function escapeShell(s)
   s = gsub(s, "([ %(%)])", "\\%1")
   return s
@@ -510,7 +515,7 @@ end
 --     means left-justify)
 --   [padder]: string to pad with (" " if omitted)
 -- returns
---   s: justified string
+--   s_: justified string
 function pad(s, width, padder)
   padder = strrep(padder or " ", abs(width))
   if width < 0 then
@@ -568,6 +573,32 @@ function readLines()
   return line
 end
 
+-- gsubs: perform multiple calls to gsub
+--   s: string to call gsub on
+--   sub: list of {pattern, replacement}
+--   [n]: upper limit on replacements
+-- returns
+--   s_: result string
+--   n_: number of replacements made
+function gsubs(s, sub, n)
+  local n_ = 0
+  for i, v in sub do
+    local r
+    if n then
+      s, r = gsub(s, i, v, n)
+      n_ = n_ + r
+      n = n - r
+      if n == 0 then
+        break
+      end
+    else
+      s, r = gsub(s, i, v)
+      n_ = n_ + r
+    end
+  end
+  return s, n_
+end
+
 -- rstrfind: strfind-like wrapper for match
 --   s: target string
 --   p: pattern
@@ -590,7 +621,7 @@ function rgmatch(s, p, r)
   return gmatch(s, regex(p), r)
 end
 
--- TODO: write a gsub-like wrapper for match
+-- TODO: rgsub: gsub-like wrapper for match
 -- really needs to be in C for speed
 -- function rgsub(s, p, r) ... end
 
