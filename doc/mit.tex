@@ -1,0 +1,288 @@
+%
+% mit, the Mite translator
+%
+% Reuben Thomas   20/5/00-3/4/01
+%
+
+% the line below makes lmk -pvc work
+%\input{mit.w}
+
+% Do a special h3sm GNU C version (inspired then by Hohensee building on
+% Ertl (et al?))
+
+\documentclass[english]{scrartcl}
+\usepackage[LY1]{fontenc}
+\usepackage{babel}
+\usepackage{lypslatex}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{url}
+
+
+% Macros for this document
+
+\newcommand{\absfont}{\sffamily}
+\newcommand{\abs}[1]{{\absfont #1}}
+
+
+
+\begin{document}
+
+\title{mit, the Mite translator}
+\author{Reuben Thomas\\\url{rrt@sc3d.org}\\\url{http://sc3d.org/rrt/}}
+\date{3rd April 2001}
+\maketitle
+
+
+
+\section{Introduction}
+
+mit, the \textbf{Mi}te \textbf{t}ranslator, is written in ISO~C, and can be
+used stand-alone or embedded in other programs.
+
+
+\subsection{License}
+
+mit is supplied as is, under BSD license:
+
+\begin{quote}
+Copyright \copyright 2001 Reuben Thomas
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the ``Software''), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+\end{quote}
+
+
+\subsection{System requirements}
+
+mit should work on any big or little-endian system with an ISO~C compiler
+and the standard libraries, provided:
+
+\begin{itemize}
+\item two's complement number representation is used
+\item the compiler performs arithmetic right shifts on signed types
+\item all pointers are the same size
+\end{itemize}
+
+\noindent I'd really like to know of any problems, whether because your system
+doesn't meet these criteria, or because of a bug in mit.
+
+
+
+\section{Interpreter}
+
+The interpreter is contained in \verb|interp.c|. Some functions are
+compiled twice, once with \verb|MITE_VERIFY| defined and once without. 
+The verified versions have some extra checks for validity of the
+object code added, which are not needed during interpretation, once
+the code has been checked; they have the prefix \verb|ver_| added to
+their names by the \verb|MITE_PREFIX| macro.
+
+The implementation-specific header is \verb|mite_i.h|. It contains the
+implementation-dependent parameters and types.
+
+
+
+\section{Utilities}
+
+Mite uses a few utility macros. \verb|min()| and \verb|max()| are the usual
+minimum and maximum operators; \verb|raise()| is a shorthand for raising an
+exception. \verb|seta()| sets array element \verb|a[i]| to \verb|e|$+$\verb|o|,
+incrementing \verb|i| and checking that it does not exceed the size \verb|n| of
+the array. \verb|alloc()| is a wrapper for \verb|malloc()| that raises an
+exception if it runs out of memory.
+
+
+
+\section{Parameters}
+
+\verb|mite_i.h| is included by \verb|mite.h| to define the implementation-specific
+parameters and types. mit represents the Mite word by \verb|intptr_t| and the
+unsigned word by \verb|uintptr_t|; there are $8$ general registers by default
+(though this can be changed by altering \verb|mite_g|'s definition), and the
+stack is descending.
+
+The endianness of the current machine is held in \verb|endianness|, which is
+simply a \verb|uint32_t| set to $1$. It is read via the macro \verb|LITTLE_ENDIAN|,
+which looks at the first byte, which will be $1$ on a little-endian machine,
+and $0$ on a big-endian machine.
+
+
+
+\section{Registers and stack}
+
+Some macros are used to access registers and the stack, which depend on \verb|R|
+being a register array. \verb|P_REG| is the register number of the \abs{P}
+register; \verb|P| gives the value of \abs{P} as a pointer to an instruction;
+\verb|Pp| gives the address of \verb|P| as a pointer to \verb|miteObject|, which can be
+passed to \verb|intg()| and \verb|num()| (section~\ref{numbers}) while reading virtual
+code. \verb|setP()| is used to assign to \verb|P| (because ANSI~C forbids casting
+l-values, and \verb|P| is actually a member of an array of \verb|miteWord|s, not a
+\verb|uint32_t *|).
+
+Similarly, \verb|S_REG| is the register number of \abs{S}, \verb|S| gives \abs{S}'s
+value as a \verb|miteWord *|, and \verb|setS()| is used to assign to \verb|S|. \verb|checkS()|
+is called by \verb|setS()| and elsewhere to check that \abs{S}'s value is valid
+every time it is updated; if not, \verb|mite_badS| is raised.
+
+The stack is stored in a \verb|malloc|ed block, which is auto-extended using the
+\verb|stack_extend()| macro, which is passed the \verb|mite_State| whose stack it
+should extend (including a trailing \verb|.| or \verb|->| to indicate the method of
+access to the members). This macro is also used to initialise the stack, by
+setting the state's \verb|S_base| to \verb|NULL|, which causes the call to \verb|realloc()|
+to allocate a new block of memory. \verb|extendS| is used during interpretation
+before each operation that pushes to the stack, to extend it when full.
+
+
+
+\section{Numbers} \label{numbers}
+
+These two functions read numbers from a \verb|miteObject *|, updating the
+pointer once the number has been read.
+
+\verb|intg()| reads an encoded integer, gathering words until the top bit is
+zero, and taking the sign from the first word. When verifying, it takes as
+its second parameter a pointer to the end of the object code and checks that
+it does not exceed this limit.
+
+\verb|num()| reads a number with possible use of $e$, $s$, $w$ and rotation.
+Because it calls \verb|intg()|, it too must have a verified version.
+
+
+
+\section{Types}
+
+\verb|miteProgram| holds all the data needed to interpret a program. \verb|code|
+points to the start of the object code in the original module, and \verb|cend|
+points to the end of the object code; \verb|data| points to the copied out data,
+and \verb|dlen| is its length; \verb|bl|, \verb|sl| and \verb|dl| point to arrays containing the
+addresses of the labels, and \verb|b|, \verb|s| and \verb|d| give the number of labels of
+each types.
+
+\verb|mite_State_i| holds the base of the stack (\verb|S_base|), and the amount of
+memory currently allocated for it (\verb|S_size|).
+
+
+
+\section{Translation}
+
+Before a program is interpreted, it is scanned to find all the labels, which
+are stored in arrays for faster access during interpretation, and the
+literal data is written into a separate memory block so that it can easily
+be read and written. At the same time, the program is verified to check that
+all the instructions and their operands are valid.
+
+\verb|mite_translate()| translates a program for interpretation, verifying that
+it is valid in the process.
+
+The number of labels of each type is now checked against the numbers
+given in the header; the checks made while setting the values of
+labels ensured that there can't be more labels than required, but
+there might be fewer.
+
+The current value of \verb|p| is stored as the value of the new label, according
+to its type, then the number of labels of the current type is checked to
+make sure it doesn't overflow.
+
+
+\subsection{Verifying and copying data}
+
+Next, the object code is scanned again. The data are copied out, and
+the types of label operands are checked.
+
+Finally, the program is returned.
+
+
+\subsection{Reading data}
+
+For a \abs{lit}, the number of operands, \verb|ops|, is read, and that
+number of literal numbers is copied into the data block.
+
+\abs{litl} can refer to the three types of label, whose addresses were
+calculated in the previous pass over the object code.
+
+\abs{space} requires the given number of words to be zero-filled.
+
+
+
+\section{Execution}
+
+\subsection{Operands}
+
+Macros are provided to read operands of each type. The special type
+\verb|_| is for unused operand places.
+
+Given an instruction's opcode and operand types, \verb|OP()| declares the
+case label and reads the instruction's operands. The \verb|break| is placed
+before to terminate the previous case, as the code for the instruction
+immediately follows. So that the first use of \verb|OP()| in the switch does
+not cause a compiler warning, the \verb|default| case is placed just before
+the first call of \verb|OP()|.
+
+
+\subsection{Interpretation loop}
+
+\verb|mite_run()| repeatedly loads, decodes and executes instructions in
+an endless loop. The function is exited by a \abs{ret} instruction when the
+stack is empty, or via \verb|raise()| if an error occurs.
+
+Instructions are dispatched by a switch on the opcode.
+
+
+\section{Instruction actions} \label{actions}
+
+The default instruction actions are below. The \verb|OP| macro need
+not do any checking of the arguments, as the code being interpreted is
+known to be correct. Only run-time errors need be checked. Note that
+there is no case for \abs{lab}, which therefore raises
+\abs{badInstruction} if it is ever executed. The preprocessing step
+sets the address of branch and subroutine labels to the instruction
+after the \abs{lab} instruction, so no \abs{lab} instruction should
+ever actually be executed.
+
+
+
+\section{Standalone interpreter}
+
+The \verb|main()| function allocates the stack, prepares the program, and then
+starts it by calling \verb|mit_run()|, whose return value is used as mit's
+exit code.
+
+
+
+\section{Embedding mit}
+
+mit can be embedded in a C program by compiling \verb|interp_main.c| into the
+program. Since the interpreter has no global state, it can be compiled as a
+shared library, and is thread-safe.
+
+
+
+\section{Acknowledgements}
+
+mit draws on implementation techniques developed for my earlier Beetle
+virtual processor~\cite{beetledis}. Martin Richards introduced me to virtual
+machine interpreter implementation techniques via his Cintcode
+system~\cite{cintweb}.
+
+
+
+\bibliographystyle{plain}
+\bibliography{rrt,vm}
+
+\end{document}

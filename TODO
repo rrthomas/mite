@@ -1,12 +1,14 @@
+Restructure source tree and write doc and top-level makefiles.
+
 Extend mkinsts.lua to handle readers and writers, which should be
 written in a yacc-like style. Specify interfaces for readers and
 writers, so that more can more easily be written.
 
 Make a file bundle release (just a tar of the contents of CVS).
 
-Clean up: check out & build Mite on a clean system, and expand out
-custom stuff (latex packages, hevea packages). Run nuweb on mit.w and
-check in the results, and remove mit.w.
+Expand out bibliographic database.
+
+Check out & build Mite on a clean system.
 
 Reduce the number of warnings given by gcc.
 
