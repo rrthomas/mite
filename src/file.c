@@ -53,7 +53,7 @@ readFile (const char *file, Byte **data)
     if (fread (*data, sizeof (Byte), len, fp) != (size_t)len)
       die (ExcFread, file);
   }
-  (*data)[len] = '\0';
+  (*data)[len] = '\0';          /* Add a sentinel byte */
   fclose (fp);
   return len;
 }
