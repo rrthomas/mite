@@ -82,6 +82,16 @@ function mkBlock (title, code, indent)
                  indent, title, indent, code, indent, title)
 end
 
+function getOpInfo (reader, opType)
+  local opRepeat
+  if strsub (opType, -1, -1) == "+" then
+    opType = strsub (opType, 1, -2)
+    opRepeat = 1
+  end
+  local opTypeInfo = reader.opType[opType]
+  return opType, opTypeInfo, opRepeat
+end
+
 
 -- Main code construction function
 
@@ -156,15 +166,14 @@ function mkTrans (arg)
     finalPtr += d->off - prev;
 ]] ..
   "    /* " .. writes .. "W_UInt must set extras */\n" ..
-  "    " .. writes .. "W_UInt (&finalPtr, " .. reads ..
-  "R_labelAddr (R, d->l).n);\n" ..
+  "    " .. writes .. "W_UInt(&finalPtr, " .. reads ..
+  "R_labelAddr(R, d->l).n);\n" ..
 [[    prev = d->off + extras;
   }
-  memcpy (finalPtr, W->img + prev,
-         W->ptr - W->img - prev);
+  memcpy(finalPtr, W->img + prev, W->ptr - W->img - prev);
   finalPtr += W->ptr - W->img - prev;
-  free (W->img);
-  W->img = realloc (finalImg, finalPtr - finalImg);
+  free(W->img);
+  W->img = realloc(finalImg, finalPtr - finalImg);
   W->ptr = W->img + (finalPtr - finalImg);
 }
 
@@ -181,9 +190,9 @@ function mkTrans (arg)
 [[{
   TState *T = translatorNew ();
 ]] ..
-  "  " .. rstate .. " *R = " .. reads .. "R_readerNew (inp);\n" ..
-  "  " .. wstate .. " *W = " .. writes .. "W_writerNew ();\n" ..
-  "  " .. outputType .. " *out = new (" .. outputType .. ");\n" ..
+  "  " .. rstate .. " *R = " .. reads .. "R_readerNew(inp);\n" ..
+  "  " .. wstate .. " *W = " .. writes .. "W_writerNew();\n" ..
+  "  " .. outputType .. " *out = new(" .. outputType .. ");\n" ..
 [[  LabelType ty;
   Opcode o;
 ]] ..
@@ -203,19 +212,16 @@ function mkTrans (arg)
     local inst = inst[i]
 
     for j = 1, getn (inst.ops) do
-      local opType = inst.ops[j]
-      local opRepeat
-      if strsub (opType, -1, -1) == "+" then
-        opType = strsub (opType, 1, -2)
-        opRepeat = 1
-      end
-      local opTypeInfo = r.opType[opType]
-
+      local opType, opTypeInfo = getOpInfo (r, inst.ops[j])
       local decls = opTypeInfo.decls (inst, j)
       if decls ~= "" then
         out = out .. "        " .. decls .. "\n"
       end
+    end
 
+    for j = 1, getn (inst.ops) do
+      local opType, opTypeInfo, opRepeat = getOpInfo (r, inst.ops[j])
+      -- TODO: deal with opRepeat
       local code = opTypeInfo.code (inst, j)
       if code ~= "" then
         out = out .. "        " .. code .. "\n"
