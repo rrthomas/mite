@@ -12,6 +12,7 @@ instWidth = 36
 -- Constructors
 Reader = constructor{
   "reads",   -- what the reader reads
+  "input",   -- input type
   "prelude", -- literal source code
   "opType",  -- operand type reader table
   "trans",   -- reader-specific parts of translator function  
@@ -42,6 +43,7 @@ OpType =
 
 Writer = constructor{
   "writes",  -- what the writer writes
+  "output",  -- output type
   "prelude", -- literal source code
   "macros",  -- writer macros
   "inst",    -- instruction table
@@ -74,6 +76,8 @@ function mkTrans(arg)
   local transFunc = transFunc(reads, writes)
   local resolveFunc = "resolveDangles" .. strcaps(transFunc)
   local rstate, wstate = reads .. "R_State", writes .. "W_State"
+  local inputType = reads .. "R_Input"
+  local outputType = writes .. "W_Output"
 
   -- Check the reader implements the correct opTypes
   affirm(setequal(Set(project("name", opType)),
@@ -106,7 +110,7 @@ function mkTrans(arg)
   for (d = T->dangles->next; d; d = d->next) {
     memcpy(finalPtr, W->img + prev, d->off - prev);
     finalPtr += d->off - prev;
-    /* writeUInt must set extras */
+    /* fooW_UInt must set extras */
 ]] ..
   "    " .. writes .. "W_UInt(&finalPtr, " .. reads ..
     "R_labelAddr(R, d->l).n);\n" ..
@@ -127,13 +131,14 @@ function mkTrans(arg)
     w.macros .. "\n\n"
 
   -- Head of the translator function
-  out = out .. "void *\n" ..
-    transFunc .. "(void *img, uintptr_t size)\n" ..
+  out = out .. outputType .. " *\n" ..
+    transFunc .. "(" .. inputType .. " *inp)\n" ..
 [[{
   TState *T = translatorNew();
 ]] ..
-  "  " .. rstate .. " *R = " .. reads .. "R_readerNew(img, size);\n" ..
+  "  " .. rstate .. " *R = " .. reads .. "R_readerNew(inp);\n" ..
   "  " .. wstate .. " *W = " .. writes .. "W_writerNew();\n" ..
+  "  " .. outputType .. "*out = new(" .. outputType .. ");\n" ..
 [[  LabelType ty;
   Opcode o;
   /* reader declarations */
@@ -194,10 +199,8 @@ function mkTrans(arg)
 ]] ..
 "  " .. r.trans.finish .. "\n" ..
 "  /* writer finish */\n" ..
-"  ".. w.trans.finish .. "\n" ..
-[[  T->img = W->img;
-  T->size = W->ptr - W->img;
-  return T;
+"  " .. w.trans.finish .. "\n" ..
+[[  return out;
 }]]
 
   return out
@@ -220,7 +223,7 @@ end
 -- Write the header file
 writeto(transFile .. ".h") -- open the output file
 writeLine("/* Mite translator",
-          " * (c) Reuben Thomas 2002",
+          " * (c) Reuben Thomas",
           " */",
           "",
           "",
@@ -228,12 +231,18 @@ writeLine("/* Mite translator",
           "#define MITE_TRANSLATORS",
           "",
           "",
-          "#include <stdint.h>",
+          "#include \"translate.h\"",
           "")
+for i, _ in readers do
+  writeLine(readers[i].input)
+end
+for i, _ in writers do
+  writeLine(writers[i].output)
+end
 for i = 1, getn(translators) do
-  writeLine("void *",
+  writeLine(translators[i][2] .. "W_Output *",
             transFunc(unpack(translators[i])) ..
-              "(void *img, uintptr_t size);\n")
+              "(" .. translators[i][1] .. "R_Input *inp);\n")
 end
 writeLine("#endif")
 
@@ -241,7 +250,7 @@ writeLine("#endif")
 
 writeto(transFile .. ".c") -- open the output file
 writeLine("/* Mite translator",
-          " * (c) Reuben Thomas 2002",
+          " * (c) Reuben Thomas",
           " *",
           " * Built with the following translators:",
           " *")

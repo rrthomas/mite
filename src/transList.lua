@@ -5,4 +5,5 @@ return {
   {"asm", "obj"},
   {"obj", "asm"},
   {"obj", "interp"},
+--  {"obj", "interpRun"},
 }

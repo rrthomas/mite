@@ -12,10 +12,16 @@ return Writer{
 -- word; non-top-bit set indicates that flags or multiple words are
 -- used; could also write out modified code which expands constants
 -- and addresses inline.
+  [[/* Writer output */
+typedef struct {
+  Byte *img;
+  uintptr_t size, labels[LABEL_TYPES];
+  Byte *labAddr[LABEL_TYPES]; /* label address arrays */
+} interpW_Output;
+]],
   [[
 #include <stdint.h>
 
-#include "translate.h"
 
 /* Writer state */
 typedef struct {
@@ -100,8 +106,12 @@ interpW_writerNew(void)
     W->labAddr[ty] = bufNew(W->labSize[ty], INIT_LABS * PTR_BYTE);]],
                                                     -- init
              "ensure(PTR_BYTE);",                   -- update
-             [[for (ty = 0; ty < LABEL_TYPES; ty++)
-    bufShrink(W->labAddr[ty], W->labSize[ty]);]]
-                                                    -- finish
+             [[for (ty = 0; ty < LABEL_TYPES; ty++) {
+    bufShrink(W->labAddr[ty], T->labels[t1] * PTR_BYTE);
+    out->labels[ty] = T->labels[ty];
+    out->labAddr[ty] = W->labAddr[ty];
+  }
+  out->img = W->img;
+  out->size = W->ptr - W->img;]]          -- finish
   }
 }

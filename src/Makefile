@@ -75,7 +75,7 @@ excEnum.h excMsg.h: except.lua mkExcept.lua
 
 
 # Translators; this rule should be automated and removed
-translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua interpWrite.lua mkTrans.lua
+translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua interpWrite.lua interpRun.lua mkTrans.lua
 	$(RUNLUA) mkTrans.lua transList.lua $*
 
 

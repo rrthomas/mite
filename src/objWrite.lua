@@ -3,11 +3,15 @@
 
 return Writer{
   "Mite object",
+  [[/* Writer output */
+typedef struct {
+  Byte *img;
+  uintptr_t size;
+} objW_Output;
+]],
   [[
 #include <stdint.h>
 #include <limits.h>
-
-#include "translate.h"
 
 
 /* Writer state */
@@ -108,6 +112,7 @@ objW_writerNew(void)
   Translator{"",                     -- decls
              "",                     -- init
              "ensure(INST_MAXLEN);", -- update
-             "",                     -- finish
+             [[out->img = W->img;
+  out->size = W->ptr - W->img;]],    -- finish
   }
 }

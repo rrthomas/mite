@@ -47,7 +47,6 @@ main(int argc, char *argv[])
   Byte *img;
   const char *rSuff, *wSuff, *outFile = argc == 3 ? argv[2] : "-";
   uintptr_t size;
-  TState *T;
   FileType r, w;
   progName = argv[0];
   excInit();
@@ -68,15 +67,24 @@ main(int argc, char *argv[])
     w = Asm;
   excLine = 1;
   if (r == Obj) {
-    if (w == Asm)
-      T = objToAsm(img, size);
-    else if (w == Interp)
-      T = objToInterp(img, size);
-  } else if (r == Asm && w == Obj)
-    T = asmToObj(img, size);
-  else
+    objR_Input *inp = new(objR_Input);
+    inp->img = img;
+    inp->size = size;
+    if (w == Asm) {
+      asmW_Output *out = objToAsm(inp);
+      writeFile(outFile, (Byte *)out->img, out->size);
+    } else if (w == Interp) {
+      interpW_Output *out = objToInterp(inp);
+    }
+  } else if (r == Asm && w == Obj) {
+    asmR_Input *inp = new(asmR_Input);
+    objW_Output *out;
+    inp->img = (char *)img;
+    inp->size = size;
+    out = asmToObj(inp);
+    writeFile(outFile, out->img, out->size);
+  } else
     die("no translator from `%s' to `%s'", rSuff, wSuff);
-  writeFile(outFile, T->img, T->size);
   free(img);
   return EXIT_SUCCESS;
 }

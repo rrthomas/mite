@@ -8,29 +8,40 @@ return Writer{
 
    Registers (R array, S, P)
    Code image (two pointers)
-   Label arrays (data image is implicit in data labels)
+   Label arrays
+   Data image (purely to be able to free it)
    Stack (two pointers for now, eventually a linked list)
-   */
-
-#include "translate.h"
+*/
 
 
-#define checkDiv(d)    if (d == 0) return ExcDivByZero;
-#define checkShift(s)  if (s > PTR_BIT) return ExcBadShift;
+#define checkDiv(d) \
+  if (d == 0) \
+    return ExcDivByZero;
 
-#define setP(x) P = (x); checkP
+#define checkShift(s) \
+  if (s > PTR_BIT) \
+    return ExcBadShift;
+
+#define setP(x) \
+  P = (x); checkP
+
 #define checkP \
   if (P > (Word *)imgEnd || P < (Word *)img) \
     return ExcBadP;
 
-#define setS(x) S = (x); checkS
+#define setS(x) \
+  S = (x); checkS
+
 #define checkS \
   if (S > stkEnd || P < stk) \
     return ExcBadS;
 
 /* Need a linked list of stack frames */
-#define stackExtend(s) return ExcBadS
-#define extendS if (S == stk) stackExtend
+#define stackExtend(s) \
+  return ExcBadS
+#define extendS \
+  if (S == stk) \
+    stackExtend
 
 #define REGS 8
 

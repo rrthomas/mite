@@ -23,13 +23,18 @@ end
 return Reader{
   "Mite assembly",
   [[
+/* Reader input */
+typedef struct {
+  char *img;
+  uintptr_t size;
+} asmR_Input;
+]],
+  [[
 #include <stdint.h>
 #include <limits.h>
 #include <ctype.h>
 #include <errno.h>
 #include <string.h>
-
-#include "translate.h"
 
 
 /* Reader state */
@@ -197,11 +202,11 @@ asmR_labelAddr(asmR_State *R, Label *l)
 }
 
 static asmR_State *
-asmR_readerNew(char *img, uintptr_t size)
+asmR_readerNew(asmR_Input *inp)
 {
   asmR_State *R = new(asmR_State);
-  R->ptr = R->img = img;
-  R->end = img + size;
+  R->ptr = R->img = inp->img;
+  R->end = inp->img + inp->size;
   return R;
 }
 ]],

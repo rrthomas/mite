@@ -4,14 +4,17 @@
 
 return Reader{
   "Mite object code",
+  [[/* Reader input */
+typedef struct {
+  Byte *img;
+  uintptr_t size;
+} objR_Input;
+]],
   [[
-/* TODO: Need a post-pass to verify everything else (what is there?) */
-
-     
 #include <stdint.h>
 #include <limits.h>
 
-#include "translate.h"
+/* TODO: Need a post-pass to verify everything else (what is there?) */
 
 
 /* Reader state */
@@ -98,11 +101,11 @@ objR_getNum(objR_State *R, int *sgnRet)
   l->v
 
 static objR_State *
-objR_readerNew(Byte *img, uintptr_t size)
+objR_readerNew(objR_Input *inp)
 {
   objR_State *R = new(objR_State);
-  R->ptr = R->img = img;
-  R->end = img + size;
+  R->ptr = R->img = inp->img;
+  R->end = inp->img + inp->size;
   return R;
 }
 ]],

@@ -3,14 +3,18 @@
 
 return Writer{
   "Mite object",
+  [[/* Writer output */
+typedef struct {
+  char *img;
+  uintptr_t size;
+} asmW_Output;
+]],
   [[
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
 #include <limits.h>
-
-#include "translate.h"
 
 
 /* Writer state */
@@ -45,7 +49,7 @@ asmW_writeNum(unsigned char *s, Word n)
 static void
 asmW_num(asmW_State *W, Word n)
 {
-  W->ptr += asmW_writeNum(W->ptr, n);
+  W->ptr += asmW_writeNum((unsigned char *)W->ptr, n);
 }
 
 static void
@@ -179,6 +183,7 @@ asmW_writerNew(void)
   Translator{"",                     -- decls
              "",                     -- init
              "ensure(INST_MAXLEN);", -- update
-             "",                     -- finish
+             [[out->img = W->img;
+  out->size = W->ptr - W->img;]]     -- finish
   }
 }
