@@ -1,7 +1,17 @@
 -- Lua utilities
 -- (c) Reuben Thomas 2000
 
--- TODO: LuaDocify
+-- TODO: LuaDocify, LTN7-ify
+-- TODO: Add a set table type with elem, ==, + (union), - (set
+--   difference) and / (intersection) operations
+-- TODO: Add indices() and values(), which return a list of the
+--   indices and values of a table
+-- TODO: Implement hslibs pretty-printing (sdoc) routines (have .. for
+--   <> and + for <+>)
+-- TODO: Separate this file into one file per section
+-- TODO: When Lua 4.1 is released, kick this out of Mite SF and have a
+--   new SF project StdLua (require should use LUALIB env var as a
+--   path variable)
 
 
 -- Assertions, warnings, errors and tracing
@@ -512,17 +522,18 @@ end
 -- wrap: Wrap a string into a paragraph
 --   s: string to wrap
 --   w: width to wrap to [78]
---   i1: indent of first line [0]
---   i2: indent of subsequent lines [0]
+--   ind: indent [0]
+--   ind1: indent of first line [ind]
 -- returns
 --   s: wrapped paragraph
-function wrap(s, w, i1, i2)
+-- TODO: make this function cope with newlines
+function wrap(s, w, ind, ind1)
   w = w or 78
-  i1 = i1 or 0
-  i2 = i2 or 0
-  affirm(i1 < w and i2 < w,
+  ind = ind or 0
+  ind1 = ind1 or ind
+  affirm(ind1 < w and ind < w,
          "wrap: the indents must be less than the line width")
-  s = strrep(" ", i1) .. s
+  s = strrep(" ", ind1) .. s
   local lstart, len = 1, strlen(s)
   while len - lstart > w do
     local i = lstart + w
@@ -533,9 +544,9 @@ function wrap(s, w, i1, i2)
     while j > lstart and strsub(s, j, j) == " " do
       j = j - 1
     end
-    s = strsub(s, 1, j) .. "\n" .. strrep(" ", i2) ..
+    s = strsub(s, 1, j) .. "\n" .. strrep(" ", ind) ..
       strsub(s, i + 1, -1)
-    local change = i2 + 1 - (i - j)
+    local change = ind + 1 - (i - j)
     lstart = j + change
     len = len + change
   end
@@ -617,4 +628,38 @@ function print(...)
     arg[i] = tostring(arg[i])
   end
   call(%print, arg)
+end
+
+-- traceCall: trace function calls
+-- Use: setcallhook(traceCall), as below
+-- based on lua/test/trace-calls.lua
+function traceCall(func)
+  local t = getinfo(2)
+  local name = t.name or "?"
+  local s = ">>> "
+  if t.what == "main" then
+    if func == "call" then
+      s = s .. "begin " .. t.source
+    else
+      s = s .. "end " .. t.source
+    end
+  else
+    s = s .. func .. " " .. name
+    if t.what == "Lua" then
+      s = s .. " <" .. t.linedefined .. ":" .. t.source .. ">"
+    else
+      s = s .. " [" .. t.what .. "]"
+    end
+  end
+  if t.currentline >= 0 then
+    s = ":" .. t.currentline
+  end
+  writeLine(_STDERR, s)
+end
+
+-- Set hooks according to _DEBUG
+if _DEBUG and type(_DEBUG) == "table" then
+  if _DEBUG.call then
+    setcallhook(traceCall)
+  end
 end
