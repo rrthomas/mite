@@ -6,7 +6,7 @@
 #include "translate.h"
 
 #define TRANSLATOR asmToObj
-TranslatorFunction TRANSLATOR;
+Translator TRANSLATOR;
 
 #include "objWrite.c"
 #include "asmRead.c"

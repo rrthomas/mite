@@ -8,7 +8,7 @@
 #include "translate.h"
 
 #define TRANSLATOR objToObj
-TranslatorFunction TRANSLATOR;
+Translator TRANSLATOR;
 
 #include "objWrite.c"
 #include "objRead.c"

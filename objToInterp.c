@@ -6,7 +6,7 @@
 #include "Translate.h"
 
 #define TRANSLATOR objToInterp
-TranslatorFunction TRANSLATOR;
+Translator TRANSLATOR;
 
 #include "InterpWrite.c"
 #include "ObjRead.c"
