@@ -18,11 +18,6 @@
    (upper bound on max. no. of decimal digits) */
 #define WORD_MAXLEN (sizeof(Word) * CHAR_BIT / 3)
 
-/* Instructions indexed by opcode */
-static const char *inst[] = {
-#include "opToName.h"
-};
-
 static void
 putChar(TState *t, char c)
 {
@@ -53,7 +48,6 @@ writeNum(Byte *s, uintptr_t n)
 static void
 putNum(TState *t, uintptr_t n)
 {
-  bufEnsure(WORD_MAXLEN);
   t->wPtr += writeNum(t->wPtr, n);
 }
 
@@ -67,15 +61,7 @@ putLabTy(TState *t, unsigned int ty)
   }
 }
 
-static void
-putLab(TState *t, Label *l)
-{
-  putChar(t, ' ');
-  putLabTy(t, l->ty);
-  putNum(t, labelMap(t, l).n);
-}
-
-#define S(s) putStr(t, s, sizeof(s) / sizeof(char))
+#define S(s) putStr(t, s, sizeof(s) / sizeof(char) - 1)
 
 static void
 putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
@@ -85,22 +71,23 @@ putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
   if (f & FLAG_W) putChar(t, 'w');
   if (n) putChar(t, '-');
   putNum(t, v);
-  if (f & FLAG_R) {
+  if (r) {
     S(">>");
     putNum(t, r);
   }
 }
 
-#define R(r) putNum(t, r)
-#define NL bufEnsure(sizeof(char)); *(t->wPtr)++ = '\n'
-#define LabTy(L) putLabTy(t, L)
-#define Lab(ty, l) addDangle(t, ty, l)
-#define Imm(f, n, v, r) putImm(t, f, n, v, r)
+#define NL *(t->wPtr)++ = '\n'
+#define SP *(t->wPtr)++ = ' '
+#define R(r) SP; putNum(t, r)
+#define LabTy(L) SP; putLabTy(t, L)
+#define Lab(ty, l) SP; putLabTy(t, ty); addDangle(t, ty, l)
+#define Imm(f, n, v, r) SP; putImm(t, f, n, v, r)
 
 #define putInt(t, sgn, n) t->wPtr += writeInt(t->wPtr, sgn, n)
 #define putUInt(t, n) putInt(t, 0, n)
 
-#define wrLab(L1, l2)          S("lab"); LabTy(L1); NL
+#define wrLab(L1, l2)          S("lab"); LabTy(L1); Lab(L1, l2); NL
 #define wrMov(r1, r2)          S("mov"); R(r1); R(r2); NL
 #define wrMovi(r1, f, n, v, r) S("movi"); R(r1); Imm(f, n, v, r); NL
 #define wrLdl(r1, l2)          S("ldl"); R(r1); Lab(LABEL_D, l2); NL
