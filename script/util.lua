@@ -19,6 +19,21 @@ function affirm(n, s)
   if not n then die(s) end
 end
 
+-- Guarded versions of library functions
+function writeToOrDie(f)
+  local h, err
+  if f then h, err = writeto(f)
+  else      h, err = writeto()
+  end
+  affirm(h, "can't write to " .. (f or "stdout") .. ": " ..
+         (err or ""))
+  return h
+end
+
+function doFileOrDie(f)
+  affirm(dofile(f), "error while executing " .. f)
+end
+
 -- Make an index for a list on the given field
 function makeIndex(f, l)
   local ind = {}

@@ -9,7 +9,7 @@
 
 miteDir = arg[1] -- $(MITE)
 dofile(miteDir .. "/script/util.lua") -- utility routines
-dofile(miteDir .. "/spec/insts.lua") -- instruction set spec
+doFileOrDie(miteDir .. "/spec/insts.lua") -- instruction set spec
 
 -- Make a name->instruction index
 nameToInst = makeIndex("name", inst)
@@ -43,18 +43,18 @@ function writeTable(...)
 end
 
 -- instLab.tex: the label instruction
-writeto("instLab.tex")
+writeToOrDie("instLab.tex")
 writeTable("lab")
 
 -- instComp.tex: the computational instructions
-writeto("instComp.tex")
+writeToOrDie("instComp.tex")
 writeTable("mov", "movi", "ldl", "ld", "st", "gets", "sets", "pop",
            "push", "add", "sub", "mul", "div", "rem", "and", "or",
            "xor", "sl", "srl", "sra", "teq", "tlt", "tltu", "b", "br",
            "bf", "bt", "call", "callr", "ret", "calln")
 
 -- instData.tex: the data instructions
-writeto("instData.tex")
+writeToOrDie("instData.tex")
 writeTable("lit", "litl", "space")
 
 -- instOp.tex: the opcode table (3 columns)
@@ -63,7 +63,7 @@ function opEntry(n)
   return inst[n].name .. " & " .. format("%0.2x", n) .. "h"
 end
 
-writeto("instOpcode.tex")
+writeToOrDie("instOpcode.tex")
 rows = ceil(getn(inst) / 3)
 for i = 1, rows do
   write(opEntry(i) .. " & " .. opEntry(i + rows) .. " & " ..
