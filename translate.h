@@ -87,13 +87,14 @@ typedef struct _Dangle {
 } Dangle;
 
 /* Immediate number flag bits */
-#define FLAG_E 4
-#define FLAG_S 2
-#define FLAG_W 1
+#define FLAG_E 8
+#define FLAG_S 4
+#define FLAG_W 2
+#define FLAG_R 1
 
 /* Immediate numbers */
 typedef struct {
-  unsigned long v; /* value */
+  uintptr_t v; /* value */
   int r; /* rotation */
   Byte f; /* flags */
   SByte sgn; /* sign */
