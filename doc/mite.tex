@@ -1,14 +1,14 @@
-%
-% The Mite virtual machine
-%
-% (c) Reuben Thomas 2000
-%
+%%%
+%%% The Mite virtual machine
+%%%
+%%% (c) Reuben Thomas 2000
+%%%
 
-% Work out what the possible error conditions are in verified code & list them.
+%%% Work out what the possible error conditions are in verified code & list them.
 
 
 \documentclass[english]{scrartcl}
-% Put usepackages one per line for HEVEA
+%%% Put usepackages one per line for HEVEA
 \usepackage[LY1]{fontenc}
 \usepackage{babel}
 \usepackage{lypslatex}
@@ -17,16 +17,16 @@
 \usepackage{booktabs}
 \usepackage{url}
 
-% Settings for this document
+%%% Settings for this document
 \urlstyle{rm}
 
-% Macros for this document
+%%% Macros for this document
 \newcommand{\cont}{\noindent}
 \newcommand{\synfont}{\sffamily}
 \newcommand{\syn}[1]{{\synfont #1}}
 \newcommand{\norm}[1]{\textrm{#1}}
 
-% Centred tables
+%%% Centred tables
 \newenvironment{ctabular}[1]%
     {\begin{center}\begin{tabular}{#1}}%
     {\end{tabular}\end{center}}
@@ -36,7 +36,7 @@
     \begin{table}[#1]\begin{center}\begin{tabular}{#3}}%
     {\end{tabular}\caption{\ctablecaption}\end{center}\end{table}}
 
-% Instruction tables
+%%% Instruction tables
 \newenvironment{insttab}[1]
     {\begin{ctable}{#1}{>{\synfont}p{13ex}p{44ex}}\toprule}
     {\bottomrule\end{ctable}}
@@ -258,7 +258,7 @@ Long numbers are encoded as follows:
 
 \section{Acknowledgements}
 
-Martin Richards introduced me to Cintcode~\cite{cintcode}, which
+Martin Richards introduced me to Cintcode~\cite{cintweb}, which
 kindled my interest in virtual machines, and led to
 Beetle~\cite{beetledis} and an earlier version of Mite~\cite{mite}, of
 which the current Mite is a sort of synthesis.
@@ -268,6 +268,7 @@ has been a fount of criticism for all my work on virtual machines.
 
 
 \bibliographystyle{plain}
-\bibliography{rrt,vm}
+\bibliography{mite}
+
 
 \end{document}
