@@ -2,6 +2,9 @@
 # (c) Reuben Thomas 1999
 
 
+MITE_TOP = ..
+
+
 # Programs and options
 
 HEVEA_FLAGS = -I texmf
@@ -13,8 +16,8 @@ HEVEA_FLAGS = -I texmf
 
 .tex.dvi:
 	latex $<
-	bibtex $*
-	latex $<
+#	bibtex $*
+#	latex $<
 	latex $<
 
 .dvi.ps:
@@ -29,7 +32,7 @@ HEVEA_FLAGS = -I texmf
 
 # Source files
 
-DOCS = README TODO MANIFESTO mite.pdf iface.pdf
+DOCS = mite.pdf iface.pdf mit.pdf
 TEX_TABLES = instLab.tex instComp.tex instData.tex instOpcode.tex
 
 
@@ -37,11 +40,17 @@ TEX_TABLES = instLab.tex instComp.tex instData.tex instOpcode.tex
 
 all: $(DOCS)
 
+clean:
+	rm -f *.log *.aux *.blg *.bbl
+
+dist-clean:
+	rm -f *.dvi *.html *.ps *.pdf $(TEX_TABLES)
+
 
 # File dependencies
 
-$(TEX_TABLES): $(MITE)/spec/insts.lua mkinsts.lua
-	lua mkinsts.lua $(MITE)/spec/insts.lua
+$(TEX_TABLES): $(MITE_TOP)/spec/insts.lua mkinsts.lua
+	lua -f mkinsts.lua $(MITE_TOP)
 	touch mite.tex
 
 mite.tex: $(TEX_TABLES)

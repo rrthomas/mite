@@ -4,6 +4,7 @@
 
 MITE = .
 
+
 all: mit doc
 
 mit:
@@ -12,10 +13,15 @@ mit:
 doc:
 	cd doc; $(MAKE) all
 
-dist: all clean
+dist: all dist-clean
 	cd ..
 	rm -f mite.zip
 	zip -qr mite.zip mite
 
 clean:
-	rm -f $(OBJS) *.log *.aux *.blg *.bbl
+	cd src; $(MAKE) $@
+	cd doc; $(MAKE) $@
+
+dist-clean:
+	cd src; $(MAKE) $@
+	cd doc; $(MAKE) $@

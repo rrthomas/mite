@@ -2,6 +2,9 @@
 # (c) Reuben Thomas 1999
 
 
+MITE_TOP = ..
+
+
 # Programs and options
 
 CC = gcc
@@ -18,7 +21,8 @@ TRANS_SRC = asmToObj.c objToAsm.c
 TRANS_OBJ = asmToObj.o objToAsm.o
 SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c $(TRANS_SRC)
 OBJS = mit.o translate.o except.o list.o hash.o flen.o insts.o $(TRANS_OBJ)
-
+GEN_SRCS = opEnum.h opToInst.h opToName.h insts.gperf insts.c endian.h
+PROGS = mit endian
 
 # Top-level targets
 
@@ -26,6 +30,11 @@ all: mit
 
 depend: .depend $(SRCS)
 
+clean:
+	rm -f $(OBJS)
+
+dist-clean:
+	rm -f $(PROGS) $(GEN_SRCS)
 
 # File dependencies
 
@@ -46,8 +55,9 @@ endian.h: endian.c
 	$(CC) -o endian endian.c
 	./endian > $@
 
-insts.gperf translate.h: $(MITE)/spec/insts.lua mkinsts.lua
-	lua mkinsts.lua $(MITE)/spec/insts.lua
+insts.gperf translate.h: $(MITE_TOP)/spec/insts.lua mkinsts.lua
+	lua -f mkinsts.lua $(MITE_TOP)
+	touch translate.h
 
 
 # Include dependencies
