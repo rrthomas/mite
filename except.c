@@ -22,13 +22,13 @@
   }
 
 static List *_excBufs;
-unsigned long excLine= 0;
-char *excFile= NULL;
+unsigned long excLine = 0;
+char *excFile = NULL;
 
 void
 excInit(void)
 {
-  _excBufs= listNew();
+  _excBufs = listNew();
 }
 
 void
@@ -64,7 +64,7 @@ unVify(vThrow, throw)
 jmp_buf *
 _excEnv(void)
 {
-  jmp_buf *env= excMalloc(sizeof(jmp_buf));
+  jmp_buf *env = excMalloc(sizeof(jmp_buf));
   listPrefix(_excBufs, env);
   return env;
 }
@@ -79,7 +79,7 @@ _endTry(void)
 void *
 excMalloc(size_t size)
 {
-  void *p= malloc(size);
+  void *p = malloc(size);
   if (!p && size) throw("could not allocate memory");
   return p;
 }
@@ -87,7 +87,7 @@ excMalloc(size_t size)
 void *
 excCalloc(size_t nobj, size_t size)
 {
-  void *p= calloc(nobj, size);
+  void *p = calloc(nobj, size);
   if (!p && nobj && size) throw("could not allocate memory");
   return p;
 }
@@ -95,7 +95,7 @@ excCalloc(size_t nobj, size_t size)
 void *
 excRealloc(void *p, size_t size)
 {
-  if (!(p= realloc(p, size)) && size)
+  if (!(p = realloc(p, size)) && size)
     throw("could not reallocate memory");
   return p;
 }

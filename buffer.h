@@ -11,9 +11,10 @@
 
 #define bufNew(size, init) excMalloc(((size)= (init)))
 #define bufExt(buf, size, need) \
-    if ((size) < (need)) \
-        (buf)= excRealloc((buf), (size)= max((size) * 2, (need)))
+  if ((size) < (need)) \
+    (buf)= excRealloc((buf), (size)= max((size) * 2, (need)))
 #define bufShrink(buf, used) excRealloc((buf), (used))
-#define bufEnsure(n) bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + (n))
+#define bufEnsure(n) \
+  bufExt(t->wImg, t->wSize, (uintptr_t)(t->wPtr - t->wImg + (n)))
 
 #endif
