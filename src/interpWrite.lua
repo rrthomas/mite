@@ -90,50 +90,50 @@ interpW_writerNew (void)
   W->ptr += WORD_BYTE;
 ]],
   inst = {
-    Inst{"lab",   "bufExt (W->labAddr[t1], W->labSize[t1], " .. 
-                  "T->labels[t1] * WORD_BYTE); " ..
-                  "W->labAddr[t1][T->labels[t1]] = t1 == LABEL_D " ..
-                  "? W->ptr - W->img : R->ptr - R->img"},
-    Inst{"mov",   ""},
-    Inst{"movi",  ""},
-    Inst{"ldl",   ""},
-    Inst{"ld",    ""},
-    Inst{"st",    ""},
-    Inst{"gets",  ""},
-    Inst{"sets",  ""},
-    Inst{"pop",   ""},
-    Inst{"push",  ""},
-    Inst{"add",   ""},
-    Inst{"sub",   ""},
-    Inst{"mul",   ""},
-    Inst{"div",   ""},
-    Inst{"rem",   ""},
-    Inst{"and",   ""},
-    Inst{"or",    ""},
-    Inst{"xor",   ""},
-    Inst{"sl",    ""},
-    Inst{"srl",   ""},
-    Inst{"sra",   ""},
-    Inst{"teq",   ""},
-    Inst{"tlt",   ""},
-    Inst{"tltu",  ""},
-    Inst{"b",     ""},
-    Inst{"br",    ""},
-    Inst{"bf",    ""},
-    Inst{"bt",    ""},
-    Inst{"call",  ""},
-    Inst{"callr", ""},
-    Inst{"ret",   ""},
-    Inst{"calln", ""},
-    Inst{"lit",   "*(Word *)W->ptr = evalImm (i1_f, i1_sgn, " ..
-                  "i1_r, i1_v); W->ptr += WORD_BYTE"},
-    Inst{"litl",  "addDangle (T, t1, l2, W->ptr - W->img); " ..
+    Inst {"lab",   "bufExt (W->labAddr[t1], W->labSize[t1], " .. 
+                   "T->labels[t1] * WORD_BYTE); " ..
+                   "W->labAddr[t1][T->labels[t1]] = t1 == LABEL_D " ..
+                   "? W->ptr - W->img : R->ptr - R->img"},
+    Inst {"mov",   ""},
+    Inst {"movi",  ""},
+    Inst {"ldl",   ""},
+    Inst {"ld",    ""},
+    Inst {"st",    ""},
+    Inst {"gets",  ""},
+    Inst {"sets",  ""},
+    Inst {"pop",   ""},
+    Inst {"push",  ""},
+    Inst {"add",   ""},
+    Inst {"sub",   ""},
+    Inst {"mul",   ""},
+    Inst {"div",   ""},
+    Inst {"rem",   ""},
+    Inst {"and",   ""},
+    Inst {"or",    ""},
+    Inst {"xor",   ""},
+    Inst {"sl",    ""},
+    Inst {"srl",   ""},
+    Inst {"sra",   ""},
+    Inst {"teq",   ""},
+    Inst {"tlt",   ""},
+    Inst {"tltu",  ""},
+    Inst {"b",     ""},
+    Inst {"br",    ""},
+    Inst {"bf",    ""},
+    Inst {"bt",    ""},
+    Inst {"call",  ""},
+    Inst {"callr", ""},
+    Inst {"ret",   ""},
+    Inst {"calln", ""},
+    Inst {"lit",   "*(Word *)W->ptr = evalImm (i1_f, i1_sgn, " ..
+                   "i1_r, i1_v); W->ptr += WORD_BYTE"},
+    Inst {"litl",  "addDangle (T, t1, l2, W->ptr - W->img); " ..
                   "W->ptr += WORD_BYTE"},
-    Inst{"space", "sp = evalImm (i1_f, i1_sgn, i1_r, i1_v) * " ..
-                  "WORD_BYTE; ensure (sp); memset (W->ptr, 0, sp); " ..
-                  "W->ptr += sp"},
+    Inst {"space", "sp = evalImm (i1_f, i1_sgn, i1_r, i1_v) * " ..
+                   "WORD_BYTE; ensure (sp); memset (W->ptr, 0, sp); " ..
+                   "W->ptr += sp"},
   },
-  trans = Translator{"Word sp;",                    -- decls
+  trans = Translator {"Word sp;",                   -- decls
              [[for (ty = 0; ty < LABEL_TYPES; ty++)
     W->labAddr[ty] = bufNew (W->labSize[ty], INIT_LABS * WORD_BYTE);]],
                                                     -- init
@@ -143,7 +143,7 @@ interpW_writerNew (void)
     out->labels[ty] = T->labels[ty];
     out->labAddr[ty] = W->labAddr[ty];
   }
-  out->img = W->img;
-  out->size = W->ptr - W->img;]]                    -- finish
+  out->dImg = W->img;
+  out->dSize = W->ptr - W->img;]]                   -- finish
   },
 }

@@ -19,7 +19,7 @@ RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 # Source files
 
-SRCS = mit.c except.c list.c hash.c file.c insts.c translators.c
+SRCS = mit.c except.c hash.c file.c insts.c translators.c
 
 
 # Generated files

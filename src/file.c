@@ -39,19 +39,19 @@ readFile (const char *file, Byte **data)
       bufExt (*data, max, max * 2);
     }
     if (len == 0)
-      throw (ExcEmptyFile, "stdin");
+      die (ExcEmptyFile, "stdin");
     bufShrink (*data, len + 1);
   } else {
     fp = fopen (file, "rb");
     if (!fp)
-      throw (ExcFopen, excFile);
+      die (ExcFopen, excFile);
     if ((len = flen (fp)) < 0)
-      throw (ExcFlen, excFile);
+      die (ExcFlen, excFile);
     if (len == 0)
-      throw (ExcEmptyFile, excFile);
+      die (ExcEmptyFile, excFile);
     *data = excMalloc (len + 1);
     if (fread (*data, sizeof (Byte), len, fp) != (size_t)len)
-      throw (ExcFread, file);
+      die (ExcFread, file);
   }
   (*data)[len] = '\0';
   fclose (fp);
@@ -64,8 +64,8 @@ writeFile (const char *file, Byte *data, long len)
   FILE *fp = *file == '-' && (file[1] == '\0' || file[1] == '.') ?
     stdout : fopen (file, "wb");
   if (!fp)
-    throw (ExcFopen, file);
+    die (ExcFopen, file);
   if (fwrite (data, sizeof (Byte), len, fp) != (size_t)len)
-    throw (ExcFwrite, file);
+    die (ExcFwrite, file);
   if (fp != stdout) fclose (fp);
 }

@@ -61,12 +61,12 @@ OpType =
     return t
   end
 
-Inst = Object{_init = {
+Inst = Object {_init = {
     "name", -- instruction name
     "def",  -- definition
 }}
 
-Translator = Object{_init = {
+Translator = Object {_init = {
     "decls",  -- extra variable declarations
     "init",   -- extra initialisation
     "update", -- update after reading each instruction
@@ -163,11 +163,13 @@ function mkTrans (arg)
  "  /* writer declarations */\n" ..
  "  " .. w.trans.decls .. "\n" ..
  "  /* end of writer declarations */\n"
-  for i = 1, getn (instrumentation) do
-    local ins = instrumentation[i]
-    out = out .. "  /* " .. ins .. " declarations */\n" ..
-      ins.trans.decls .. "\n" ..
-      "  /* end of " .. ins .. " declarations */\n"
+  if instrumentation then
+    for i = 1, getn (instrumentation) do
+      local ins = instrumentation[i]
+      out = out .. "  /* " .. ins .. " declarations */\n" ..
+        ins.trans.decls .. "\n" ..
+        "  /* end of " .. ins .. " declarations */\n"
+    end
   end
   out = out ..
 [[  for (ty = 0; ty < LABEL_TYPES; ty++)
@@ -213,7 +215,7 @@ function mkTrans (arg)
   end
   out = out ..
 [[    default:
-      throw (ExcBadInst);
+      die (ExcBadInst);
 ]]
 
   -- End of the translator function

@@ -10,29 +10,22 @@
 #include <stdint.h>
 
 
-struct _HashNode {
-  struct _HashNode *next;
+typedef struct _List {
+  struct _List *next;
   char *key;
   void *body;
-};
-typedef struct _HashNode HashNode;
+} List;
 
 typedef struct {
-    HashNode **thread;
-    uintptr_t size;
-} HashTable;
+  List **thread;
+  uintptr_t size;
+} Hash;
 
-typedef struct {
-  uint32_t entry;
-  HashNode *prev;
-  HashNode *curr;
-  int found;
-} HashLink;
-
-HashTable *hashNew (uintptr_t size);
-void hashDestroy (HashTable *table);
-void hashGet (HashTable *table, char *key, HashLink *l);
-HashNode *hashSet (HashTable *table, HashLink *l, char *key, void *body);
+Hash *hashNew (uintptr_t size);
+void hashDestroy (Hash *table);
+List *hashGet (Hash *table, char *key, uint32_t *entry);
+List *hashSet (Hash *table, List *p, uint32_t entry,
+                   char *key, void *body);
 uint32_t strHash (char *str);
 
 #endif

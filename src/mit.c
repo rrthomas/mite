@@ -49,27 +49,26 @@ main (int argc, char *argv[])
   unsigned long size;
   FileType r, w;
   progName = argv[0];
-  excInit ();
   if (argc < 2 || argc > 3) {
     progName = NULL;
-    die ("Usage: %s IN-FILE [OUT-FILE]", argv[0]);
+    die (ExcMitUsage, argv[0]);
   }
   excFile = argv[1];
   size = readFile (excFile, &img);
   rSuff = suffix (argv[1]);
   if ((r = typeFromSuffix (rSuff)) == None)
-    die ("unknown input file type `%s'", rSuff ? rSuff : "");
+    die (ExcMitBadInType, rSuff ? rSuff : "");
   if (argc == 3) {
     wSuff = suffix (argv[2]);
     if ((w = typeFromSuffix (wSuff)) == None)
-      die ("unknown output file type `%s'", wSuff ? wSuff : "");
+      die (ExcMitBadOutType, wSuff ? wSuff : "");
   } else
     w = Asm;
   excPos = 1;
   if (r == Obj) {
     objR_Input *inp = new (objR_Input);
-    inp->img = img;
-    inp->size = size;
+    inp->cImg = img;
+    inp->cSize = size;
     if (w == Asm) {
       asmW_Output *out = objToAsm (inp);
       writeFile (outFile, (Byte *)out->img, out->size);
@@ -85,7 +84,7 @@ main (int argc, char *argv[])
     out = asmToObj (inp);
     writeFile (outFile, out->img, out->size);
   } else
-    die ("no translator from `%s' to `%s'", rSuff, wSuff);
+    die (ExcMitNoTranslator, rSuff, wSuff);
   free (img);
   return EXIT_SUCCESS;
 }

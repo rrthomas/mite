@@ -12,11 +12,11 @@
 
 
 #define bufNew(size, init) \
-  excMalloc (((size)= (init)))
+  excMalloc (((size) = (init)))
 
 #define bufExt(buf, size, need) \
   if ((size) < (need)) \
-    (buf)= excRealloc ((buf), (size)= max ((size) * 2, (need)))
+    (buf) = excRealloc ((buf), (size) = max ((size) * 2, (need)))
 
 #define bufShrink(buf, used) \
   excRealloc ((buf), (used))

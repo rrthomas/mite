@@ -10,20 +10,20 @@
 #include "hash.h"
 
 
-HashTable *
+Hash *
 hashNew (uintptr_t size)
 {
-  HashTable *table = new (HashTable);
-  table->thread = excCalloc (size, sizeof (HashNode *));
+  Hash *table = new (Hash);
+  table->thread = excCalloc (size, sizeof (List *));
   table->size = size;
   return table;
 }
 
 void
-hashDestroy (HashTable *table)
+hashDestroy (Hash *table)
 {
   uintptr_t i;
-  HashNode *p, *q;
+  List *p, *q;
   for (i = 0; i < table->size; i++)
     for (p = table->thread[i]; p != NULL; p = q) {
       q = p->next;
@@ -35,36 +35,30 @@ hashDestroy (HashTable *table)
   free (table);
 }
 
-void
-hashGet (HashTable *table, char *key, HashLink *l)
+List *
+hashGet (Hash *table, char *key, uint32_t *entry)
 {
-  uint32_t entry = strHash (key) % table->size;
-  l->entry = entry;
-  l->prev = NULL;
-  l->curr = table->thread[entry];
-  l->found = 0;
-  while (l->curr != NULL) {
-    if (strcmp (key, l->curr->key) == 0) {
-      l->found = 1;
-      return;
-    }
-    l->prev = l->curr;
-    l->curr = l->curr->next;
+  List *p;
+  *entry = strHash (key) % table->size;
+  for (p = table->thread[*entry]; p != NULL; p = p->next) {
+    if (strcmp (key, p->key) == 0)
+      return p;
   }
+  return NULL;
 }
 
-HashNode *
-hashSet (HashTable *table, HashLink *l, char *key, void *body)
+List *
+hashSet (Hash *table, List *p, uint32_t entry,
+         char *key, void *body)
 {
-  HashNode *n = new (HashNode);
-  if (l->prev == NULL)
-    table->thread[l->entry] = n;
-  else
-    l->prev->next = n;
-  n->next = l->curr;
-  n->key = key;
-  n->body = body;
-  return n;
+  if (p == NULL) {
+    p = new (List);
+    p->next = table->thread[entry];
+    table->thread[entry] = p;
+    p->key = key;
+  }
+  p->body = body;
+  return p;
 }
 
 uint32_t

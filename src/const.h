@@ -35,9 +35,6 @@
 #define WORD_BYTES_LEFT(p) (WORD_BYTE - ((uintptr_t)p & WORD_MASK))
   /* Number of bytes left in the word from p */
 
-#define INST_MAXLEN 4096 /* Maximum amount of code generated for an
-                            instruction */
-
 #define INIT_IMAGE_SIZE 16384
 #define INIT_LABS 256
 

@@ -17,7 +17,6 @@
 #include "const.h"
 #include "except.h"
 #include "buffer.h"
-#include "list.h"
 #include "hash.h"
 #include "file.h"
 
@@ -69,7 +68,7 @@ typedef struct {
   void *img;
   Word size;
   Word labels[LABEL_TYPES];
-  Dangle *dangles
+  Dangle *dangles;
   Dangle *dangleEnd;
 } TState;
 

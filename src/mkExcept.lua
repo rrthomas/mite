@@ -5,9 +5,9 @@
 --   * The exception enumeration [excEnum.h]
 --   * List of exception messages [excMsg.h]
 
-Exc = Object{_init = {
+Exc = Object {_init = {
     "name",
-    "message", -- printed when throw reaches the top level
+    "message",
 }}
 
 dofile(arg[1]) -- load the exceptions table

@@ -42,7 +42,7 @@ typedef struct {
   char *img;
   char *end;
   char *ptr;
-  HashTable *labHash; /* table of label names */
+  Hash *labHash; /* table of label names */
   Bool eol; /* EOL state */
 } asmR_State;
 
@@ -81,9 +81,9 @@ asmR_tok (asmR_State *R, char **tok, int (*f)(int))
   *tok = (char *)p;
   while (f ((char)*p)) p++;
   if (*tok == (char *)p)
-    throw (ExcMissingTok);
+    die (ExcMissingTok);
   if (!isspace ((char)*p))
-    throw (ExcBadChar);
+    die (ExcBadChar);
   if ((char)*p == '\n')
     R->eol = 1;
   *p = '\0';
@@ -98,7 +98,7 @@ rdInst (asmR_State *R)
   Word len = asmR_tok (R, &tok, issym);
   struct Inst *i = findInst (tok, len);
   if (i == NULL)
-    throw (ExcBadInst);
+    die (ExcBadInst);
   return i->opcode;
 }
 
@@ -111,7 +111,7 @@ rdReg (asmR_State *R)
   Word len = asmR_tok (R, &tok, isdigit);
   r = strtoul (tok, &nend, 10);
   if (r > UINT_MAX || (Word)(nend - tok) != len)
-    throw (ExcBadReg);
+    die (ExcBadReg);
   return r;
 }
 
@@ -129,27 +129,28 @@ asmR_labTy (asmR_State *R)
     case 'd':
       return LABEL_D;
     }
-  throw (ExcBadLabTy);
+  die (ExcBadLabTy);
 }
 
-static HashNode *
+static List *
 asmR_lab (asmR_State *R, LabelType ty)
 {
   char *tok;
   Label *l;
-  HashLink hl;
+  List *hp;
+  uint32_t hEntry;
   asmR_tok (R, &tok, issym);
-  hashGet (R->labHash, tok, &hl);
-  if (hl.found) {
-    l = hl.curr->body;
+  hp = hashGet (R->labHash, tok, &hEntry);
+  if (hp) {
+    l = hp->body;
     if (l->ty != ty)
-      throw (ExcWrongLab);
-    return hl.curr;
+      die (ExcWrongLab);
+    return hp;
   } else {
     l = new (Label);
     l->ty = ty;
     l->v.n = 0;
-    return hashSet (R->labHash, &hl, tok, l);
+    return hashSet (R->labHash, hp, hEntry, tok, l);
   }
 }
 
@@ -183,7 +184,7 @@ asmR_imm (asmR_State *R, Byte *f, SByte *sgn, int *r, Word *v)
   if (errno == ERANGE || (*sgn && *v > (unsigned long)(LONG_MAX) + 1))
     /* rather than -LONG_MIN; we're assuming two's complement anyway,
        and negating LONG_MIN overflows long */
-    throw (ExcBadImmVal);
+    die (ExcBadImmVal);
   tok = nend;
   rsgn = 0;
   if (*tok == '>' && tok[1] == '>') {
@@ -196,22 +197,23 @@ asmR_imm (asmR_State *R, Byte *f, SByte *sgn, int *r, Word *v)
     }
     rl = strtoul (tok, &nend, 0);
     if (rl + rsgn > 127 || errno == ERANGE)
-      throw (ExcBadImmRot);
+      die (ExcBadImmRot);
     tok = nend;
     *r = rsgn ? -(int)rl : (int)rl;
   } else
     *r = 0;
   if (*tok)
-    throw (ExcBadImm);
+    die (ExcBadImm);
 }
 
 static LabelValue
 asmR_labelAddr (asmR_State *R, Label *l)
 {
   LabelValue ret;
-  HashLink hl;
-  hashGet (R->labHash, (char *)l->v.p, &hl);
-  ret.p = hl.found ? ((Label *)hl.curr->body)->v.p : NULL;
+  List *hp;
+  uint32_t hEntry;
+  hp = hashGet (R->labHash, (char *)l->v.p, &hEntry);
+  ret.p = (hp != NULL) ? ((Label *)hp->body)->v.p : NULL;
   return ret;
 }
 
@@ -225,33 +227,33 @@ asmR_readerNew (asmR_Input *inp)
 }
 ]],
   opType = {
-    r = OpType{"Register r%n = rdReg (R);", ""},
-    i = OpType{[[Byte i%n_f;
+    r = OpType {"Register r%n = rdReg (R);", ""},
+    i = OpType {[[Byte i%n_f;
         SByte i%n_sgn;
         int i%n_r;
         Word i%n_v;]],
         "asmR_imm (R, &i%n_f, &i%n_sgn, &i%n_r, &i%n_v);"},
-    t = OpType{"LabelType t%n = asmR_labTy (R);", ""},
-    l = OpType{function (inst, op)
-                 local ty = labelType (inst, op)
-                 return "HashNode *l%n_hn = asmR_lab (R, " .. ty .. [[);
+    t = OpType {"LabelType t%n = asmR_labTy (R);", ""},
+    l = OpType {function (inst, op)
+                  local ty = labelType (inst, op)
+                  return "List *l%n_l = asmR_lab (R, " .. ty .. [[);
         LabelValue l%n;]]
-               end,
-        "l%n.p = l%n_hn->key;"},
-    n = OpType{function (inst, op)
-                 local ty = labelType (inst, op)
-                 return "HashNode *n%n_hn = asmR_lab (R, " .. ty ..
-                   ");\n        Label *l;"
-               end,
-               function (inst, op)
-                 local ty = labelType (inst, op)
-                 return [[l = n%n_hn->body;
+                end,
+        "l%n.p = l%n_l->key;"},
+    n = OpType {function (inst, op)
+                  local ty = labelType (inst, op)
+                  return "List *n%n_l = asmR_lab (R, " .. ty ..
+                    ");\n        Label *l;"
+                end,
+                function (inst, op)
+                  local ty = labelType (inst, op)
+                  return [[l = n%n_l->body;
         if (l->v.n)
-          throw (ExcDupLab, n%n_hn->key);
+          die (ExcDupLab, n%n_l->key);
         l->v.n = ++T->labels[]] .. ty .. "];"
-               end},
+                end},
   },
-  trans = Translator{
+  trans = Translator {
     "",                              -- decls
     [[R->labHash = hashNew (4096);
   R->eol = 0;]],                     -- init
