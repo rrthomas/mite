@@ -35,6 +35,8 @@ Reduce the number of warnings given by gcc.
 Check whether shifts of type size are allowed, and stop using them if
 not.
 
+Inst{"calln",  {"r"},            "call native code at $%1$"},
+
 
 Test system:
 
