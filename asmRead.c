@@ -86,9 +86,9 @@ getLabTy(TState *t)
   uintptr_t len = getTok(t, &tok, isalpha);
   if (len == 1)
     switch (*tok) {
-      case 'b': ret.ty = LABEL_B;  return ret;
-      case 's': ret.ty = LABEL_S;  return ret;
-      case 'd': ret.ty = LABEL_D;  return ret;
+      case 'b': ret.ty = LABEL_B; return ret;
+      case 's': ret.ty = LABEL_S; return ret;
+      case 'd': ret.ty = LABEL_D; return ret;
     }
   throw("bad label type");
 }
@@ -139,6 +139,7 @@ getImm(TState *t)
   rsgn = 0;
   if (*tok == '>' && tok[1] == '>') {
     tok += 2;
+    i->f |= FLAG_R;
     errno = 0;
     if (*tok == '-') {
 	tok++;
@@ -205,51 +206,51 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
     excLine += 1;
     bufEnsure(INST_MAXLEN);
     switch (i) {
-      case OP_LAB:
-	t->labels[op1.l->ty]++;
-	if ((old = hashFind(t->labelHash, op1.l->v.p))) {
-	  if (old->ty != op1.l->ty) throw("inconsistent label");
-	} else
-	  hashInsert(t->labelHash, op1.l->v.p, (void *)(t->labels[op1.l->ty]));
-	wrLab(op1.l->ty, op1.l->v/*t->labels[op1.l->ty]*/);
-	break;
-      case OP_MOV:   wrMov(op1.r, op2.r); break;
-      case OP_MOVI:
-	wrMovi(op1.r, op2.i->f, op2.i->sgn, op2.i->v, op2.i->r);
-        break;
-      case OP_LDL:   wrLdl(op1.r, op1.l->v); break;
-      case OP_LD:    wrLd(op1.r, op2.r); break;
-      case OP_ST:    wrSt(op1.r, op2.r); break;
-      case OP_GETS:  wrGets(op1.r); break;
-      case OP_SETS:  wrSets(op1.r); break;
-      case OP_POP:   wrPop(op1.r); break;
-      case OP_PUSH:  wrPush(op1.r); break;
-      case OP_ADD:   wrAdd(op1.r, op2.r, op3.r); break;
-      case OP_SUB:   wrSub(op1.r, op2.r, op3.r); break;
-      case OP_MUL:   wrMul(op1.r, op2.r, op3.r); break;
-      case OP_DIV:   wrDiv(op1.r, op2.r, op3.r); break;
-      case OP_REM:   wrRem(op1.r, op2.r, op3.r); break;
-      case OP_AND:   wrAnd(op1.r, op2.r, op3.r); break;
-      case OP_OR:    wrOr(op1.r, op2.r, op3.r); break;
-      case OP_XOR:   wrXor(op1.r, op2.r, op3.r); break;
-      case OP_SL:    wrSl(op1.r, op2.r, op3.r); break;
-      case OP_SRL:   wrSrl(op1.r, op2.r, op3.r); break;
-      case OP_SRA:   wrSra(op1.r, op2.r, op3.r); break;
-      case OP_TEQ:   wrTeq(op1.r, op2.r, op3.r); break;
-      case OP_TLT:   wrTlt(op1.r, op2.r, op3.r); break;
-      case OP_TLTU:  wrTltu(op1.r, op2.r, op3.r); break;
-      case OP_B:     wrB(op1.l->v); break;
-      case OP_BR:    wrBr(op1.r); break;
-      case OP_BF:    wrBf(op1.r, op1.l->v); break;
-      case OP_BT:    wrBt(op1.r, op1.l->v); break;
-      case OP_CALL:  wrCall(op1.l->v); break;
-      case OP_CALLR: wrCallr(op1.r); break;
-      case OP_RET:   wrRet(); break;
-      case OP_CALLN: wrCalln(op1.r); break;
-      case OP_LIT:   wrLit(op1.i->f, op1.i->sgn, op1.i->v, op1.i->r); break;
-      case OP_LITL:  wrLitl(op1.l->ty, op1.l->v); break;
-      case OP_SPACE: wrSpace(op1.i->f, op1.i->sgn, op1.i->v, op1.i->r); break;
-      default:       throw("bad instruction");
+    case OP_LAB:
+      t->labels[op1.l->ty]++;
+      if ((old = hashFind(t->labelHash, op1.l->v.p))) {
+        if (old->ty != op1.l->ty) throw("inconsistent label");
+      } else
+        hashInsert(t->labelHash, op1.l->v.p, (void *)(t->labels[op1.l->ty]));
+      wrLab(op1.l->ty, op1.l->v);
+      break;
+    case OP_MOV:   wrMov(op1.r, op2.r); break;
+    case OP_MOVI:
+      wrMovi(op1.r, op2.i->f, op2.i->sgn, op2.i->v, op2.i->r);
+      break;
+    case OP_LDL:   wrLdl(op1.r, op1.l->v); break;
+    case OP_LD:    wrLd(op1.r, op2.r); break;
+    case OP_ST:    wrSt(op1.r, op2.r); break;
+    case OP_GETS:  wrGets(op1.r); break;
+    case OP_SETS:  wrSets(op1.r); break;
+    case OP_POP:   wrPop(op1.r); break;
+    case OP_PUSH:  wrPush(op1.r); break;
+    case OP_ADD:   wrAdd(op1.r, op2.r, op3.r); break;
+    case OP_SUB:   wrSub(op1.r, op2.r, op3.r); break;
+    case OP_MUL:   wrMul(op1.r, op2.r, op3.r); break;
+    case OP_DIV:   wrDiv(op1.r, op2.r, op3.r); break;
+    case OP_REM:   wrRem(op1.r, op2.r, op3.r); break;
+    case OP_AND:   wrAnd(op1.r, op2.r, op3.r); break;
+    case OP_OR:    wrOr(op1.r, op2.r, op3.r); break;
+    case OP_XOR:   wrXor(op1.r, op2.r, op3.r); break;
+    case OP_SL:    wrSl(op1.r, op2.r, op3.r); break;
+    case OP_SRL:   wrSrl(op1.r, op2.r, op3.r); break;
+    case OP_SRA:   wrSra(op1.r, op2.r, op3.r); break;
+    case OP_TEQ:   wrTeq(op1.r, op2.r, op3.r); break;
+    case OP_TLT:   wrTlt(op1.r, op2.r, op3.r); break;
+    case OP_TLTU:  wrTltu(op1.r, op2.r, op3.r); break;
+    case OP_B:     wrB(op1.l->v); break;
+    case OP_BR:    wrBr(op1.r); break;
+    case OP_BF:    wrBf(op1.r, op1.l->v); break;
+    case OP_BT:    wrBt(op1.r, op1.l->v); break;
+    case OP_CALL:  wrCall(op1.l->v); break;
+    case OP_CALLR: wrCallr(op1.r); break;
+    case OP_RET:   wrRet(); break;
+    case OP_CALLN: wrCalln(op1.r); break;
+    case OP_LIT:   wrLit(op1.i->f, op1.i->sgn, op1.i->v, op1.i->r); break;
+    case OP_LITL:  wrLitl(op1.l->ty, op1.l->v); break;
+    case OP_SPACE: wrSpace(op1.i->f, op1.i->sgn, op1.i->v, op1.i->r); break;
+    default:       throw("bad instruction");
     }
   }
   excLine = 0;
