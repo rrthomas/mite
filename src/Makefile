@@ -27,7 +27,7 @@ SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c
 # Generated files
 
 OBJS = $(patsubst %.c,%.o,$(SRCS) $(TRANS_SRCS))
-GEN_SRCS = instEnum.h insts.gperf insts.c endian.h
+GEN_SRCS = instEnum.h insts.gperf insts.c endian.h excEnum.h excMsg.h
 PROGS = mit endian
 
 
@@ -66,6 +66,16 @@ insts.gperf translate.h: $(MITE_TOP)/spec.lua procSpec.lua
 	touch translate.h
 
 mit.o: translators.c
+
+except.h: excEnum.h
+
+except.c: excMsg.h
+
+excEnum.h excMsg.h: except.lua mkExcept.lua
+	$(RUNLUA) mkExcept.lua except.lua
+	touch except.h
+
+# Translators; these rules should be automated and removed
 
 asmToObj.c: asmRead.lua objWrite.lua mkTrans.lua
 	$(RUNLUA) mkTrans.lua asmRead.lua objWrite.lua $*
