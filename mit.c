@@ -89,7 +89,7 @@ main(int argc, char *argv[])
   Byte *img;
   const char *rSuff, *wSuff;
   long len;
-  Translator *t;
+  TState *t;
   unsigned int r, w;
   progName = argv[0];
   excInit();
@@ -109,9 +109,12 @@ main(int argc, char *argv[])
   } else w = Asm;
   excLine = 1;
   if (r == Asm)
-    if (w == Obj) asmToObj(img, img + len);
-    else die("can only translate assembly to object");
+    if (w == Obj) t = asmToObj(img, img + len);
+    else {
+      if (w == Asm) t = asmToAsm(img, img + len);
+      else die("can only translate assembly to assembly or object");
       /* Translate by more than one step */
+    }
   else t = objToObj(img, img + len);
   free(img);
   writeFile(argc == 3 ? argv[2] : "-", t->wImg, (long)(t->wPtr - t->wImg));
