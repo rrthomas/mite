@@ -69,7 +69,7 @@ Mite is parametrized on the following quantities:
 \begin{description}
 \item[$W$]number of bytes in a word
 
-\item[$R$]the number of registers ($R=2^n, n>2$, for some $n$)
+\item[$R$]the number of registers ($R=2^n, 2<n\leq 8$)
 
 \item[$S$]direction of stack growth ($-1$ for an ascending stack, $1$
   for a descending stack)
@@ -223,7 +223,10 @@ Opcodes, registers and label types are encoded as one byte. The
 instruction opcodes are shown in table~\ref{opcodetab}. Opcodes
 0x25--0x7f are reserved for future expansion. Registers are encoded by
 their number. Label types are encoded as $1$ for \syn{b}, $2$ for
-\syn{s}, $3$ for \syn{d} and $4$ for \syn{f}.
+\syn{s}, $3$ for \syn{d} and $4$ for \syn{f}. Argument types are
+encoded as one byte for the argument type ($1$ for \syn{r}, $2$ for
+\syn{f} or $3$ for \syn{b}$n$) followed, for a \syn{b} type, by a long
+number giving the size.
 
 Labels are encoded as a long number (see section~\ref{longnums}).
 Labels of each type are numbered consecutively from $1$ from the start
