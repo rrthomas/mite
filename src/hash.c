@@ -10,7 +10,7 @@
 #include "hash.h"
 
 
-size_t
+uintptr_t
 strHash(char *str)
 {
   char *p = str;
@@ -26,7 +26,7 @@ strHash(char *str)
 }
 
 HashTable *
-hashNew(size_t size)
+hashNew(uintptr_t size)
 {
   HashTable *table = new(HashTable);
   table->thread = excCalloc(size, sizeof(HashNode *));
@@ -37,7 +37,7 @@ hashNew(size_t size)
 void
 hashDestroy (HashTable *table)
 {
-  size_t i;
+  uintptr_t i;
   HashNode *p, *q;
   for (i = 0; i < table->size; i++)
     for (p = table->thread[i]; p != NULL; p = q) {
@@ -50,72 +50,34 @@ hashDestroy (HashTable *table)
   free(table);
 }
 
-typedef struct {
-  size_t entry;
-  HashNode *prev;
-  HashNode *curr;
-  int found;
-} HashLink;
-
-static HashLink
-hashSearch(HashTable *table, void *key)
+void
+hashGet(HashTable *table, char *key, HashLink *l)
 {
-  size_t entry = strHash(key) % table->size;
-  HashLink ret;
-  ret.entry = entry;
-  ret.prev = NULL;
-  ret.curr = table->thread[entry];
-  ret.found = HASH_NOTFOUND;
-  while (ret.curr != NULL) {
-    if (strcmp((char *)key, (char *)ret.curr->key) == 0) {
-      ret.found = HASH_FOUND;
-      return ret;
+  uintptr_t entry = strHash(key) % table->size;
+  l->entry = entry;
+  l->prev = NULL;
+  l->curr = table->thread[entry];
+  l->found = 0;
+  while (l->curr != NULL) {
+    if (strcmp(key, l->curr->key) == 0) {
+      l->found = 1;
+      return;
     }
-    ret.prev = ret.curr;
-    ret.curr = ret.curr->next;
+    l->prev = l->curr;
+    l->curr = l->curr->next;
   }
-  return ret;
 }
 
-void *
-hashFind(HashTable *table, void *key)
+HashNode *
+hashSet(HashTable *table, HashLink *l, char *key, void *body)
 {
-  HashLink l = hashSearch(table, key);
-  if (l.found == HASH_NOTFOUND)
-    return NULL;
-  return l.curr->body;
-}
-
-void *
-hashInsert(HashTable *table, void *key, void *body)
-{
-  HashLink l = hashSearch(table, key);
-  HashNode *n;
-  if (l.found == HASH_FOUND)
-    return l.curr->body;
-  n = excMalloc(sizeof(HashNode));
-  if (l.prev == NULL)
-    table->thread[l.entry] = n;
+  HashNode *n = new(HashNode);
+  if (l->prev == NULL)
+    table->thread[l->entry] = n;
   else
-    l.prev->next = n;
-  n->next = l.curr;
+    l->prev->next = n;
+  n->next = l->curr;
   n->key = key;
   n->body = body;
-  return NULL;
-}
-
-int
-hashRemove(HashTable *table, void *key)
-{
-  HashLink l = hashSearch(table, key);
-  if (l.found == HASH_NOTFOUND)
-    return HASH_NOTFOUND;
-  if (l.prev == NULL)
-    table->thread[l.entry] = l.curr->next;
-  else
-    l.prev->next = l.curr->next;
-  free(l.curr->key);
-  free(l.curr->body);
-  free(l.curr);
-  return HASH_OK;
+  return n;
 }

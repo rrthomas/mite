@@ -7,22 +7,32 @@
 #define MITE_HASH
 
 
-struct _HashNode { struct _HashNode *next; void *key; void *body; };
+#include <stdint.h>
+
+
+struct _HashNode {
+  struct _HashNode *next;
+  char *key;
+  void *body;
+};
 typedef struct _HashNode HashNode;
 
 typedef struct {
     HashNode **thread;
-    size_t size;
+    uintptr_t size;
 } HashTable;
 
-HashTable *hashNew(size_t size);
-void hashDestroy(HashTable *table);
-void *hashFind(HashTable *table, void *key);
-void *hashInsert(HashTable *table, void *key, void *body);
-int hashRemove(HashTable *table, void *key);
+typedef struct {
+  uintptr_t entry;
+  HashNode *prev;
+  HashNode *curr;
+  int found;
+} HashLink;
 
-#define HASH_OK 0
-#define HASH_FOUND 1
-#define HASH_NOTFOUND 2
+HashTable *hashNew(uintptr_t size);
+void hashDestroy(HashTable *table);
+void hashGet(HashTable *table, char *key, HashLink *l);
+HashNode *hashSet(HashTable *table, HashLink *l, char *key, void *body);
+uintptr_t strHash(char *str);
 
 #endif
