@@ -6,7 +6,6 @@ Required tools (to build)
 ISO '89 C compiler (will be '99 when GCC is)
 Lua 4.0 (will move to 5.0 when released)
 GNU make
-mkdep
 rm
 gperf
 
