@@ -14,5 +14,6 @@
     if ((size) < (need)) \
         (buf)= excRealloc((buf), (size)= max((size) * 2, (need)))
 #define bufShrink(buf, used) excRealloc((buf), (used))
+#define bufEnsure(n) bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + (n))
 
 #endif
