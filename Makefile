@@ -68,7 +68,7 @@ endian.h: endian.c
 	$(CC) -o endian endian.c
 	./endian > $@
 
-insts.gperf $(TEX_TABLES): insts.lua mkinsts.lua
+insts.gperf translate.h $(TEX_TABLES): insts.lua mkinsts.lua
 	lua mkinsts.lua
 	touch mite.tex
 
