@@ -46,9 +46,7 @@ used stand-alone or embedded in other programs.
 
 \subsection{License}
 
-mit is supplied as is, under the following BSD-like license (which is
-actually the MIT license, as given at
-\url{http://www.opensource.org/licenses/mit-license.html}):
+mit is supplied as is, under BSD license:
 
 \begin{quote}
 Copyright \copyright 2001 Reuben Thomas
