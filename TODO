@@ -1,8 +1,22 @@
-Restructure source tree and write doc and top-level makefiles.
+Make mkInsts.lua generate opType[] in translate.c.
 
-Extend mkinsts.lua to handle readers and writers, which should be
-written in a yacc-like style. Specify interfaces for readers and
-writers, so that more can more easily be written.
+Sort out bufEnsure (should probably be in translate.h; certainly not
+in buffer.h).
+
+Have mkRdWr.lua (mkinsts.lua -> mkInsts.lua), which generates readers
+and writers.
+
+The format of a reader or writer is:
+
+name = Reader/Writer{
+  lab = "...",
+  ...
+}
+
+Check that there are no missing or extra entries. Also need some extra
+fields for utility functions and macros. In reader, need the shell of
+the translation function; it'd be nice if this could be automatically
+generated too, but might be too fiddly to be worth it.
 
 Make a file bundle release (just a tar of the contents of CVS).
 
