@@ -55,9 +55,9 @@ static void
 putLabTy(TState *t, unsigned int ty)
 {
   switch (ty) {
-    case LABEL_B: putChar(t, 'b');  return;
-    case LABEL_S: putChar(t, 's');  return;
-    case LABEL_D: putChar(t, 'd');  return;
+  case LABEL_B: putChar(t, 'b'); return;
+  case LABEL_S: putChar(t, 's'); return;
+  case LABEL_D: putChar(t, 'd'); return;
   }
 }
 
