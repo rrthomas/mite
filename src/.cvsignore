@@ -1,2 +1,3 @@
 mit insts.c insts.gperf instEnum.h
 endian endian.h
+objToAsm.c asmToObj.c
