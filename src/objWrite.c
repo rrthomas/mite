@@ -7,7 +7,6 @@
 #include <limits.h>
 
 #include "endian.h"
-#include "except.h"
 #include "translate.h"
 
 
