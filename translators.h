@@ -13,12 +13,9 @@ TState *
 asmToObj(Byte *rImg, Byte *rEnd);
 
 TState *
-objToObj(Byte *rImg, Byte *rEnd);
+objToAsm(Byte *rImg, Byte *rEnd);
 
 TState *
 objToInterp(Byte *rImg, Byte *rEnd);
-
-TState *
-asmToAsm(Byte *rImg, Byte *rEnd);
 
 #endif
