@@ -14,8 +14,6 @@
 #include "string.h"
 #include "translate.h"
 
-#include "insts.c"
-
 
 static int
 issym(int c)
@@ -60,7 +58,7 @@ getInstNum(TState *t)
 {
   char *tok;
   uintptr_t len = getTok(t, &tok, issym);
-  Inst *i = findInst(tok, len);
+  struct Inst *i = findInst(tok, len);
 
   if (i == NULL) throw("bad instruction");
   return (unsigned int)i->opcode;
@@ -205,6 +203,7 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
   while (t->rPtr < t->rEnd) {
     getInst(t, &i, &op1, &op2, &op3);
     excLine += 1;
+    bufEnsure(INST_MAXLEN);
     switch (i) {
       case OP_LAB:
 	t->labels[op1.l->ty]++;
@@ -212,13 +211,13 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
 	  if (old->ty != op1.l->ty) throw("inconsistent label");
 	} else
 	  hashInsert(t->labelHash, op1.l->v.p, (void *)(t->labels[op1.l->ty]));
-	wrLab(op1.l->ty, t->labels[op1.l->ty]);
+	wrLab(op1.l->ty, op1.l->v/*t->labels[op1.l->ty]*/);
 	break;
       case OP_MOV:   wrMov(op1.r, op2.r); break;
       case OP_MOVI:
 	wrMovi(op1.r, op2.i->f, op2.i->sgn, op2.i->v, op2.i->r);
         break;
-      case OP_LDL:   wrLdl(op1.r, op1.l); break;
+      case OP_LDL:   wrLdl(op1.r, op1.l->v); break;
       case OP_LD:    wrLd(op1.r, op2.r); break;
       case OP_ST:    wrSt(op1.r, op2.r); break;
       case OP_GETS:  wrGets(op1.r); break;
@@ -239,16 +238,16 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
       case OP_TEQ:   wrTeq(op1.r, op2.r, op3.r); break;
       case OP_TLT:   wrTlt(op1.r, op2.r, op3.r); break;
       case OP_TLTU:  wrTltu(op1.r, op2.r, op3.r); break;
-      case OP_B:     wrB(op1.l); break;
+      case OP_B:     wrB(op1.l->v); break;
       case OP_BR:    wrBr(op1.r); break;
-      case OP_BF:    wrBf(op1.r, op1.l); break;
-      case OP_BT:    wrBt(op1.r, op1.l); break;
-      case OP_CALL:  wrCall(op1.l); break;
+      case OP_BF:    wrBf(op1.r, op1.l->v); break;
+      case OP_BT:    wrBt(op1.r, op1.l->v); break;
+      case OP_CALL:  wrCall(op1.l->v); break;
       case OP_CALLR: wrCallr(op1.r); break;
       case OP_RET:   wrRet(); break;
       case OP_CALLN: wrCalln(op1.r); break;
       case OP_LIT:   wrLit(op1.i->f, op1.i->sgn, op1.i->v, op1.i->r); break;
-      case OP_LITL:  wrLitl(op1.l->ty, op1.l); break;
+      case OP_LITL:  wrLitl(op1.l->ty, op1.l->v); break;
       case OP_SPACE: wrSpace(op1.i->f, op1.i->sgn, op1.i->v, op1.i->r); break;
       default:       throw("bad instruction");
     }
