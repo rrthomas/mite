@@ -14,7 +14,9 @@ HEVEA_FLAGS= -I texmf
 
 # Suffix rules
 
-.SUFFIXES: .tex .dvi .ps .pdf .html
+# Next line stops spurious rules for .w files being activated; remove once mit.w is no more.
+.SUFFIXES:
+.SUFFIXES: .c .h .o .tex .dvi .ps .pdf .html
 .tex.dvi:
 	lmk -q -co $<
 .dvi.ps:
@@ -29,8 +31,8 @@ HEVEA_FLAGS= -I texmf
 
 TRANS_SRC = objToObj.c asmToAsm.c asmToObj.c
 TRANS_OBJ = objToObj.o asmToAsm.o asmToObj.o
-SRCS = mit.c translate.c except.c list.c hash.c flen.c $(TRANS_SRC)
-OBJS = mit.o translate.o except.o list.o hash.o flen.o $(TRANS_OBJ)
+SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c $(TRANS_SRC)
+OBJS = mit.o translate.o except.o list.o hash.o flen.o insts.o $(TRANS_OBJ)
 
 DOCS = README TODO Manifesto mite.pdf mit.pdf iface.pdf
 TEX_TABLES = instLab.tex instComp.tex instData.tex instOpcode.tex
