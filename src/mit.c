@@ -117,8 +117,8 @@ main(int argc, char *argv[])
       die("unknown output file type `%s'", wSuff ? wSuff : "");
   } else w = Asm;
   excLine = 1;
-  if (translator[r][w])
-    t = translator[r][w](img, img + len);
+  if (translator[r - 1][w - 1])
+    t = translator[r - 1][w - 1](img, img + len);
   else
     die("no translator from `%s' to `%s'", rSuff, wSuff);
   free(img);
