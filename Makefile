@@ -20,7 +20,7 @@ HEVEA_FLAGS = -I texmf
 .SUFFIXES: .c .h .o .tex .dvi .ps .pdf .html
 .tex.dvi:
 	latex $<
-	bibtex $(basename $<)
+	bibtex $*
 	latex $<
 	latex $<
 .dvi.ps:
