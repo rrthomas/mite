@@ -4,17 +4,17 @@ Add pointers to sources of all the tools
 Required tools (to build)
 
 ISO '89 C compiler (will be '99 when GCC is)
+Lua 4.0 or higher (will be 4.1 when released)
 GNU make
 mkdep
 rm
-Lua 4.0 or higher
+gperf
 
 
 Useful tools (for dist, docs &c.)
 
 LaTeX
 zip
-gperf
 ghostscript
 hevea
 LY1
