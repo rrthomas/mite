@@ -19,15 +19,13 @@ RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 # Source files
 
-TRANS_SRCS = asmToObj.c objToAsm.c objToInterp.c
-TRANS_OBJS = $(patsubst %.c,%.o,$(TRANS_SRCS))
-SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c
+SRCS = mit.c except.c list.c hash.c file.c insts.c translators.c
 
 
 # Generated files
 
-OBJS = $(patsubst %.c,%.o,$(SRCS) $(TRANS_SRCS))
-GEN_SRCS = instEnum.h insts.gperf insts.c endian.h excEnum.h excMsg.h
+OBJS = $(patsubst %.c,%.o,$(SRCS))
+GEN_SRCS = instEnum.h insts.gperf insts.c endian.h excEnum.h excMsg.h translators.c
 PROGS = mit endian
 
 
@@ -35,14 +33,14 @@ PROGS = mit endian
 
 all: mit
 
-depend: $(SRCS) $(GEN_SRCS) $(TRANS_SRCS)
-	mkdep -p $(CFLAGS) $(SRCS) $(TRANS_SRCS)
+depend: $(SRCS) $(GEN_SRCS)
+	mkdep -p $(CFLAGS) $(SRCS)
 
 clean:
 	rm -f $(OBJS)
 
 dist-clean: clean
-	rm -f $(PROGS) $(GEN_SRCS) $(TRANS_SRCS)
+	rm -f $(PROGS) $(GEN_SRCS)
 
 
 # File dependencies
@@ -75,16 +73,10 @@ excEnum.h excMsg.h: except.lua mkExcept.lua
 	$(RUNLUA) mkExcept.lua except.lua
 	touch except.h
 
-# Translators; these rules should be automated and removed
 
-asmToObj.c: asmRead.lua objWrite.lua mkTrans.lua
-	$(RUNLUA) mkTrans.lua asmRead.lua objWrite.lua $*
-
-objToAsm.c: objRead.lua asmWrite.lua mkTrans.lua
-	$(RUNLUA) mkTrans.lua objRead.lua asmWrite.lua $*
-
-objToInterp.c: objRead.lua interpWrite.lua mkTrans.lua
-	$(RUNLUA) mkTrans.lua objRead.lua interpWrite.lua $*
+# Translators; this rule should be automated and removed
+translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua interpWrite.lua mkTrans.lua
+	$(RUNLUA) mkTrans.lua transList.lua $*
 
 
 # Include dependencies

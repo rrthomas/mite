@@ -7,6 +7,7 @@
 #include <limits.h>
 
 #include "translate.h"
+#include "translators.h"
 
 
 #if CHAR_BIT != 8
@@ -18,8 +19,6 @@ char *progName;
 typedef enum {
   None, Obj, Asm, Interp
 } FileType;
-
-#include "translators.c"
 
 static FileType
 typeFromSuffix(const char *s)
@@ -42,70 +41,22 @@ suffix(const char *s)
   return suff;
 }
 
-static long
-readFile(const char *file, Byte **data)
-{
-  FILE *fp;
-  Byte *p;
-  long len = 0;
-  uintptr_t max;
-  if (*file == '-' && (file[1] == '\0' || file[1] == '.')) {
-    fp = stdin;
-    *data = bufNew(max, INIT_IMAGE_SIZE);
-    p = *data;
-    while (!feof(fp)) {
-      len += fread(p, sizeof(Byte), max, fp);
-      p += len;
-      bufExt(*data, max, max * 2);
-    }
-    if (len == 0)
-      throw(ExcEmptyFile, "stdin");
-    bufShrink(*data, len + 1);
-  } else {
-    fp = fopen(file, "rb");
-    if (!fp)
-      throw(ExcFopen, excFile);
-    if ((len = flen(fp)) < 0)
-      throw(ExcFlen, excFile);
-    if (len == 0)
-      throw(ExcEmptyFile, excFile);
-    *data = excMalloc(len + 1);
-    if (fread(*data, sizeof(Byte), len, fp) != (uintptr_t)len)
-      throw(ExcFread, file);
-  }
-  (*data)[len] = '\0';
-  fclose(fp);
-  return len;
-}
-
-static void
-writeFile(const char *file, Byte *data, long len)
-{
-  FILE *fp = *file == '-' && (file[1] == '\0' || file[1] == '.') ?
-    stdout : fopen(file, "wb");
-  if (!fp)
-    throw(ExcFopen, file);
-  if (fwrite(data, sizeof(Byte), len, fp) != (uintptr_t)len)
-    throw(ExcFwrite, file);
-  if (fp != stdout) fclose(fp);
-}
-
 int
 main(int argc, char *argv[])
 {
   Byte *img;
-  const char *rSuff, *wSuff;
-  long len;
-  TState *t = NULL;
+  const char *rSuff, *wSuff, *outFile = argc == 3 ? argv[2] : "-";
+  uintptr_t size;
+  TState *T;
   FileType r, w;
   progName = argv[0];
   excInit();
   if (argc < 2 || argc > 3) {
     progName = NULL;
-    die("Usage: %s [-o file] file", argv[0]);
+    die("Usage: %s IN-FILE [OUT-FILE]", argv[0]);
   }
   excFile = argv[1];
-  len = readFile(excFile, &img);
+  size = readFile(excFile, &img);
   rSuff = suffix(argv[1]);
   if ((r = typeFromSuffix(rSuff)) == None)
     die("unknown input file type `%s'", rSuff ? rSuff : "");
@@ -113,13 +64,19 @@ main(int argc, char *argv[])
     wSuff = suffix(argv[2]);
     if ((w = typeFromSuffix(wSuff)) == None)
       die("unknown output file type `%s'", wSuff ? wSuff : "");
-  } else w = Asm;
+  } else
+    w = Asm;
   excLine = 1;
-  if (translator[r - 1][w - 1])
-    t = translator[r - 1][w - 1](img, img + len);
+  if (r == Obj) {
+    if (w == Asm)
+      T = objToAsm(img, size);
+    else if (w == Interp)
+      T = objToInterp(img, size);
+  } else if (r == Asm && w == Obj)
+    T = asmToObj(img, size);
   else
     die("no translator from `%s' to `%s'", rSuff, wSuff);
+  writeFile(outFile, T->img, T->size);
   free(img);
-  writeFile(argc == 3 ? argv[2] : "-", t->wImg, (long)(t->wPtr - t->wImg));
   return EXIT_SUCCESS;
 }

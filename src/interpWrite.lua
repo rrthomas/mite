@@ -1,20 +1,31 @@
 -- Mite interpretive code writer
 -- (c) Reuben Thomas 2000
 
-return Writer(
+return Writer{
   "Mite interpretive code",
--- Format of interpretive code: same as object code, but with data written out
---   To speed up interpretation, could have top-bit-set instruction variants
---   which take a simple number in the rest of the word; non-top-bit set
---   indicates that flags or multiple words are used; could also write out
---   modified code which expands constants and addresses inline
+-- The interpreter writer calculates the label addresses and writes
+-- out the data from the object code; the interpreter uses all three
+-- to intepret the code.
+
+-- TODO: To speed up interpretation, could have top-bit-set
+-- instruction variants which take a simple number in the rest of the
+-- word; non-top-bit set indicates that flags or multiple words are
+-- used; could also write out modified code which expands constants
+-- and addresses inline.
   [[
 #include <stdint.h>
 
 #include "translate.h"
 
+/* Writer state */
+typedef struct {
+  Byte *img, *ptr;
+  uintptr_t size, labSize[LABEL_TYPES];
+  Byte *labAddr[LABEL_TYPES]; /* label address arrays */
+} interpW_State;
+
 static Word
-evalImm(Byte f, int sgn, Word v, SWord r)
+evalImm(Byte f, int sgn, int r, Word v)
 {
   if (sgn)
     v = (Word)(-(SWord)v);
@@ -39,7 +50,7 @@ evalImm(Byte f, int sgn, Word v, SWord r)
   return v;
 }
 
-#define writeUInt(p, n) \
+#define interpW_UInt(p, n) \
   { \
     Word **uip = (Word **)(p); \
     *(*uip)++ = (n); \
@@ -49,37 +60,48 @@ evalImm(Byte f, int sgn, Word v, SWord r)
 #define DANGLE_MAXLEN PTR_BYTE
 #define RESOLVE_IMG NULL
 #define RESOLVE_PTR NULL
+
+static interpW_State *
+interpW_writerNew(void)
+{
+  interpW_State *W = new(interpW_State);
+  W->img = bufNew(W->size, INIT_IMAGE_SIZE);
+  W->ptr = W->img;
+  return W;
+}
 ]],
+"",
   {
-    Inst("lab",    "bufExt(t->labAddr[t1], t->labSize[t1], " .. 
-                   "t->labels[t1] * PTR_BYTE); " ..
-                   "t->labAddr[t1][t->labels[t1]] = t1 == LABEL_D " ..
-                   "? t->wPtr - t->wImg : t->rPtr - t->rImg;"),
-    Inst("mov",   ""), Inst("movi",  ""), Inst("ldl",   ""),
-    Inst("ld",    ""), Inst("st",    ""), Inst("gets",  ""),
-    Inst("sets",  ""), Inst("pop",   ""), Inst("push",  ""),
-    Inst("add",   ""), Inst("sub",   ""), Inst("mul",   ""),
-    Inst("div",   ""), Inst("rem",   ""), Inst("and",   ""),
-    Inst("or",    ""), Inst("xor",   ""), Inst("sl",    ""),
-    Inst("srl",   ""), Inst("sra",   ""), Inst("teq",   ""),
-    Inst("tlt",   ""), Inst("tltu",  ""), Inst("b",     ""),
-    Inst("br",    ""), Inst("bf",    ""), Inst("bt",    ""),
-    Inst("call",  ""), Inst("callr", ""), Inst("ret",   ""),
-    Inst("calln", ""),
-    Inst("lit",    "*(Word *)t->wPtr = evalImm(i1_f, i1_sgn, " ..
-                   "i1_v, i1_r); t->wPtr += PTR_BYTE"),
-    Inst("litl",   "addDangle(t, t1, l2); t->wPtr += PTR_BYTE"),
-    Inst("space",  "sp = evalImm(i1_f, i1_sgn, i1_v, i1_r) * " ..
-                   "PTR_BYTE;ensure(sp); memset(t->wPtr, 0, sp); " ..
-                   "t->wPtr += sp"),
+    Inst{"lab",   "bufExt(W->labAddr[t1], W->labSize[t1], " .. 
+                  "T->labels[t1] * PTR_BYTE); " ..
+                  "W->labAddr[t1][T->labels[t1]] = t1 == LABEL_D " ..
+                  "? W->ptr - W->img : R->ptr - R->img"},
+    Inst{"mov",   ""}, Inst{"movi",  ""}, Inst{"ldl",   ""},
+    Inst{"ld",    ""}, Inst{"st",    ""}, Inst{"gets",  ""},
+    Inst{"sets",  ""}, Inst{"pop",   ""}, Inst{"push",  ""},
+    Inst{"add",   ""}, Inst{"sub",   ""}, Inst{"mul",   ""},
+    Inst{"div",   ""}, Inst{"rem",   ""}, Inst{"and",   ""},
+    Inst{"or",    ""}, Inst{"xor",   ""}, Inst{"sl",    ""},
+    Inst{"srl",   ""}, Inst{"sra",   ""}, Inst{"teq",   ""},
+    Inst{"tlt",   ""}, Inst{"tltu",  ""}, Inst{"b",     ""},
+    Inst{"br",    ""}, Inst{"bf",    ""}, Inst{"bt",    ""},
+    Inst{"call",  ""}, Inst{"callr", ""}, Inst{"ret",   ""},
+    Inst{"calln", ""},
+    Inst{"lit",   "*(Word *)W->ptr = evalImm(i1_f, i1_sgn, " ..
+                  "i1_r, i1_v); W->ptr += PTR_BYTE"},
+    Inst{"litl",  "addDangle(T, t1, l2, W->ptr - W->img); " ..
+                  "W->ptr += PTR_BYTE"},
+    Inst{"space", "sp = evalImm(i1_f, i1_sgn, i1_r, i1_v) * " ..
+                  "PTR_BYTE; ensure(sp); memset(W->ptr, 0, sp); " ..
+                  "W->ptr += sp"},
   },
-  Translator("Word sp;",                       -- decls
+  Translator{"Word sp;",                            -- decls
              [[for (ty = 0; ty < LABEL_TYPES; ty++)
-    t->labAddr[ty] = bufNew(t->labSize[ty], INIT_LABS * PTR_BYTE);]],
+    W->labAddr[ty] = bufNew(W->labSize[ty], INIT_LABS * PTR_BYTE);]],
                                                     -- init
              "ensure(PTR_BYTE);",                   -- update
              [[for (ty = 0; ty < LABEL_TYPES; ty++)
-                 bufShrink(t->labAddr[ty], t->labSize[ty]);]]
+    bufShrink(W->labAddr[ty], W->labSize[ty]);]]
                                                     -- finish
-  )
-)
+  }
+}

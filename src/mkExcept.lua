@@ -24,4 +24,4 @@ function quote(s)
   return "\"" .. s .. "\""
 end
 writeto("excMsg.h")
-writeLine(join(",\n", map(quote, project(exception, "message"))))
+writeLine(join(",\n", map(quote, project("message", exception))))

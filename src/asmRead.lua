@@ -5,9 +5,8 @@
 -- Return type for a given label operand
 -- either a type variable, or determined by the instruction
 function labelType(inst, op)
-  local ty
   if op > 1 and inst.ops[op - 1] == "t" then
-    ty = "t" .. tostring(op - 1)
+    return "t" .. tostring(op - 1)
   else
     local tyToNum = {
       ldl  = "LABEL_D",
@@ -16,13 +15,12 @@ function labelType(inst, op)
       bt   = "LABEL_B",
       call = "LABEL_S"
     }
-    ty = tyToNum[inst.name]
+    return tyToNum[inst.name]
   end
-  return ty
 end
 
 
-return Reader(
+return Reader{
   "Mite assembly",
   [[
 #include <stdint.h>
@@ -34,28 +32,23 @@ return Reader(
 #include "translate.h"
 
 
-static int
-issym(int c)
-{
-  return isalnum(c) || (c == '_');
-}
+/* Reader state */
+typedef struct {
+  char *img, *end, *ptr;
+  HashTable *labHash; /* table of label names */
+  Bool eol; /* EOL state */
+} asmR_State;
 
-static int
-isimm(int c)
-{
-  return isxdigit(c) || strchr(">-_swx", c);
-}
-
-/* Read next token consisting of characters for which f() returns true into
-   *tok, advancing t->rPtr past it, and discarding leading non-f() characters
-   and comments */
+/* Read next token consisting of characters for which f() returns true
+   into *tok, advancing R->ptr past it, and discarding leading non-f()
+   characters and comments */
 static Word
-rdTok(TState *t, char **tok, int (*f)(int))
+asmR_tok(asmR_State *R, char **tok, int (*f)(int))
 { 
-#define p t->rPtr
-  if (t->eol) {
+#define p R->ptr
+  if (R->eol) {
     excLine++;
-    t->eol = 0;
+    R->eol = 0;
   }
   while (*p && (isspace((char)*p) || (char)*p == '#')) {
     if ((char)*p == '#')
@@ -73,17 +66,17 @@ rdTok(TState *t, char **tok, int (*f)(int))
   if (!isspace((char)*p))
     throw(ExcBadChar);
   if ((char)*p == '\n')
-    t->eol = 1;
-  *p = (Byte)'\0';
-  return p++ - (Byte *)*tok;
+    R->eol = 1;
+  *p = '\0';
+  return p++ - *tok;
 #undef p
 }
 
 static Opcode
-rdInst(TState *t)
+rdInst(asmR_State *R)
 {
   char *tok;
-  Word len = rdTok(t, &tok, issym);
+  Word len = asmR_tok(R, &tok, issym);
   struct Inst *i = findInst(tok, len);
   if (i == NULL)
     throw(ExcBadInst);
@@ -92,11 +85,11 @@ rdInst(TState *t)
 
 #undef isdigit /* use the function, not the macro */
 static Register
-rdReg(TState *t)
+rdReg(asmR_State *R)
 {
   char *tok, *nend;
   Register r;
-  Word len = rdTok(t, &tok, isdigit);
+  Word len = asmR_tok(R, &tok, isdigit);
   r = strtoul(tok, &nend, 10);
   if (r > UINT_MAX || (Word)(nend - tok) != len)
     throw(ExcBadReg);
@@ -104,10 +97,10 @@ rdReg(TState *t)
 }
 
 static LabelType
-rdLabTy(TState *t)
+asmR_labTy(asmR_State *R)
 {
   char *tok;
-  Word len = rdTok(t, &tok, isalpha);
+  Word len = asmR_tok(R, &tok, isalpha);
   if (len == 1)
     switch (*tok) {
     case 'b':
@@ -121,13 +114,13 @@ rdLabTy(TState *t)
 }
 
 static HashNode *
-rdLab(TState *t, LabelType ty)
+asmR_lab(asmR_State *R, LabelType ty)
 {
   char *tok;
   Label *l;
   HashLink hl;
-  rdTok(t, &tok, issym);
-  hashGet(t->labHash, tok, &hl);
+  asmR_tok(R, &tok, issym);
+  hashGet(R->labHash, tok, &hl);
   if (hl.found) {
     l = hl.curr->body;
     if (l->ty != ty)
@@ -137,17 +130,17 @@ rdLab(TState *t, LabelType ty)
     l = new(Label);
     l->ty = ty;
     l->v.n = 0;
-    return hashSet(t->labHash, &hl, tok, l);
+    return hashSet(R->labHash, &hl, tok, l);
   }
 }
 
 static void
-rdImm(TState *t, Byte *f, SByte *sgn, Word *v, int *r)
+asmR_imm(asmR_State *R, Byte *f, SByte *sgn, int *r, Word *v)
 {
   int rsgn;
   long rl;
   char *tok, *nend;
-  rdTok(t, &tok, isimm);
+  asmR_tok(R, &tok, isimm);
   *f = 0;
   if (*tok == 'e') {
     tok++;
@@ -169,8 +162,8 @@ rdImm(TState *t, Byte *f, SByte *sgn, Word *v, int *r)
   errno = 0;
   *v = strtoul(tok, &nend, 0);
   if (errno == ERANGE || (*sgn && *v > (unsigned long)(LONG_MAX) + 1))
-    /* rather than -LONG_MIN; we're assuming two's complement anyway, and
-       negating LONG_MIN overflows long */
+    /* rather than -LONG_MIN; we're assuming two's complement anyway,
+       and negating LONG_MIN overflows long */
     throw(ExcBadImmVal);
   tok = nend;
   rsgn = 0;
@@ -194,46 +187,56 @@ rdImm(TState *t, Byte *f, SByte *sgn, Word *v, int *r)
 }
 
 static LabelValue
-labelAddr(TState *t, Label *l)
+asmR_labelAddr(asmR_State *R, Label *l)
 {
   LabelValue ret;
   HashLink hl;
-  hashGet(t->labHash, (char *)l->v.p, &hl);
+  hashGet(R->labHash, (char *)l->v.p, &hl);
   ret.p = hl.found ? ((Label *)hl.curr->body)->v.p : NULL;
   return ret;
 }
+
+static asmR_State *
+asmR_readerNew(char *img, uintptr_t size)
+{
+  asmR_State *R = new(asmR_State);
+  R->ptr = R->img = img;
+  R->end = img + size;
+  return R;
+}
 ]],
   {
-    r = OpType("Register r%n = rdReg(t);", ""),
-    i = OpType([[Byte i%n_f;
+    r = OpType{"Register r%n = rdReg(R);", ""},
+    i = OpType{[[Byte i%n_f;
         SByte i%n_sgn;
-        Word i%n_v;
-        int i%n_r;]],
-        "rdImm(t, &i%n_f, &i%n_sgn, &i%n_v, &i%n_r);"),
-    t = OpType("LabelType t%n = rdLabTy(t);", ""),
-    l = OpType(function (inst, op)
+        int i%n_r;
+        Word i%n_v;]],
+        "asmR_imm(R, &i%n_f, &i%n_sgn, &i%n_r, &i%n_v);"},
+    t = OpType{"LabelType t%n = asmR_labTy(R);", ""},
+    l = OpType{function (inst, op)
                  local ty = labelType(inst, op)
-                 return "HashNode *l%n_hn = rdLab(t, " .. ty .. [[);
+                 return "HashNode *l%n_hn = asmR_lab(R, " .. ty .. [[);
         LabelValue l%n;]]
                end,
-        "l%n.p = (Byte *)l%n_hn->key;"),
-    n = OpType(function (inst, op)
+        "l%n.p = l%n_hn->key;"},
+    n = OpType{function (inst, op)
                  local ty = labelType(inst, op)
-                 return "HashNode *n%n_hn = rdLab(t, " .. ty .. ");"
+                 return "HashNode *n%n_hn = asmR_lab(R, " .. ty ..
+                   ");\n        Label *l;"
                end,
                function (inst, op)
                  local ty = labelType(inst, op)
                  return [[l = n%n_hn->body;
         if (l->v.n)
           throw(ExcDupLab, n%n_hn->key);
-        l->v.n = ++t->labels[]] .. ty .. "];"
-               end),
+        l->v.n = ++T->labels[]] .. ty .. "];"
+               end},
   },
-  Translator(
-    "Label *l;",                     -- decls
-    [[t->labHash = hashNew(4096);
-  t->eol = 0;]],                     -- init
-    "o = rdInst(t);",                -- update
-    ""                               -- finish
-  )
-)
+  Translator{
+    "",                              -- decls
+    [[R->labHash = hashNew(4096);
+  R->eol = 0;]],                     -- init
+    "o = rdInst(R);",                -- update
+    "",                              -- finish
+  }
+}

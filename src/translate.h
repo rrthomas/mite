@@ -11,51 +11,24 @@
 #include <stdint.h>
 #include <limits.h>
 
+#include "endian.h"
 #include "util.h"
+#include "types.h"
+#include "const.h"
+#include "except.h"
+#include "buffer.h"
+#include "list.h"
+#include "hash.h"
+#include "file.h"
 
 
-typedef int Bool;
-typedef uint8_t Byte;
-typedef int8_t SByte;
-typedef uint32_t InstWord;
-typedef int32_t SInstWord;
-typedef uintptr_t Word;
-typedef intptr_t SWord;
-
-#define BYTE_BIT CHAR_BIT /* Number of bits */
-#define BYTE_SIGN_BIT (1U << (BYTE_BIT - 1)) /* 1 in sign bit */
-#define BYTE_SHIFT 3 /* Shift to turn bytes into bits */
-#define BYTE_MASK ((Byte)-1) /* Mask for a byte */
-
-#define WORD_BYTE (sizeof(InstWord)) /* Number of bytes */
-#define WORD_BIT (sizeof(InstWord) * CHAR_BIT) /* Number of bits */
-#define WORD_ALIGN (WORD_BYTE - 1) /* Mask to align an address */
-#define WORD_SIGN_BIT (1U << (WORD_BIT - 1)) /* 1 in sign bit */
-#define WORD_SHIFT 2 /* Shift to turn words into bytes */
-#define WORD_BYTES_LEFT(p) (WORD_BYTE - ((uintptr_t)p & WORD_ALIGN))
-
-#define PTR_BYTE (sizeof(uintptr_t)) /* Number of bytes */
-#define PTR_BIT (sizeof(uintptr_t) * CHAR_BIT) /* Number of bits */
-#define PTR_MASK (PTR_BYTE - 1)
-  /* Number of bytes left in the word from p */
-#define PTR_BYTES_LEFT(p) (PTR_BYTE - ((uintptr_t)p & PTR_MASK))
-  /* Number of bytes left in the word from p */
-
-#define INST_MAXLEN 4096 /* Maximum amount of code generated for an
-                            instruction */
-
-#define ensure(n) \
-  bufExt(t->wImg, t->wSize, (uintptr_t)(t->wPtr - t->wImg + (n)))
-
+/* Instruction set */
 #include "instEnum.h"
 struct Inst { const char *name; Opcode opcode; };
 #include "insts.h"
 
+/* Register type */
 typedef unsigned int Register;
-
-/* Mapping from instruction to operand types */
-typedef unsigned int OpList;
-extern OpList opType[];
 
 /* Label types */
 typedef enum {
@@ -66,7 +39,7 @@ typedef enum {
 /* Label value */
 typedef union {
   uintptr_t n;
-  Byte *p;
+  void *p;
 } LabelValue;
 
 /* Label */
@@ -78,7 +51,7 @@ typedef struct {
 /* Dangling label list node */
 typedef struct _Dangle {
   Label *l;
-  ptrdiff_t ins; /* insertion point */
+  ptrdiff_t off; /* offset into image */
   struct _Dangle *next;
 } Dangle;
 
@@ -90,27 +63,13 @@ typedef struct _Dangle {
 
 /* Translator state */
 typedef struct {
-  Byte *rImg, *rEnd, *rPtr;
-  Byte *wImg, *wPtr;
-  uintptr_t wSize, labels[LABEL_TYPES], labSize[LABEL_TYPES];
+  void *img;
+  uintptr_t size, labels[LABEL_TYPES];
   Dangle *dangles, *dangleEnd;
-  Byte *labAddr[LABEL_TYPES]; /* Code writer label address arrays */
-  HashTable *labHash; /* Assembly reader table of label names */
-  Bool eol; /* Assembly reader EOL state */
 } TState;
 
-typedef TState *Translator(Byte *rImg, Byte *rEnd);
-
-#define INIT_IMAGE_SIZE 16384
-#define INIT_LABS 256
-
-void
-addDangle(TState *t, LabelType ty, LabelValue n);
-
-void
-align(TState *t);
-
-TState *
-translatorNew(Byte *img, Byte *end);
+/* Extend a write buffer */
+#define ensure(n) \
+  bufExt(W->img, W->size, (uintptr_t)(W->ptr - W->img + (n)))
 
 #endif
