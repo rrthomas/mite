@@ -1,4 +1,4 @@
-/* Mite abstract grammar
+/* Mite translator shared utility routines
    (c) Reuben Thomas 2000
 */
 
@@ -9,12 +9,6 @@
 #include "buffer.h"
 #include "translate.h"
 
-
-const char *labelType[] = {
-  "branch",
-  "subroutine",
-  "data"
-};
 
 void
 align(TState *t)

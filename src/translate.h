@@ -51,6 +51,8 @@ typedef uint32_t Word;
 struct Inst { const char *name; Opcode opcode; };
 #include "insts.h"
 
+typedef unsigned int Register;
+
 /* Mapping from instruction to operand types */
 typedef unsigned int OpList;
 extern OpList opType[];
@@ -59,7 +61,6 @@ extern OpList opType[];
 typedef enum {
   LABEL_B = 1, LABEL_S, LABEL_D, LABEL_TYPES = 3
 } LabelType;
-extern const char *labelType[]; /* names */
 
 /* Label value */
 typedef union {
@@ -85,14 +86,6 @@ typedef struct _Dangle {
 #define FLAG_S 4
 #define FLAG_W 2
 #define FLAG_R 1
-
-/* Immediate numbers */
-typedef struct {
-  uintptr_t v; /* value */
-  int r; /* rotation */
-  Byte f; /* flags */
-  SByte sgn; /* sign */
-} Immediate;
 
 /* Translator state */
 typedef struct {
