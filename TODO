@@ -1,4 +1,6 @@
-Get build working with cook or cons (?).
+Get interpreter working.
+
+Use a better build tool: cook or cons (?).
 
 Make a distribution that can easily be compiled with any ANSI C
 compiler.
