@@ -8,7 +8,7 @@
 #include "types.h"
 
 
-static char sym[] = "LITTLE_ENDIAN";
+static char sym[] = "LITTLE_ENDIAN_MITE";
 
 int
 main (void)
