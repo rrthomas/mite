@@ -6,10 +6,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-#include "except.h"
-#include "buffer.h"
-#include "flen.h"
-#include "string.h"
 #include "translate.h"
 
 
@@ -20,7 +16,7 @@
 char *progName;
 
 typedef enum {
-  None, Obj, Asm
+  None, Obj, Asm, Interp
 } FileType;
 
 #include "translators.c"
@@ -32,6 +28,8 @@ typeFromSuffix(const char *s)
     return Obj;
   else if (s == NULL || *s == '\0' || strcmp(s, "s") == 0)
     return Asm;
+  else if (strcmp(s, "interp") == 0)
+    return Interp;
   return None;
 }
 
@@ -53,7 +51,7 @@ readFile(const char *file, Byte **data)
   uintptr_t max;
   if (*file == '-' && (file[1] == '\0' || file[1] == '.')) {
     fp = stdin;
-    *data = bufNew(max, MIN_IMAGE_SIZE);
+    *data = bufNew(max, INIT_IMAGE_SIZE);
     p = *data;
     while (!feof(fp)) {
       len += fread(p, sizeof(Byte), max, fp);
