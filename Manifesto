@@ -1,0 +1,131 @@
+An antidote to .NET
+-------------------
+
+The below is *not* a plan for a specific system, but a manifesto for a way
+of developing such a system, or even a variety of such systems (one of the
+principles being that there needn't be One True Way).
+
+
+.NET's good points
+------------------
+
+Comprehensive
+
+  deals with security, outside interaction, has wide-ranging libraries...
+
+Platform neutral
+
+  implemented on Intel, local-variable-based VM
+
+Language neutral
+  
+  at least better than Java, though some restrictions as noted above
+
+Performance in theory
+
+  all sorts of special instructions that should be capable of optimisation
+  by a clever JIT
+
+Common type system
+
+  common data representation in a (fairly) language-neutral way; lacks
+  purity, strictness &c. annotations for (lazy) functional languages;
+  probably similar concerns for logical, linear &c. languages
+
+
+.NET's bad points
+-----------------
+
+Too big
+
+Too complex
+
+Not modular
+
+Closed world
+
+  difficult to translate non-C# language features for
+    tail calls, stack balancing requirements, raw memory access
+  
+  difficult to call into, although it does have reasonable support for calling
+  out
+
+URT is too high level
+
+  too many language-oriented assumptions, requires a heavy duty (hence slow)
+  JIT to produce good code)
+
+Performance in practice
+
+  an excellent JIT could do a better job, but the current one doesn't
+
+Common language subset is large
+
+  many types, perhaps because of the strongly-typed bias of .NET
+
+
+Want a system which
+-------------------
+
+Is simple and small
+
+  Complexity may be unavoidable or even beneficial in commercial
+  circumstances, but it's good to have a system to be used experimentally,
+  that can be mostly understood and rewritten by a single person
+  
+  Complexity, like entropy, tends to increase anyway, so might as well try
+  to minimise it at the outset
+  
+  Much complexity in most systems is really the result of inertia and
+  legacy; one of the benefits of starting again is getting to throw lots
+  away.
+
+Supports proven, "classic" technologies
+
+  ANSI C, OpenGL
+  
+  Why? To avoid having to reinvent bits you're not interested in
+
+Allows any bit to be replaced
+
+  not monolithic
+
+  can use existing solutions (as above), or invent new ones
+  
+  can throw bits of the existing system away to reduce complexity in future
+
+Is open
+
+  interworks with other systems easily
+
+Performs reasonably well
+
+  emphasis on "reasonably"
+  
+  good performance should not add complexity (80-20 rule)
+  
+  the main way to improve performance should be to go to lower levels
+  
+    write Mite code by hand    
+    write native code by hand
+    call out to native libraries
+    
+A single language, or family of languages
+
+  scales well from scripting to large systems
+
+A low-level execution model that doesn't force implementation decisions
+
+  garbage collector
+  
+  threading
+
+Is portable
+
+  portable execution model and object code
+  
+  allows various levels of portability (rather like ANSI Forth); the system
+  should encourage completely portable code, but not disallow this to be
+  circumvented when expedient
+
+

@@ -1,0 +1,57 @@
+Shifts of type size (e.g. 32 bits for a word) are not allowed; make sure
+they are not assumed.
+
+Need to match assembly reader and writer with ReadObj.c.
+
+
+Test system:
+
+Have a Lua script which takes a little file of the form:
+
+test = {
+  input = "<input>",
+  input_type = "<in-type>",
+  output_type = "<out-type>",
+  flags = "<flags-to-mit>",
+  output = { <list-of-outputs> }
+}
+
+and runs
+
+  mit <flags to mit> -.<in type> -.<out type> 2>1
+
+The output is piped back in and compared against each output, which can be
+either genuine output or an error. If one matches, the test passes;
+otherwise it fails.
+
+Have another script that takes an input file, input type, output type and
+flags, and produces a test file from it.
+
+
+Extensions:
+
+Accessing dynamic libs: return the address of the given symbol; should work
+at least for the standard C library.
+
+FP instruction set (using new reg set, use only 64-bit IEEE numbers).
+
+Higher level calling: use Swig.
+
+
+Separate compilation of Mite code
+
+Use a custom format, and dynamic linking.
+
+Allow dynamic linking? Mite code could be DLed to native code. Would need to
+distinguish Mite symbols from native ones.
+
+Mite starts by loading a single object file. All other facilities can be
+provided in virtual code; just need to add access to libffi/Swig. Allow
+Mite modules to be loaded and linked in. Preferably possible to load just
+code (no symbols) if desired. Need export/import labels for Mite and native
+symbols.
+
+Addresses can only be known after word-length independence adjustment.
+
+
+Good magic value for 7-coded stream: 37F06EDh (becomes 1B7C0DEDh when 7-coded).
