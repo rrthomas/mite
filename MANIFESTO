@@ -127,5 +127,3 @@ Is portable
   allows various levels of portability (rather like ANSI Forth); the system
   should encourage completely portable code, but not disallow this to be
   circumvented when expedient
-
-
