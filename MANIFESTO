@@ -124,6 +124,6 @@ Is portable
 
   portable execution model and object code
   
-  allows various levels of portability (rather like ANSI Forth); the system
-  should encourage completely portable code, but not disallow this to be
-  circumvented when expedient
+  allows various levels of portability (rather like ANSI Forth); the
+  system should encourage completely portable code, but not stop this
+  being circumvented when expedient
