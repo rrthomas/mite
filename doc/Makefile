@@ -33,7 +33,7 @@ RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 # Source files
 
 DOCS = mite.pdf iface.pdf mit.pdf
-TEX_TABLES = instLab.tex instComp.tex instData.tex instOpcode.tex
+TEX_TABLES = instLab.tex instComp.tex instData.tex instCcall.tex instOpcode.tex
 
 
 # Top-level targets
@@ -53,4 +53,4 @@ $(TEX_TABLES): $(MITE_TOP)/spec.lua procSpec.lua
 	$(RUNLUA) procSpec.lua
 	touch mite.tex
 
-mite.tex: $(TEX_TABLES)
+mite.dvi: $(TEX_TABLES)
