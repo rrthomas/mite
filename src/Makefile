@@ -19,7 +19,7 @@ RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 # Source files
 
-TRANS_SRCS = asmToObj.c objToAsm.c
+TRANS_SRCS = asmToObj.c objToAsm.c objToInterp.c
 TRANS_OBJS = $(patsubst %.c,%.o,$(TRANS_SRCS))
 SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c
 
@@ -72,6 +72,9 @@ asmToObj.c: asmRead.lua objWrite.lua mkTrans.lua
 
 objToAsm.c: objRead.lua asmWrite.lua mkTrans.lua
 	$(RUNLUA) mkTrans.lua objRead.lua asmWrite.lua $*
+
+objToInterp.c: objRead.lua interpWrite.lua mkTrans.lua
+	$(RUNLUA) mkTrans.lua objRead.lua interpWrite.lua $*
 
 
 # Include dependencies
