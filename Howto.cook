@@ -1,0 +1,39 @@
+/* Top-level Makefile for Mite
+   (c) Reuben Thomas 1999
+*/
+
+
+if [not [defined MITE]] then
+	MITE = .;
+
+
+all: mit doc;
+
+mit:
+{
+	cd src\; [self] all;
+}
+
+doc:
+{
+	cd doc\; [self] all;
+}
+
+dist: all dist-clean
+{
+	cd ..;
+	rm -f mite.zip;
+	zip -qr mite.zip mite;
+}
+
+clean:
+{
+	cd src\; [self] [target];
+	cd doc\; [self] [target];
+}
+
+dist-clean:
+{
+	cd src\; [self] [target];
+	cd doc\; [self] [target];
+}
