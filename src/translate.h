@@ -11,14 +11,14 @@
 #include <stdint.h>
 #include <limits.h>
 
-#include "buffer.h"
-#include "hash.h"
+#include "util.h"
 
 
 typedef int Bool;
 typedef uint8_t Byte;
 typedef int8_t SByte;
 typedef uint32_t Word;
+typedef int32_t SWord;
 
 #define BYTE_BIT CHAR_BIT /* Number of bits in a byte */
 #define BYTE_SIGN_BIT (1U << (BYTE_BIT - 1)) /* 1 in sign bit of a byte */
@@ -41,8 +41,6 @@ typedef uint32_t Word;
 
 #define INST_MAXLEN 4096 /* Maximum amount of code generated for an
                             instruction */
-
-#define max(a, b) ((a) > (b) ? (a) : (b))
 
 #define ensure(n) \
   bufExt(t->wImg, t->wSize, (uintptr_t)(t->wPtr - t->wImg + (n)))
@@ -92,15 +90,17 @@ typedef struct _Dangle {
 typedef struct {
   Byte *rImg, *rEnd, *rPtr;
   Byte *wImg, *wPtr;
-  uintptr_t wSize, labels[LABEL_TYPES];
+  uintptr_t wSize, labels[LABEL_TYPES], labSize[LABEL_TYPES];
   Dangle *dangles, *dangleEnd;
-  HashTable *labelHash; /* Assembly reader hash table for label names */
+  Byte *labAddr[LABEL_TYPES]; /* Code writer label address arrays */
+  HashTable *labHash; /* Assembly reader table of label names */
   Bool eol; /* Assembly reader EOL state */
 } TState;
 
 typedef TState *Translator(Byte *rImg, Byte *rEnd);
 
-#define MIN_IMAGE_SIZE 16384
+#define INIT_IMAGE_SIZE 16384
+#define INIT_LABS 256
 
 void
 addDangle(TState *t, LabelType ty, LabelValue n);
