@@ -1,19 +1,35 @@
-Immediate action to get it working and back on track:
+Make a file bundle release (just a tar of the contents of CVS).
 
-Debug core dump
+Clean up Mite: build it on a clean system, and expand out custom stuff
+(ctable, any other latex packages, hevea packages). Run nuweb on *.w
+and check in the results, and remove .w files.
 
-Add output of assembler back in, and do asm->asm and obj->asm (need to
-match assembly reader and writer with ReadObj.c)
+Specify interfaces for readers and writers, so that more can more
+easily be written.
+
+Do asm->asm and obj->asm (need to match assembly reader and writer
+with objRead.c)
+
+Reduce the number of warnings given by gcc if reasonably possible.
+
+Instead of using __GNUC__, use some way of distinguishing ISO'99 from
+ISO'89 to decide whether to use ISO'99 features (e.g. in insts.gperf,
+but this needs changes to gperf! Look at latest version). Also ask if
+it's possible to get fewer warnings from GCC: put both fields in empty
+hash table entries:{"", 0}, and have prototype of lookup function
+before it is declared (must be done my gperf because the exact form of
+the declaration depends on the command-line arguments to gperf).
 
 
-Shifts of type size (e.g. 32 bits for a word) are not allowed; make sure
-they are not assumed.
+Make sure that versions of files don't stay at 1.1.1.1. Why is this??
 
+Shifts of type size (e.g. 32 bits for a word) are not allowed; make
+sure they are not assumed.
 
 
 Test system:
 
-Have a Lua script which takes a little file of the form:
+Have a Lua script which takes a file of the form:
 
 test = {
   input = "<input>",
@@ -27,9 +43,9 @@ and runs
 
   mit <flags to mit> -.<in type> -.<out type> 2>1
 
-The output is piped back in and compared against each output, which can be
-either genuine output or an error. If one matches, the test passes;
-otherwise it fails.
+The output is piped back in and compared against each output in the
+test table, which can be either genuine output or an error. If one
+matches, the test passes; otherwise it fails.
 
 Have another script that takes an input file, input type, output type and
 flags, and produces a test file from it.
