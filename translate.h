@@ -38,12 +38,14 @@ typedef uint32_t Word;
 #define PTR_BYTES_LEFT(p) (PTR_BYTE - ((uintptr_t)p & PTR_MASK))
   /* Number of bytes left in the Word from p */
 
+#define INST_MAXLEN 4096 /* Maximum amount of code generated for an
+                            instruction */
+
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-/* Instruction opcodes */
-enum {
 #include "opEnum.h"
-};
+struct Inst { const char *name; unsigned int opcode; };
+#include "insts.h"
 
 /* Operand types */
 enum {
@@ -85,10 +87,9 @@ typedef struct _Dangle {
 } Dangle;
 
 /* Immediate number flag bits */
-#define FLAG_E 8
-#define FLAG_S 4
-#define FLAG_W 2
-#define FLAG_R 1
+#define FLAG_E 4
+#define FLAG_S 2
+#define FLAG_W 1
 
 /* Immediate numbers */
 typedef struct {
@@ -121,7 +122,7 @@ typedef TState *Translator(Byte *rImg, Byte *rEnd);
 #define MIN_IMAGE_SIZE 16384
 
 void
-addDangle(TState *t, unsigned int ty, uintptr_t n);
+addDangle(TState *t, unsigned int ty, LabelValue n);
 
 void
 resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
@@ -135,9 +136,6 @@ resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
 
 void
 align(TState *t);
-
-void
-nullLabNew(TState *t, unsigned int ty, uintptr_t n);
 
 TState *
 translatorNew(Byte *img, Byte *end);
