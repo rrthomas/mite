@@ -94,20 +94,20 @@ putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
   *(t->wPtr)++ = ' '
 
 #define R(r) \
-  SP;
+  SP; \
   putNum(t, r)
 
 #define LabTy(L) \
-  SP;
+  SP; \
   putLabTy(t, L)
 
 #define Lab(ty, l) \
-  SP;
-  putLabTy(t, ty);
+  SP; \
+  putLabTy(t, ty); \
   addDangle(t, ty, l)
 
 #define Imm(f, n, v, r) \
-  SP;
+  SP; \
   putImm(t, f, n, v, r)
 
 
