@@ -37,8 +37,8 @@ eval(Byte f, int n, uintptr_t v, uintptr_t r)
   }
 }
 
-#define Lab(ty, l) addDangle(t, ty, l); bufEnsure(PTR_BYTE); t->wPtr += PTR_BYTE
-#define Imm(n) bufEnsure(PTR_BYTE); *(uintptr_t *)t->wPtr = n; t->wPtr += PTR_BYTE
+#define Lab(ty, l) addDangle(t, ty, l); t->wPtr += PTR_BYTE
+#define Imm(n) *(uintptr_t *)t->wPtr = n; t->wPtr += PTR_BYTE
 #define Zero(n) l = n * PTR_BYTE; bufEnsure(l); memset(t->wPtr, 0, l); \
   t->wPtr += l
 
