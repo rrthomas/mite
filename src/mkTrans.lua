@@ -11,26 +11,28 @@ instWidth = 36
 
 -- Constructors
 Reader = constructor{
-  "reads",       -- what is read
+  "reads",       -- what the reader reads
   "prelude",     -- literal source code
-  "rdInst",      -- code to read an instruction
-  "labelAddr",   -- map a label's name to its address
   "opType",      -- operand type reader table
   "trans",       -- reader-specific parts of translator function  
 }
 
 OpType = function(decls, code)
-  -- decls: declarations for the operand reading code
-  -- code: code to read an operand of the given type
-  -- either a string, or a function (inst, op_no) -> string in both
-  -- decls and code, the name of the operand is substituted for %o
+           -- decls: declarations for the operand reading code
+           -- code: code to read an operand of the given type
+           -- each is either a string, or a function (inst, op) ->
+           -- string
+           -- in the output, %n -> operand no.
            function funcify(f)
              if type(f) ~= "function" then
-               return function (inst, op)
-                        return %f
-                      end
+               f = function (inst, op)
+                     return %f
+                   end
              end
-             return f
+             return function (inst, opNo)
+                      local s = %f(inst, opNo)
+                      return gsub(s, "%%n", tostring(opNo))
+                    end
            end
            local t = {decls = funcify(decls), code = funcify(code)}
            return t
@@ -44,11 +46,8 @@ Translator = constructor{
 }
 
 Writer = constructor{
-  "writes",       -- what is written
+  "writes",       -- what the writer writes
   "prelude",      -- literal source code
-  "dangleMaxLen", -- DANGLE_MAXLEN
-  "resolveImg",   -- RESOLVE_IMG
-  "resolvePtr",   -- RESOLVE_PTR
   "inst",         -- instruction table
 }
 
@@ -103,15 +102,36 @@ writeLine("/* " .. r.reads .. " to " .. w.writes .. " translator */\n")
 writeLine("#include \"translators.h\"")
 
 -- Reader prelude and macros
-writeLine(r.prelude,
-          "#define rdInst(t) " .. r.rdInst,
-          "#define labelAddr(t, l) " .. r.labelAddr .. "\n")
+writeLine(r.prelude)
 
 -- Writer prelude and macros
-writeLine(w.prelude,
-          "#define DANGLE_MAXLEN " .. w.dangleMaxLen,
-          "#define RESOLVE_IMG " .. w.resolveImg,
-          "#define RESOLVE_PTR " .. w.resolvePtr .. "\n")
+writeLine(w.prelude)
+
+-- Dangle resolution function
+writeLine("static void",
+          "resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr)",
+          "{",
+          "  Dangle *d;",
+          "  uintptr_t prev = 0, extras, n,",
+          "    off = finalPtr - finalImg;", 
+          "  for (d = t->dangles->next, n = 0; d; d = d->next, n++);",
+          "  finalImg = excRealloc(finalImg, t->wPtr - t->wImg + n *",
+          "                        DANGLE_MAXLEN + off);",
+          "  finalPtr = finalImg + off;",
+          "  for (d = t->dangles->next; d; d = d->next) {",
+          "    memcpy(finalPtr, t->wImg + prev, d->ins - prev);",
+          "    finalPtr += d->ins - prev;",
+          "    extras = writeUInt(&finalPtr, labelAddr(t, d->l).n);",
+          "    prev = d->ins + extras;",
+          "  }",
+          "  memcpy(finalPtr, t->wImg + prev,",
+          "         t->wPtr - t->wImg - prev);", 
+          "  finalPtr += t->wPtr - t->wImg - prev;",
+          "  free(t->wImg);",
+          "  t->wImg = realloc(finalImg, finalPtr - finalImg);",
+          "  t->wPtr = t->wImg + (finalPtr - finalImg);",
+          "}",
+          "")
 
 -- Start of the translator function
 writeLine("TState *",
@@ -125,30 +145,27 @@ writeLine("TState *",
           "    t->labels[ty] = 0;",
           "  " .. r.trans.init,
           "  while (t->rPtr < t->rEnd) {",
-          "    o = rdInst(t);",
           "    " .. r.trans.update,
           "    ensure(" .. r.trans.maxInstLen .. ");",
           "    switch (o) {")
 
 -- The instruction cases
 for i = 1, getn(inst) do
-  function substOp(s, op)
-    return gsub(s, "%%o", op)
-  end
   writeLine("    case " .. opify(inst[i].name) .. ":",
             "      {")
   local inst = inst[i]
   for j = 1, getn(inst.ops) do
-    local opType = inst.ops[j]
-    local opTypeInfo = r.opType[opType]
+    local opTypeInfo = r.opType[inst.ops[j]]
     local decls = opTypeInfo.decls(inst, j)
-    local code = opTypeInfo.code(inst, j)
-    local opVar = opType .. tostring(j)
     if decls ~= "" then
-      writeLine("        " .. substOp(decls, opVar))
+      writeLine("        " .. decls)
     end
+  end
+  for j = 1, getn(inst.ops) do
+    local opTypeInfo = r.opType[inst.ops[j]]
+    local code = opTypeInfo.code(inst, j)
     if code ~= "" then
-      writeLine("        " .. substOp(code, opVar))
+      writeLine("        " .. code)
     end
   end
   writeLine("        " .. w.inst[i].def .. ";",
@@ -162,6 +179,6 @@ writeLine("    default:",
 writeLine("    }",
           "  }",
           "  excLine = 0;",
-          "  resolve(t);",
+          "  resolveDangles(t, RESOLVE_IMG, RESOLVE_PTR);",
           "  return t;",
           "}")

@@ -205,32 +205,30 @@ labelAddr(TState *t, Label *l)
   ret.p = hl.found ? ((Label *)hl.curr->body)->v.p : NULL;
   return ret;
 }
-  ]],
-  "rdInst(t)",       -- rdInst(t)
-  "labelAddr(t, l)", -- labelAddr(t, l)
+]],
   {
-    r = OpType("Register %o = rdReg(t);", ""),
-    i = OpType([[Byte %o_f;
-        SByte %o_sgn;
-        uintptr_t %o_v;
-        int %o_r;]],
-        "rdImm(t, &%o_f, &%o_sgn, &%o_v, &%o_r);"),
-    t = OpType("LabelType %o = rdLabTy(t);", ""),
+    r = OpType("Register r%n = rdReg(t);", ""),
+    i = OpType([[Byte i%n_f;
+        SByte i%n_sgn;
+        uintptr_t i%n_v;
+        int i%n_r;]],
+        "rdImm(t, &i%n_f, &i%n_sgn, &i%n_v, &i%n_r);"),
+    t = OpType("LabelType t%n = rdLabTy(t);", ""),
     l = OpType(function (inst, op)
                  local ty = labelType(inst, op)
-                 return "HashNode *%o_hn = rdLab(t, " .. ty .. [[);
-        LabelValue %o;]]
+                 return "HashNode *l%n_hn = rdLab(t, " .. ty .. [[);
+        LabelValue l%n;]]
                end,
-        "%o.p = (Byte *)%o_hn->key;"),
+        "l%n.p = (Byte *)l%n_hn->key;"),
     n = OpType(function (inst, op)
                  local ty = labelType(inst, op)
-                 return "HashNode *%o_hn = rdLab(t, " .. ty .. ");"
+                 return "HashNode *n%n_hn = rdLab(t, " .. ty .. ");"
                end,
                function (inst, op)
                  local ty = labelType(inst, op)
-                 return [[l = %o_hn->body;
+                 return [[l = n%n_hn->body;
         if (l->v.n)
-          throw("duplicate definition for `%s'", %o_hn->key);
+          throw("duplicate definition for `%s'", n%n_hn->key);
         l->v.n = ++t->labels[]] .. ty .. "];"
                end),
   },
@@ -238,7 +236,8 @@ labelAddr(TState *t, Label *l)
     "Label *l;",     -- decls
     [[t->labelHash = hashNew(4096);
   t->eol = 0;]],     -- init
-    "excLine += 1;", -- update
+    [[o = rdInst(t);
+    excLine += 1;]], -- update
     "INST_MAXLEN"    -- maxInstLen
   )
 )

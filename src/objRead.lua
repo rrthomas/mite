@@ -98,27 +98,10 @@ static const char *badReg = "bad register",
   *badLabTy = "bad label type",
   *badFlags = "bad immediate flags";
 
-#define CHECK__(op)
-#define CHECK_l(op)
-#define CHECK_n(op)
-#define CHECK_f(op) \
-  if (op & ~(FLAG_R | FLAG_S | FLAG_W | FLAG_E)) throwPos(t, badFlags)
-#define CHECK_r(op) \
-  if (op == 0 || op > UINT_MAX) throwPos(t, badReg)
-#define CHECK_t(op) \
-  if (op == 0 || op > LABEL_TYPES) throwPos(t, badLabTy)
-
-#define OPS(a, b, c) \
-  CHECK_ ## a(op1); \
-  CHECK_ ## b(op2); \
-  CHECK_ ## c(op3)
-
-
 #ifdef LITTLE_ENDIAN
 
 #  define OPCODE(w) \
      (w) & BYTE_MASK
-
 #  define OP(p) \
      (w >> (BYTE_BIT * (p))) & BYTE_MASK
 
@@ -126,75 +109,61 @@ static const char *badReg = "bad register",
 
 #  define OPCODE(w) \
      (w >> (BYTE_BIT * 3)) & BYTE_MASK
-
-#  define \
-     OP(p) (w >> (BYTE_BIT * (WORD_BYTE - (p)))) & BYTE_MASK
+#  define OP(p) \
+     (w >> (BYTE_BIT * (WORD_BYTE - (p)))) & BYTE_MASK
 
 #endif /* LITTLE_ENDIAN */
 
-
-#define GET_LAB(p) \
-  t->rPtr -= 4 - (p); \
-  l.n = getNum(t, &sgn); \
-  if (sgn) \
-    throwPos(t, badLab)
-
-    w = *(Word *)t->rPtr;
-    case OP_LAB:
-      OPS(L,_,_);
-      l.n = ++t->labels[op1];
-      wrLab(op1, l);
-      break;
-  ]],
-  "rdInst(t)", -- rdInst(t)
-  "l->v",      -- labelAddr(t, l)
+#define labelAddr(t, l) l->v
+]],
   {
-    r = OpType("Register %o = rdReg(t);", ""),
-    i = OpType([[Byte %o_f = ;
-        SByte %o_sgn;
-        uintptr_t %o_v;
-        int %o_r;]],
-    function (inst, op)
-                 
-      
-#define GET_IMM1 \
-  r = (op1 & FLAG_R) ? (t->rPtr--, op2) : ((t->rPtr -= 2), 0); \
-  n = getNum(t, &sgn)
-
-#define GET_IMM2 \
-  r = (op2 & FLAG_R) ? op3 : (t->rPtr--, 0); \
-  n = getNum(t, &sgn)
-
-OpType([[Byte %o_f;
-        SByte %o_sgn;
-        uintptr_t %o_v;
-        int %o_r;]],
-        "rdImm(t, &%o_f, &%o_sgn, &%o_v, &%o_r);"),
-    t = OpType("LabelType %o = rdLabTy(t);", ""),
-    l = OpType(function (inst, op)
-                 local ty = labelType(inst, op)
-                 return "HashNode *%o_hn = rdLab(t, " .. ty .. [[);
-        LabelValue %o;]]
-               end,
-        "%o.p = (Byte *)%o_hn->key;"),
-    n = OpType(function (inst, op)
-                 local ty = labelType(inst, op)
-                 return "HashNode *%o_hn = rdLab(t, " .. ty .. ");"
-               end,
+    r = OpType([[#undef r%n
+        #define r%n op%n]],
+        [[if (r%n == 0) /* r%n can't be > UINT_MAX */
+          throwPos(t, badReg);]]),
+    i = OpType([[#undef i%n_f
+        #define i%n_f op%n
+        int i%n_sgn;
+        uintptr_t i%n_v;
+        int i%n_r;]],
                function (inst, op)
-                 local ty = labelType(inst, op)
-                 return [[l = %o_hn->body;
-        t->labels[]] .. ty .. [[]++;
-        if (l->v.n != 0)
-          throw("duplicate definition for `%s'", %o_hn->key);
-        l->v.n = t->labels[]] .. ty .. "];"
+                 return
+        [[if (i%n_f & ~(FLAG_R | FLAG_S | FLAG_W | FLAG_E))
+          throwPos(t, badFlags);
+        i%n_r = (op%n & FLAG_R) ?
+          (t->rPtr -= 2 - %n, op]] .. tostring(op + 1) .. [[) :
+          ((t->rPtr -= 3 - %n), 0);
+        i%n_v = getNum(t, &i%n_sgn);]]
+               end),
+    t = OpType([[#undef t%n
+        #define t%n op%n]],
+        [[if (op%n == 0 || op%n > LABEL_TYPES)
+          throwPos(t, badLabTy);]]),
+    l = OpType([[int l%n_sgn;
+        LabelValue l%n;]],
+               function (inst, op)
+                 return [[t->rPtr -= 4 - %n;
+        l%n.n = getNum(t, &l%n_sgn);
+        if (l%n_sgn)
+          throwPos(t, badLab);]]
+               end),
+    n = OpType("LabelValue l%n;",
+               function (inst, op)
+                 return "l%n.n = ++t->labels[t" .. tostring(op - 1) ..
+                   "];"
                end),
   },
   Translator(
-    "Word w;",               -- decls
+    [[Word w;
+    Byte op1, op2, op3;]],   -- decls
     [[t->labelHash = hashNew(4096);
-  t->eol = 0;]],             -- init
-    "t->rPtr += WORD_BYTE;", -- update
+    t->eol = 0;]],           -- init
+    [[w = *(Word *)t->rPtr;
+    op1 = OP(1);
+    op2 = OP(2);
+    op3 = OP(3);
+    o = OPCODE(w);
+    t->rPtr += WORD_BYTE;]], -- update
     "INST_MAXLEN"            -- maxInstLen
   )
 )

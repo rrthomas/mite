@@ -84,10 +84,11 @@ writeUInt(Byte **p, uintptr_t n)
   *p += len;
   return len & WORD_ALIGN;
 }
+
+#define DANGLE_MAXLEN (WORD_BYTE * 2)
+#define RESOLVE_IMG NULL
+#define RESOLVE_PTR NULL
   ]],
-  "(WORD_BYTE * 2)", -- dangleMaxLen
-  "NULL", -- resolveImg
-  "NULL", -- resolvePtr
   {
     Inst("lab",    "W(OP_LAB, t1, 0, 0)"),
     Inst("mov",    "W(OP_MOV, r1, r2, 0)"),
