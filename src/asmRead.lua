@@ -31,9 +31,6 @@ return Reader(
 #include <errno.h>
 #include <string.h>
 
-#include "except.h"
-#include "hash.h"
-#include "string.h"
 #include "translate.h"
 
 
@@ -130,7 +127,7 @@ rdLab(TState *t, LabelType ty)
   Label *l;
   HashLink hl;
   rdTok(t, &tok, issym);
-  hashGet(t->labelHash, tok, &hl);
+  hashGet(t->labHash, tok, &hl);
   if (hl.found) {
     l = hl.curr->body;
     if (l->ty != ty)
@@ -140,7 +137,7 @@ rdLab(TState *t, LabelType ty)
     l = new(Label);
     l->ty = ty;
     l->v.n = 0;
-    return hashSet(t->labelHash, &hl, tok, l);
+    return hashSet(t->labHash, &hl, tok, l);
   }
 }
 
@@ -201,7 +198,7 @@ labelAddr(TState *t, Label *l)
 {
   LabelValue ret;
   HashLink hl;
-  hashGet(t->labelHash, (char *)l->v.p, &hl);
+  hashGet(t->labHash, (char *)l->v.p, &hl);
   ret.p = hl.found ? ((Label *)hl.curr->body)->v.p : NULL;
   return ret;
 }
@@ -233,11 +230,10 @@ labelAddr(TState *t, Label *l)
                end),
   },
   Translator(
-    "Label *l;",     -- decls
-    [[t->labelHash = hashNew(4096);
-  t->eol = 0;]],     -- init
-    [[o = rdInst(t);
-    excLine += 1;]], -- update
-    "INST_MAXLEN"    -- maxInstLen
+    "Label *l;",                     -- decls
+    [[t->labHash = hashNew(4096);
+  t->eol = 0;]],                     -- init
+    "o = rdInst(t);",                -- update
+    ""                               -- finish
   )
 )

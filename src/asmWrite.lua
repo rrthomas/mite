@@ -10,8 +10,6 @@ return Writer(
 #include <math.h>
 #include <limits.h>
 
-#include "except.h"
-#include "buffer.h"
 #include "translate.h"
 
 
@@ -116,17 +114,14 @@ putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
 #define putUInt(t, n) \
   putInt(t, 0, n)
 
-static uintptr_t
-writeUInt(Byte **s, uintptr_t n)
-{
-  *s += writeNum(*s, n);
-  return 0;
-}
+#define writeUInt(s, n) \
+  *(s) += writeNum(*(s), (n)); \
+  extras = 0
 
 #define DANGLE_MAXLEN WORD_MAXLEN
 #define RESOLVE_IMG NULL
 #define RESOLVE_PTR NULL
-  ]],
+]],
   {
     Inst("lab",    "S(\"lab\"); LabTy(t1); Lab(t1, l2); NL;"),
     Inst("mov",    "S(\"mov\"); R(r1); R(r2); NL;"),
@@ -166,5 +161,10 @@ writeUInt(Byte **s, uintptr_t n)
     Inst("litl",   "S(\"litl\"); Lab(t1, l2); NL;"),
     Inst("space",  "S(\"space\"); " ..
                    "Imm(i1_f, i1_sgn, i1_v, i1_r); NL;"), 
-  }
+  },
+  Translator("",                     -- decls
+             "",                     -- init
+             "ensure(INST_MAXLEN);", -- update
+             ""                      -- finish
+  )
 )

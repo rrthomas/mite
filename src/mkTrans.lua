@@ -38,17 +38,11 @@ OpType = function(decls, code)
            return t
          end
 
-Translator = constructor{
-  "decls",         -- extra variable declarations
-  "init",          -- extra initialisation
-  "update",        -- update after reading each instruction
-  "maxInstLen",    -- max. no. of bytes required by next instruction
-}
-
 Writer = constructor{
   "writes",       -- what the writer writes
   "prelude",      -- literal source code
   "inst",         -- instruction table
+  "trans",        -- writer-specific parts of translator function
 }
 
 Inst = constructor{
@@ -56,23 +50,12 @@ Inst = constructor{
   "def",  -- definition
 }
 
--- Construct the operand list of an instruction writer macro
-function ops(inst)
-  local s, n = "(", getn(inst.ops)
-  for i = 1, n do
-    local o
-    if inst.ops[i] == "i" then
-      o = "f, n, v, r"
-    else
-      o = inst.ops[i] .. tostring(i)
-    end
-    s = s .. o
-    if i < n then
-      s = s .. ", "
-    end
-  end
-  return s .. ")"
-end
+Translator = constructor{
+  "decls",        -- extra variable declarations
+  "init",         -- extra initialisation
+  "update",       -- update after reading each instruction
+  "finish",       -- code to execute after translation and resolution
+}
 
 
 -- Load the reader and writer
@@ -121,7 +104,8 @@ writeLine("static void",
           "  for (d = t->dangles->next; d; d = d->next) {",
           "    memcpy(finalPtr, t->wImg + prev, d->ins - prev);",
           "    finalPtr += d->ins - prev;",
-          "    extras = writeUInt(&finalPtr, labelAddr(t, d->l).n);",
+          -- writeUInt must set extras
+          "    writeUInt(&finalPtr, labelAddr(t, d->l).n);",
           "    prev = d->ins + extras;",
           "  }",
           "  memcpy(finalPtr, t->wImg + prev,",
@@ -133,20 +117,28 @@ writeLine("static void",
           "}",
           "")
 
--- Start of the translator function
+-- Head of the translator function
 writeLine("TState *",
           transFunc .. "(Byte *rImg, Byte *rEnd)",
           "{",
           "  TState *t = translatorNew(rImg, rEnd);",
           "  LabelType ty;",
           "  Opcode o;",
+          "  /* reader declarations */",
           "  " .. r.trans.decls,
+          "  /* writer declarations */",
+          "  " .. w.trans.decls,
           "  for (ty = 0; ty < LABEL_TYPES; ty++)",
           "    t->labels[ty] = 0;",
+          "  /* reader initialisation */",
           "  " .. r.trans.init,
+          "  /* writer initialisation */",
+          "  " .. w.trans.init,
           "  while (t->rPtr < t->rEnd) {",
+          "    /* reader update */",
           "    " .. r.trans.update,
-          "    ensure(" .. r.trans.maxInstLen .. ");",
+          "    /* writer update */",
+          "    " .. w.trans.update,
           "    switch (o) {")
 
 -- The instruction cases
@@ -180,5 +172,9 @@ writeLine("    }",
           "  }",
           "  excLine = 0;",
           "  resolveDangles(t, RESOLVE_IMG, RESOLVE_PTR);",
+          "  /* reader finish */",
+          "  " .. r.trans.finish,
+          "  /* writer finish */",
+          "   ".. w.trans.finish,
           "  return t;",
           "}")

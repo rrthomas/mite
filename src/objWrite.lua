@@ -7,8 +7,6 @@ return Writer(
 #include <stdint.h>
 #include <limits.h>
 
-#include "endian.h"
-#include "except.h"
 #include "translate.h"
 
 
@@ -77,18 +75,17 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 #define putUInt(t, n) \
   putInt(t, 0, n)
 
-static uintptr_t
-writeUInt(Byte **p, uintptr_t n)
-{
-  uintptr_t len = writeInt(*p, 0, n);
-  *p += len;
-  return len & WORD_ALIGN;
-}
+#define writeUInt(p, n) \
+  { \
+    uintptr_t len = writeInt(*(p), 0, (n)); \
+    *(p) += len; \
+    extras = len & WORD_ALIGN; \
+  }
 
 #define DANGLE_MAXLEN (WORD_BYTE * 2)
 #define RESOLVE_IMG NULL
 #define RESOLVE_PTR NULL
-  ]],
+]],
   {
     Inst("lab",    "W(OP_LAB, t1, 0, 0)"),
     Inst("mov",    "W(OP_MOV, r1, r2, 0)"),
@@ -125,5 +122,10 @@ writeUInt(Byte **p, uintptr_t n)
     Inst("lit",    "B(OP_LIT); Imm(i1_f, i1_sgn, i1_v, i1_r)"),
     Inst("litl",   "B(OP_LITL); B(t1); Lab(t1, l2)"),
     Inst("space",  "B(OP_SPACE); Imm(i1_f, i1_sgn, i1_v, i1_r)"),
-  }
+  },
+  Translator("",                     -- decls
+             "",                     -- init
+             "ensure(INST_MAXLEN);", -- update
+             ""                      -- finish
+  )
 )

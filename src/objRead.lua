@@ -11,8 +11,6 @@ return Reader(
 #include <stdint.h>
 #include <limits.h>
 
-#include "endian.h"
-#include "except.h"
 #include "translate.h"
 
 
@@ -156,7 +154,7 @@ static const char *badReg = "bad register",
   Translator(
     [[Word w;
     Byte op1, op2, op3;]],   -- decls
-    [[t->labelHash = hashNew(4096);
+    [[t->labHash = hashNew(4096);
     t->eol = 0;]],           -- init
     [[w = *(Word *)t->rPtr;
     op1 = OP(1);
@@ -164,6 +162,6 @@ static const char *badReg = "bad register",
     op3 = OP(3);
     o = OPCODE(w);
     t->rPtr += WORD_BYTE;]], -- update
-    "INST_MAXLEN"            -- maxInstLen
+    ""                       -- finish
   )
 )
