@@ -1,7 +1,7 @@
 %
 % The Mite virtual machine
 %
-% Reuben Thomas   20/5/00-24/6/01
+% Reuben Thomas   20/5/00-24/7/01
 %
 
 % Work out what the possible error conditions are in verified code & list them.
@@ -45,7 +45,7 @@
 
 \title{The Mite virtual machine}
 \author{Reuben Thomas\\\url{rrt@sc3d.org}\\\url{http://sc3d.org/rrt/}}
-\date{29th April 2001}
+\date{24th July 2001}
 \maketitle
 
 
@@ -67,10 +67,11 @@ Mite is parametrized on the following quantities:
 \begin{description}
 \item[$w$]number of bytes in a word
 
-\item[$g$]the number of general-purpose registers ($g=2^n, 2<n$, for some $n$)
+\item[$g$]the number of general-purpose registers ($g=2^n, 2<n$, for
+some $n$)
 
-\item[$s$]direction of stack growth ($-1$ for an ascending stack, $1$ for a
-descending stack)
+\item[$s$]direction of stack growth ($-1$ for an ascending stack, $1$
+for a descending stack)
 \end{description}
 
 
@@ -120,7 +121,7 @@ $\{P\}$ has the value $1$ if the predicate $P$ is true, and $0$ otherwise.
 Labels are defined by the \syn{lab} instruction, shown in table~\ref{labtab}.
 
 \begin{insttab}{Label definition\label{labtab}}
-lab $l_1$ $n_2$        & define a label\\
+\input{instLab}
 \end{insttab}
 
 There are three types of label: branch labels, denoted \syn{b}, subroutine
@@ -138,37 +139,7 @@ labels may not be executed.
 \subsection{Computation}
 
 \begin{insttab}{Computational instructions\label{comptab}}
-mov $r_1$ $r_2$        & $r_1\gets r_2$ \\
-movi $r_1$ $i_2$       & $r_1\gets i_2$ \\
-ldl $r_1$ $n_2$        & $r_1\gets n_2$ \\
-ld $r_1$ $r_2$         & $r_1\gets M(r_2)$ \\
-st $r_1$ $r_2$         & $M(r_2)\gets r_1$ \\
-gets $r_1$             & $r_1\gets S$ \\
-sets $r_1$             & $S\gets r_1$ \\
-pop $r_1$              & $r_1\gets M(S)$; $S\gets S-sw$ \\
-push $r_1$             & $S\gets S+sw$; $M(S)\gets r_1$ \\
-add $r_1$ $r_2$ $r_3$  & $r_1\gets r_2+r_3$ \\
-sub $r_1$ $r_2$ $r_3$  & $r_1\gets r_2-r_3$ \\
-mul $r_1$ $r_2$ $r_3$  & $r_1\gets r_2\times r_3$ \\
-div $r_1$ $r_2$ $r_3$  & $r_1\gets r_2\div r_3$ (unsigned) \\
-rem $r_1$ $r_2$ $r_3$  & $r_1\gets r_2\bmod r_3$ (unsigned) \\
-and $r_1$ $r_2$ $r_3$  & $r_1\gets r_2$ bitwise and $r_3$ \\
-or $r_1$ $r_2$ $r_3$   & $r_1\gets r_2$ bitwise or $r_3$ \\
-xor $r_1$ $r_2$ $r_3$  & $r_1\gets r_2$ bitwise xor $r_3$ \\
-sl $r_1$ $r_2$ $r_3$   & $r_1\gets r_2$ left shift $r_3$ ($0\leq r_3\leq 8w$) \\
-srl $r_1$ $r_2$ $r_3$  & $r_1\gets r_2$ logical right shift $r_3$ ($0\leq r_3\leq 8w$) \\
-sra $r_1$ $r_2$ $r_3$  & $r_1\gets r_2$ arithmetic right shift $r_3$ ($0\leq r_3\leq 8w$) \\
-teq $r_1$ $r_2$ $r_3$  & $r_1\gets\{r_2=r_3\}$ \\
-tlt $r_1$ $r_2$ $r_3$  & $r_1\gets\{r_2<r_3\}$ \\
-tltu $r_1$ $r_2$ $r_3$ & $r_1\gets\{r_2<r_3$ (unsigned)$\}$ \\
-b $n_1$                & $P\gets n_1$ \\
-br $r_1$               & $P\gets r_1$ \\
-bf $r_1$ $n_2$         & if $r_1=0$, $P\gets n_2$ \\
-bt $r_1$ $n_2$         & if $r_1\neq0$, $P\gets n_2$ \\
-call $n_1$             & $S\gets S+sw$; $M(S)\gets P$; $P\gets n_1$ \\
-callr $r_1$            & $S\gets S+sw$; $M(S)\gets P$; $P\gets n_1$ \\
-ret                    & $P\gets M(S)$; $S\gets S-sw$ \\
-calln $r_1$            & call native code at $r_1$ \\
+\input{instComp}
 \end{insttab}
 
 The computational instructions are shown in table~\ref{comptab}.
@@ -190,9 +161,7 @@ be included in object code; they may not be executed. Data between two
 labels are stored contiguously in $M$.
 
 \begin{insttab}{Data instructions\label{datatab}}
-lit $i_1$              & a literal word \\
-litl $l_1$ $n_2$       & a literal label \\
-space $i_1$            & $i_1$ zero words ($i_1>0$)\\
+\input{instData}
 \end{insttab}
 
 \syn{lit} causes its operand to be truncated to a word and stored in the
@@ -206,8 +175,8 @@ consecutive locations.
 
 \section{Object format}
 
-In the description below, hexadecimal numbers are indicated by a trailing
-``h''.
+In the description below, hexadecimal numbers are indicated by a leading
+``0x''.
 
 Object code consists of a series of instructions.
 
@@ -216,18 +185,7 @@ Object code consists of a series of instructions.
 \toprule
 \norm{\bf Instruction} & \bf Opcode & \norm{\bf Instruction} & \bf Opcode &
 \norm{\bf Instruction} & \bf Opcode \\ \midrule
-lab   & 01h & mul   & 0Dh & b     & 19h \\
-mov   & 02h & div   & 0Eh & br    & 1Ah \\
-movi  & 03h & rem   & 0Fh & bf    & 1Bh \\
-ldl   & 04h & and   & 10h & bt    & 1Ch \\
-ld    & 05h & or    & 11h & call  & 1Dh \\
-st    & 06h & xor   & 12h & callr & 1Eh \\
-gets  & 07h & sl    & 13h & ret   & 1Fh \\
-sets  & 08h & srl   & 14h & calln & 20h \\
-pop   & 09h & sra   & 15h & lit   & 21h \\
-push  & 0Ah & teq   & 16h & litl  & 22h \\
-add   & 0Bh & tlt   & 17h & space & 23h \\
-sub   & 0Ch & tltu  & 18h \\
+\input{instOpcode}
 \bottomrule
 \end{ctable}
 
@@ -238,7 +196,7 @@ numerical order. Instructions that do not end on a $4$-byte boundary are
 padded to the next such boundary with zero bytes.
 
 Opcodes, registers and label types are encoded as one byte. The instruction
-opcodes are shown in table~\ref{opcodetab}. Opcodes 25h--7Fh are reserved
+opcodes are shown in table~\ref{opcodetab}. Opcodes 0x25--0x7F are reserved
 for future expansion. Registers are encoded by their number. Label types are
 encoded as $1$ for \syn{b}, $2$ for \syn{s}, and $3$ for \syn{d}.
 
