@@ -12,13 +12,13 @@ Type = constructor{
 }
 
 type = {
-  Inst("r",    "register"),
-  Inst("i",    "immediate constant"),
-  Inst("l",    "label (any type)"),
-  Inst("L",    "label definition"),
-  Inst("b",    "branch label"),
-  Inst("s",    "subroutine label"),
-  Inst("d",    "data label"),
+  Type("r",    "register"),
+  Type("i",    "immediate constant"),
+  Type("l",    "label (any type)"),
+  Type("L",    "label definition"),
+  Type("b",    "branch label"),
+  Type("s",    "subroutine label"),
+  Type("d",    "data label"),
 }
 
 
