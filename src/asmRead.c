@@ -232,7 +232,7 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
   while (t->rPtr < t->rEnd) {
     getInst(t, &i, &op1, &op2, &op3);
     excLine += 1;
-    bufEnsure(INST_MAXLEN);
+    ensure(INST_MAXLEN);
     switch (i) {
     case OP_LAB:
       t->labels[op1.l->ty]++;

@@ -19,7 +19,4 @@
 #define bufShrink(buf, used) \
   excRealloc((buf), (used))
 
-#define bufEnsure(n) \
-  bufExt(t->wImg, t->wSize, (uintptr_t)(t->wPtr - t->wImg + (n)))
-
 #endif

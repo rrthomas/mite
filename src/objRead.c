@@ -168,7 +168,7 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
     op3 = OP(3);
     t->rPtr += WORD_BYTE;
     excLine += WORD_BYTE;
-    bufEnsure(INST_MAXLEN);
+    ensure(INST_MAXLEN);
     switch (OPCODE(w)) {
     case OP_LAB:
       OPS(L,_,_);

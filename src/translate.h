@@ -43,6 +43,9 @@ typedef uint32_t Word;
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
+#define ensure(n) \
+  bufExt(t->wImg, t->wSize, (uintptr_t)(t->wPtr - t->wImg + (n)))
+
 #include "opEnum.h"
 struct Inst { const char *name; unsigned int opcode; };
 #include "insts.h"

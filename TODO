@@ -1,6 +1,3 @@
-Sort out bufEnsure (should probably be in translate.h; certainly not
-in buffer.h).
-
 Make procSpec.lua generate readers and writers, or have another script
 which will (re)generate a particular reader or writer.
 

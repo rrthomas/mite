@@ -21,14 +21,13 @@
 static void
 putChar(TState *t, char c)
 {
-  bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + 1U);
   *t->wPtr++ = c;
 }
 
 static void
 putStr(TState *t, const char *s, uintptr_t len)
 {
-  bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + len);
+  ensure(len);
   memcpy(t->wPtr, s, len);
   t->wPtr += len;
 }
