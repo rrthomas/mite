@@ -27,7 +27,7 @@ const char *_excMsg[] = {
   }
 
 static List *_excBufs;
-unsigned long excLine = 0;
+unsigned long excPos = 0;
 char *excFile = NULL;
 
 void
@@ -43,9 +43,9 @@ vWarn(const char *fmt, va_list arg)
     fprintf(stderr, "%s:", progName);
   if (excFile)
     fprintf(stderr, "%s:", excFile);
-  if (excLine)
-    fprintf(stderr, "%lu:", excLine);
-  if (progName || excFile || excLine)
+  if (excPos)
+    fprintf(stderr, "%lu:", excPos);
+  if (progName || excFile || excPos)
     putc(' ', stderr);
   vfprintf(stderr, fmt, arg);
   va_end(arg);

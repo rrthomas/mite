@@ -36,7 +36,7 @@ void *excRealloc(void *p, size_t size);
 
 #define new(T) excMalloc(sizeof(T))
 
-extern unsigned long excLine;
+extern unsigned long excPos;
 extern char *excFile;
 extern char *progName;
 
