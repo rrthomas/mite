@@ -17,6 +17,8 @@ opType = {
   Type{"t", "label type"},
   Type{"l", "label"},
   Type{"n", "name"},
+  Type{"a", "argument type"},
+  Type{"b", "return type"},
 }
 
 
@@ -60,10 +62,16 @@ inst = {
   Inst{"br",     {"r"},            "$P<-%1$"},
   Inst{"bf",     {"r", "l"},       "if $%1=0$, $P<-\\syn{b}%2$"},
   Inst{"bt",     {"r", "l"},       "if $%1\\neq0$, $P<-\\syn{b}%2$"},
-  Inst{"call",   {"l"},            "$S<-S+sw$; $M(S)<-P$; $P<-\\syn{s}%1$"},
-  Inst{"callr",  {"r"},            "$S<-S+sw$; $M(S)<-P$; $P<-%1$"},
-  Inst{"ret",    {},               "$P<-M(S)$; $S<-S-sw$"},
+  Inst{"call",   {"l"},            "\syn{push} $P$; $P<-\\syn{s}%1$"},
+  Inst{"callr",  {"r"},            "\syn{push} $P$; $P<-%1$"},
+  Inst{"ret",    {},               "\syn{pop} $P$"},
   Inst{"lit",    {"i"},            "a literal word"},
   Inst{"litl",   {"t", "l"},       "a literal label"},
   Inst{"space",  {"i"},            "$%1$ zero words ($%1>0$)"},
+  Inst{"func",   {"i"},            "start a function call with $%1$ arguments"},
+  Inst{"funcv",  {"i"},            "start a variadic function call with $%1$ arguments"},
+  Inst{"arg",    {"a", "r"},       "add argument $%2$ of type $%1$ to the current call"},
+  Inst{"callf",  {"b", "l", "r"},  "\syn{push} $P$, $g_i$ ($i$ even); $P<-\\syn{f}%2$; $%3<-$ result of type $%1$"},
+  Inst{"callfr", {"b", "r", "r"},  "\syn{push} $P$, $g_i$ ($i$ even); $P<-%2$; $%3<-$ result of type $%1$"},
+  Inst{"retf",   {"b", "r"},       "\syn{pop} $P$, $g_i$ ($i$ even); return $%2$ of type $%1$"},
 }
