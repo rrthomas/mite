@@ -1,17 +1,23 @@
+Add pointers to sources of all the tools
+
+
 Required tools (to build)
 
-make (must support include)
+ISO '89 C compiler (will be '99 when GCC is)
+GNU make
 mkdep
 rm
-lmk [get rid of this]
+Lua 4.0 or higher
 
 
 Useful tools (for dist, docs &c.)
 
+LaTeX
 zip
 gperf
 ghostscript
 hevea
+LY1
 
 
 Things that need changing if you don't have default tools
