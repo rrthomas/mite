@@ -14,7 +14,6 @@ typedef struct {
 [[#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
-#include <math.h>
 #include <limits.h>
 
 
@@ -36,56 +35,10 @@ asmW_str (asmW_State *W, const char *s, Word len)
   W->ptr += len;
 }
 
-static Word
-asmW_writeNum (unsigned char *s, Word n)
-{
-  Word last = n ? log10(n) : 0;
-  s += last;
-  do {
-    *s-- = '0' + n % 10;
-    n /= 10;
-  } while (n);
-  return last + 1;
-}
-
 static void
 asmW_num (asmW_State *W, Word n)
 {
-  W->ptr += asmW_writeNum ((unsigned char *)W->ptr, n);
-}
-
-static void
-asmW_labTy (asmW_State *W, LabelType ty)
-{
-  switch (ty) {
-  case LABEL_B:
-    asmW_char (W, 'b');
-    return;
-  case LABEL_S:
-    asmW_char (W, 's');
-    return;
-  case LABEL_D:
-    asmW_char (W, 'd');
-    return;
-  }
-}
-
-static void
-asmW_Imm (asmW_State *W, int f, int n, Word v, Word r)
-{
-  if (f & FLAG_E)
-    asmW_char (W, 'e');
-  if (f & FLAG_S)
-    asmW_char (W, 's');
-  if (f & FLAG_W)
-    asmW_char (W, 'w');
-  if (n)
-    asmW_char (W, '-');
-  asmW_num (W, v);
-  if (r) {
-    asmW_str (W, ">>", 2);
-    asmW_num (W, r);
-  }
+  W->ptr += writeNum (W->ptr, n);
 }
 
 static asmW_State *
@@ -95,17 +48,15 @@ asmW_writerNew (void)
   W->img = bufNew (W->size, INIT_IMAGE_SIZE);
   W->ptr = W->img;
   return W;
-}
-]],
+}]],
   resolve =
 [[#define asmW_UInt(s, n) \
-  *(s) += asmW_writeNum (*(s), (n)); \
+  *(s) += writeNum ((char *)*(s), (n)); \
   extras = 0
 
 #define asmW_DANGLE_MAXLEN INST_MAXLEN
 #define asmW_RESOLVE_IMG NULL
-#define asmW_RESOLVE_PTR NULL
-]],
+#define asmW_RESOLVE_PTR NULL]],
   macros =
 [[#undef S
 #undef NL
@@ -130,17 +81,16 @@ asmW_writerNew (void)
 
 #define LabTy(L) \
   SP; \
-  asmW_labTy (W, L)
+  asmW_char (W, labTyToChar (L))
 
 #define Lab(ty, l) \
   SP; \
-  asmW_labTy (W, ty); \
+  asmW_char (W, labTyToChar (ty)); \
   addDangle (T, ty, l, W->ptr - W->img)
 
 #define Imm(f, n, v, r) \
   SP; \
-  asmW_Imm (W, f, n, v, r)
-]],
+  writeImm (W->ptr, f, n, v, r)]],
   inst = {
     Inst {"lab",    "S (\"lab\"); LabTy (t1); Lab (t1, l2); NL;"},
     Inst {"mov",    "S (\"mov\"); R (r1); R (r2); NL;"},
@@ -181,7 +131,8 @@ asmW_writerNew (void)
     Inst {"space",  "S (\"space\"); " ..
                     "Imm (i1_f, i1_sgn, i1_v, i1_r); NL;"},
   },
-  trans = Translator {"",        -- decls
+  trans = Translator {
+    "",                          -- decls
     "",                          -- init
     "ensure (INST_MAXLEN);",     -- update
     [[out->img = W->img;

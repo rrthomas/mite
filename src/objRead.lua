@@ -89,21 +89,21 @@ objR_getNum (objR_State *R, int *sgnRet)
 #undef p
 }
 
-#ifdef LITTLE_ENDIAN
+#ifdef LITTLE_ENDIAN_MITE
 
 #  define objR_OPCODE \
      (objR_w) & BYTE_MASK
 #  define objR_OP(p) \
      (objR_w >> (BYTE_BIT * (p))) & BYTE_MASK
 
-#else /* !LITTLE_ENDIAN */
+#else /* !LITTLE_ENDIAN_MITE */
 
 #  define objR_OPCODE \
      (objR_w >> (BYTE_BIT * 3)) & BYTE_MASK
 #  define objR_OP(p) \
      (objR_w >> (BYTE_BIT * (INST_BYTE - (p)))) & BYTE_MASK
 
-#endif /* LITTLE_ENDIAN */
+#endif /* LITTLE_ENDIAN_MITE */
 
 #define objR_labelAddr(R, l) \
   l->v
@@ -115,8 +115,7 @@ objR_readerNew (objR_Input *inp)
   R->ptr = R->img = inp->cImg;
   R->end = inp->cImg + inp->cSize;
   return R;
-}
-]],
+}]],
   opType = {
     r = OpType {[[#undef r%n
         #define r%n objR_op%n]],

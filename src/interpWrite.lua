@@ -42,7 +42,7 @@ evalImm (Byte f, int sgn, int r, Word v)
 {
   if (sgn)
     v = (Word)(-(SWord)v);
-#ifndef LITTLE_ENDIAN
+#ifndef LITTLE_ENDIAN_MITE
   if (f & FLAG_E)
     v = WORD_BYTE - v;
 #endif
@@ -70,8 +70,7 @@ interpW_writerNew (void)
   W->img = bufNew (W->size, INIT_IMAGE_SIZE);
   W->ptr = W->img;
   return W;
-}
-]],
+}]],
   resolve =
 [[#define interpW_UInt(p, n) \
   { \
@@ -82,13 +81,11 @@ interpW_writerNew (void)
 
 #define DANGLE_MAXLEN WORD_BYTE
 #define RESOLVE_IMG NULL
-#define RESOLVE_PTR NULL
-]],
+#define RESOLVE_PTR NULL]],
   macros =
 [[#define A(i) \
   *W->ptr = &i ## Action (state); \
-  W->ptr += WORD_BYTE;
-]],
+  W->ptr += WORD_BYTE;]],
   inst = {
     Inst {"lab",   "bufExt (W->labAddr[t1], W->labSize[t1], " .. 
                    "T->labels[t1] * WORD_BYTE); " ..
@@ -133,13 +130,14 @@ interpW_writerNew (void)
                    "WORD_BYTE; ensure (sp); memset (W->ptr, 0, sp); " ..
                    "W->ptr += sp"},
   },
-  trans = Translator {"Word sp;",                   -- decls
+  trans = Translator {
+             "Word sp;",                            -- decls
              [[for (ty = 0; ty < LABEL_TYPES; ty++)
     W->labAddr[ty] = bufNew (W->labSize[ty], INIT_LABS * WORD_BYTE);]],
                                                     -- init
              "ensure (WORD_BYTE);",                 -- update
              [[for (ty = 0; ty < LABEL_TYPES; ty++) {
-    bufShrink (W->labAddr[ty], T->labels[t1] * WORD_BYTE);
+    bufShrink (W->labAddr[ty], T->labels[ty] * WORD_BYTE);
     out->labels[ty] = T->labels[ty];
     out->labAddr[ty] = W->labAddr[ty];
   }

@@ -61,8 +61,7 @@ objW_writerNew (void)
   W->img = bufNew (W->size, INIT_IMAGE_SIZE);
   W->ptr = W->img;
   return W;
-}
-]],
+}]],
   resolve =
 [[#define objW_UInt(p, n) \
   { \
@@ -73,8 +72,7 @@ objW_writerNew (void)
 
 #define objW_DANGLE_MAXLEN (INST_BYTE * 2)
 #define objW_RESOLVE_IMG NULL
-#define objW_RESOLVE_PTR NULL
-]],
+#define objW_RESOLVE_PTR NULL]],
   macros =
 [[#undef B
 #undef W
@@ -84,17 +82,17 @@ objW_writerNew (void)
 #define B(b) \
   *W->ptr++ = (Byte)b
 
-#ifdef LITTLE_ENDIAN
+#ifdef LITTLE_ENDIAN_MITE
 #  define W(a, b, c, d) \
      *(InstWord *)W->ptr = a | (b << BYTE_BIT) | \
        (c << (BYTE_BIT * 2)) | (d << (BYTE_BIT * 3)); \
      W->ptr += INST_BYTE
-#else /* !LITTLE_ENDIAN */
+#else /* !LITTLE_ENDIAN_MITE */
 #  define W(a, b, c, d) \
      *(InstWord *)W->ptr = (a << (BYTE_BIT * 3)) | \
        (b << (BYTE_BIT * 2)) | (c << BYTE_BIT) | d; \
      W->ptr += INST_BYTE
-#endif /* LITTLE_ENDIAN */
+#endif /* LITTLE_ENDIAN_MITE */
 
 #define Lab(off, ty, l) \
   addDangle (T, ty, l, W->ptr - W->img + off)
@@ -103,8 +101,7 @@ objW_writerNew (void)
   *W->ptr++ = (Byte)(f); \
   if (r) \
     *W->ptr++ = (Byte)r; \
-  W->ptr += writeInt (W->ptr, sgn, v)
-]],
+  W->ptr += writeInt (W->ptr, sgn, v)]],
   inst = {
     Inst {"lab",    "W (OP_LAB, t1, 0, 0)"},
     Inst {"mov",    "W (OP_MOV, r1, r2, 0)"},
@@ -143,7 +140,8 @@ objW_writerNew (void)
     Inst {"litl",   "W (OP_LITL, t1, 0, 0); Lab (-2, t1, l2)"},
     Inst {"space",  "B (OP_SPACE); Imm (i1_f, i1_sgn, i1_v, i1_r)"},
   },
-  trans = Translator {"",              -- decls
+  trans = Translator {
+             "",                      -- decls
              "",                      -- init
              "ensure (INST_MAXLEN);", -- update
              [[out->img = W->img;

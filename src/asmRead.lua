@@ -224,8 +224,7 @@ asmR_readerNew (asmR_Input *inp)
   R->ptr = R->img = inp->img;
   R->end = inp->img + inp->size;
   return R;
-}
-]],
+}]],
   opType = {
     r = OpType {"Register r%n = rdReg (R);", ""},
     i = OpType {[[Byte i%n_f;
