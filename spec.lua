@@ -63,7 +63,6 @@ inst = {
   Inst{"call",   {"l"},            "$S<-S+sw$; $M(S)<-P$; $P<-\\syn{s}%1$"},
   Inst{"callr",  {"r"},            "$S<-S+sw$; $M(S)<-P$; $P<-%1$"},
   Inst{"ret",    {},               "$P<-M(S)$; $S<-S-sw$"},
-  Inst{"calln",  {"r"},            "call native code at $%1$"},
   Inst{"lit",    {"i"},            "a literal word"},
   Inst{"litl",   {"t", "l"},       "a literal label"},
   Inst{"space",  {"i"},            "$%1$ zero words ($%1>0$)"},
