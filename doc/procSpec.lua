@@ -1,15 +1,14 @@
--- Mite instruction table generator
+-- Documentation generator
 -- (c) Reuben Thomas 2001
 
--- Take the raw instruction table and generate the documentation
--- tables instLab.tex, instComp.tex, instData.tex and instOpcode.tex
-
--- See $(MITE)/spec/insts.lua for the format of the instruction table
+-- Take the specifications and generate the documentation tables
+-- instLab.tex, instComp.tex, instData.tex, instOpcode.tex and
+-- types.tex
 
 
 miteDir = arg[1] -- $(MITE)
 dofile(miteDir .. "/script/util.lua") -- utility routines
-doFileOrDie(miteDir .. "/spec/insts.lua") -- instruction set spec
+dofile(miteDir .. "/spec.lua") -- Mite's specification
 
 -- Make a name->instruction index
 nameToInst = makeIndex("name", inst)
@@ -30,6 +29,8 @@ for i = 1, getn(inst) do
   inst[i].desc = d
 end
 
+-- write a LaTeX table line for the given fields
+
 -- write LaTeX table lines for the given instructions
 function writeTable(...)
   for i = 1, arg.n do
@@ -43,18 +44,18 @@ function writeTable(...)
 end
 
 -- instLab.tex: the label instruction
-writeToOrDie("instLab.tex")
+writeto("instLab.tex")
 writeTable("lab")
 
 -- instComp.tex: the computational instructions
-writeToOrDie("instComp.tex")
+writeto("instComp.tex")
 writeTable("mov", "movi", "ldl", "ld", "st", "gets", "sets", "pop",
            "push", "add", "sub", "mul", "div", "rem", "and", "or",
            "xor", "sl", "srl", "sra", "teq", "tlt", "tltu", "b", "br",
            "bf", "bt", "call", "callr", "ret", "calln")
 
 -- instData.tex: the data instructions
-writeToOrDie("instData.tex")
+writeto("instData.tex")
 writeTable("lit", "litl", "space")
 
 -- instOp.tex: the opcode table (3 columns)
@@ -63,9 +64,15 @@ function opEntry(n)
   return inst[n].name .. " & " .. format("%0.2x", n) .. "h"
 end
 
-writeToOrDie("instOpcode.tex")
+writeto("instOpcode.tex")
 rows = ceil(getn(inst) / 3)
 for i = 1, rows do
   write(opEntry(i) .. " & " .. opEntry(i + rows) .. " & " ..
         opEntry(i + rows * 2) .. " \\\\\n")
+end
+
+-- types.tex: the operand types
+writeto("types.tex")
+for i = 1, getn(type) do
+  write(type[i].name .. " & " .. type[i].desc .. " \\\\\n")
 end
