@@ -1,8 +1,3 @@
-Exc = constructor{
-  "name",
-  "message", -- printed when throw reaches the top level
-}
-
 exception = {
   -- fundamental errors
   Exc{"Malloc", "could not allocate memory"},

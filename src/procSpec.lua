@@ -9,25 +9,25 @@
 -- instEnum.h
 -- enumeration of opcodes
 -- each instruction name is uppercased and prefixed with "OP_"
-writeto("instEnum.h")
-writeLine("/* Instruction opcodes */\n",
+writeto ("instEnum.h")
+writeLine ("/* Instruction opcodes */\n",
           "#ifndef MITE_INSTENUM",
           "#define MITE_INSTENUM\n\n",
           "typedef enum {")
-instEnum = map(opify, project("name", inst))
+instEnum = map (opify, project ("name", inst))
 instEnum[1] = instEnum[1] .. " = 0x01"
-writeWrapped(join(", ", instEnum))
-writeLine("} Opcode;\n",
+writeWrapped (join (", ", instEnum))
+writeLine ("} Opcode;\n",
           "#endif")
 
 -- insts.gperf
 -- list of name, opcode pairs in alphabetical order
-writeto("insts.gperf")
-writeLine("%{",
+writeto ("insts.gperf")
+writeLine ("%{",
           "#include \"insts.h\"",
           "%}",
           "struct Inst { const char *name; Opcode opcode; };",
           "%%")
-for i = 1, getn(inst) do
-  writeLine(inst[i].name .. ", " .. opify(inst[i].name))
+for i = 1, getn (inst) do
+  writeLine (inst[i].name .. ", " .. opify (inst[i].name))
 end

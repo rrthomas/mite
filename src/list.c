@@ -10,24 +10,24 @@
 
 
 List *
-listNew(void)
+listNew (void)
 {
-  List *l = new(List);
+  List *l = new (List);
   l->next = l;
   l->item = NULL;
   return l;
 }
 
 int
-listEmpty(List *l)
+listEmpty (List *l)
 {
   return (l->next == l);
 }
 
 List *
-listPrefix(List *l, void *i)
+listPrefix (List *l, void *i)
 {
-  List *n = new(List);
+  List *n = new (List);
   n->next = l->next;
   n->item = i;
   l->next = n;
@@ -35,13 +35,13 @@ listPrefix(List *l, void *i)
 }
 
 void *
-listBehead(List *l)
+listBehead (List *l)
 {
   void *i;
   List *d;
   if ((d = l->next) == l) return NULL;
   i = d->item;
   l->next = l->next->next;
-  free(d);
+  free (d);
   return i;
 }

@@ -13,9 +13,9 @@ struct _List {
 };
 typedef struct _List List;
 
-List *listNew(void);
-int listEmpty(List *l);
-List *listPrefix(List *l, void *i);
-void *listBehead(List *l);
+List *listNew (void);
+int listEmpty (List *l);
+List *listPrefix (List *l, void *i);
+void *listBehead (List *l);
 
 #endif

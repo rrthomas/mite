@@ -24,7 +24,10 @@
 
 /* Instruction set */
 #include "instEnum.h"
-struct Inst { const char *name; Opcode opcode; };
+struct Inst {
+  const char *name;
+  Opcode opcode;
+};
 #include "insts.h"
 
 /* Register type */
@@ -38,7 +41,7 @@ typedef enum {
 
 /* Label value */
 typedef union {
-  uintptr_t n;
+  Word n;
   void *p;
 } LabelValue;
 
@@ -64,12 +67,14 @@ typedef struct _Dangle {
 /* Translator state */
 typedef struct {
   void *img;
-  uintptr_t size, labels[LABEL_TYPES];
-  Dangle *dangles, *dangleEnd;
+  Word size;
+  Word labels[LABEL_TYPES];
+  Dangle *dangles
+  Dangle *dangleEnd;
 } TState;
 
 /* Extend a write buffer */
 #define ensure(n) \
-  bufExt(W->img, W->size, (uintptr_t)(W->ptr - W->img + (n)))
+  bufExt (W->img, W->size, (uintptr_t)(W->ptr - W->img + (n)))
 
 #endif

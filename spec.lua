@@ -6,10 +6,10 @@
 --   * The table is a list of types
 --   * Encoding is given by list position (e.g. r = 0x1)
 --   * Each type has two fields:
-Type = constructor{
-  "name", -- as in the assembly language
-  "desc", -- description
-}
+Type = Object{_init = {
+    "name", -- as in the assembly language
+    "desc", -- description
+}}
 
 opType = {
   Type{"r", "register"},
@@ -24,12 +24,12 @@ opType = {
 --   * The table is a list of instructions
 --   * Opcode is given by list position (e.g. lab = 0x1)
 --   * Each instruction has three fields:
-Inst = constructor{
-  "name",   -- as in the assembly language
-  "ops",    -- list of operand types (see types.lua)
-  "effect", -- semantics
-            -- (%n --> {ops[n]}_{n}; %% --> %; <- --> \gets)
-}
+Inst = Object{_init = {
+    "name",   -- as in the assembly language
+    "ops",    -- list of operand types (see types.lua)
+    "effect", -- semantics
+              -- (%n --> {ops[n]}_{n}; %% --> %; <- --> \gets)
+}}
 
 inst = {
   Inst{"lab",    {"t", "n"},       "define a type $%1$ label named $%2$"},

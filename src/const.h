@@ -17,22 +17,22 @@
 #define BYTE_SHIFT 3 /* Shift to turn bytes into bits */
 #define BYTE_MASK ((Byte)-1) /* Mask for a byte */
 
-#define WORD_BYTE (sizeof(InstWord)) /* Number of bytes */
-#define WORD_BIT (sizeof(InstWord) * CHAR_BIT) /* Number of bits */
-#define WORD_ALIGN (WORD_BYTE - 1) /* Mask to align an address */
-#define WORD_SIGN_BIT (1U << (WORD_BIT - 1)) /* 1 in sign bit */
-#define WORD_SHIFT 2 /* Shift to turn words into bytes */
-#define WORD_BYTES_LEFT(p) (WORD_BYTE - ((uintptr_t)p & WORD_ALIGN))
+#define INST_BYTE (sizeof (InstWord)) /* Number of bytes */
+#define INST_BIT (sizeof (InstWord) * CHAR_BIT) /* Number of bits */
+#define INST_ALIGN (INST_BYTE - 1) /* Mask to align an address */
+#define INST_SIGN_BIT (1U << (INST_BIT - 1)) /* 1 in sign bit */
+#define INST_SHIFT 2 /* Shift to turn words into bytes */
+#define INST_BYTES_LEFT(p) (INST_BYTE - ((uintptr_t)p & INST_ALIGN))
 /* maximum number of octal digits in an InstWord (upper bound on max. 
    no. of decimal digits) */
-#define WORD_MAXLEN (sizeof(InstWord) * CHAR_BIT / 3)
+#define INST_MAXLEN (sizeof (InstWord) * CHAR_BIT / 3)
 
 
-#define PTR_BYTE (sizeof(uintptr_t)) /* Number of bytes */
-#define PTR_BIT (sizeof(uintptr_t) * CHAR_BIT) /* Number of bits */
-#define PTR_MASK (PTR_BYTE - 1)
+#define WORD_BYTE (sizeof (Word)) /* Number of bytes */
+#define WORD_BIT (sizeof (Word) * CHAR_BIT) /* Number of bits */
+#define WORD_MASK (WORD_BYTE - 1)
   /* Number of bytes left in the word from p */
-#define PTR_BYTES_LEFT(p) (PTR_BYTE - ((uintptr_t)p & PTR_MASK))
+#define WORD_BYTES_LEFT(p) (WORD_BYTE - ((uintptr_t)p & WORD_MASK))
   /* Number of bytes left in the word from p */
 
 #define INST_MAXLEN 4096 /* Maximum amount of code generated for an

@@ -14,6 +14,6 @@
 __inline
 #endif
 struct Inst *
-findInst(register const char *str, register unsigned int len);
+findInst (register const char *str, register unsigned int len);
 
 #endif

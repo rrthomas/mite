@@ -11,61 +11,61 @@
 
 
 long
-flen(FILE *fp)
+flen (FILE *fp)
 {
-  long pos = ftell(fp);
-  if (pos != -1 && fseek(fp, 0, SEEK_END) == 0) {
-    long len = ftell(fp);
-    if (len != -1 && fseek(fp, pos, SEEK_SET) == 0)
+  long pos = ftell (fp);
+  if (pos != -1 && fseek (fp, 0, SEEK_END) == 0) {
+    long len = ftell (fp);
+    if (len != -1 && fseek (fp, pos, SEEK_SET) == 0)
       return len;
   }
   return -1;
 }
 
 long
-readFile(const char *file, Byte **data)
+readFile (const char *file, Byte **data)
 {
   FILE *fp;
   Byte *p;
   long len = 0;
-  uintptr_t max;
+  size_t max;
   if (*file == '-' && (file[1] == '\0' || file[1] == '.')) {
     fp = stdin;
-    *data = bufNew(max, INIT_IMAGE_SIZE);
+    *data = bufNew (max, INIT_IMAGE_SIZE);
     p = *data;
-    while (!feof(fp)) {
-      len += fread(p, sizeof(Byte), max, fp);
+    while (!feof (fp) && !ferror (fp)) {
+      len += fread (p, sizeof (Byte), max, fp);
       p += len;
-      bufExt(*data, max, max * 2);
+      bufExt (*data, max, max * 2);
     }
     if (len == 0)
-      throw(ExcEmptyFile, "stdin");
-    bufShrink(*data, len + 1);
+      throw (ExcEmptyFile, "stdin");
+    bufShrink (*data, len + 1);
   } else {
-    fp = fopen(file, "rb");
+    fp = fopen (file, "rb");
     if (!fp)
-      throw(ExcFopen, excFile);
-    if ((len = flen(fp)) < 0)
-      throw(ExcFlen, excFile);
+      throw (ExcFopen, excFile);
+    if ((len = flen (fp)) < 0)
+      throw (ExcFlen, excFile);
     if (len == 0)
-      throw(ExcEmptyFile, excFile);
-    *data = excMalloc(len + 1);
-    if (fread(*data, sizeof(Byte), len, fp) != (uintptr_t)len)
-      throw(ExcFread, file);
+      throw (ExcEmptyFile, excFile);
+    *data = excMalloc (len + 1);
+    if (fread (*data, sizeof (Byte), len, fp) != (size_t)len)
+      throw (ExcFread, file);
   }
   (*data)[len] = '\0';
-  fclose(fp);
+  fclose (fp);
   return len;
 }
 
 void
-writeFile(const char *file, Byte *data, long len)
+writeFile (const char *file, Byte *data, long len)
 {
   FILE *fp = *file == '-' && (file[1] == '\0' || file[1] == '.') ?
-    stdout : fopen(file, "wb");
+    stdout : fopen (file, "wb");
   if (!fp)
-    throw(ExcFopen, file);
-  if (fwrite(data, sizeof(Byte), len, fp) != (uintptr_t)len)
-    throw(ExcFwrite, file);
-  if (fp != stdout) fclose(fp);
+    throw (ExcFopen, file);
+  if (fwrite (data, sizeof (Byte), len, fp) != (size_t)len)
+    throw (ExcFwrite, file);
+  if (fp != stdout) fclose (fp);
 }

@@ -1,30 +1,33 @@
 Get interpreter working.
 
-Add a debugger to the interpreter. At each instruction entry, have D. 
+Add a debugger. If a translator has a third argument in transList, use
+that as a debugger. It should have the same form as a writer.
+
+
+to the interpreter. At each instruction entry, have D. 
 This can call the debugging function with the current WState and
 RState. The WState can include all debugging information. Also have
 D_Init and D_Finalise, which can provide the rest. Actually write the
 debugger in a separate file, which is #included if debugging turned
 on.
 
-Change reader and writer files so that they have foo = ... for each
-field, rather than just listing the fields. Use the new standard
-library stuff for this. Might also want to construct a util.lua to
-avoid relying on my std lib.
+Add debugging and optimised builds to Makefile.
 
-Rather than having a resolve flag, have a resolve string containing
-the macros & functions needed for resolution, and don't generate the
-resolution function if it's empty.
+Make Mite into a library, with a public header.
 
+Document code properly, using something like doxygen (preferably
+coping with Lua as well, or at least with the option to cope with
+OCaml).
 
-Use a better build tool: cook or cons (?). Rewrite scripts in OCaml
-for better definition of the type of a reader and writer, and easier
-debugging in future (plus more people know OCaml than Lua!).
+Construct a util.lua to avoid relying on my std lib.
+
+Rewrite scripts in OCaml for better definition of the type of a reader
+and writer, and easier debugging in future.
 
 Make a distribution that can easily be compiled with any ANSI C
-compiler.
+compiler (preferably a single C file).
 
-Write a Lua script to process LaTeX files semi-intelligently, i.e. 
+Write a shell script to process LaTeX files semi-intelligently, i.e. 
 search for "bibliography" and if not found, just run latex twice;
 otherwise, run latex, bibtex, latex, latex. Look in l2web.
 

@@ -9,10 +9,10 @@ MITE_TOP = ..
 
 CC = gcc
 WARN = -Wall -W -Wundef -Wpointer-arith -Wbad-function-cast -Wcast-qual \
-       -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
+    -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
 COPTS = -ansi -pedantic -g # -O2 -fomit-frame-pointer
 CFLAGS = $(COPTS) $(WARN)
-LDFLAGS = -lm
+LDFLAGS = -lm # -s
 
 RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
@@ -25,7 +25,8 @@ SRCS = mit.c except.c list.c hash.c file.c insts.c translators.c
 # Generated files
 
 OBJS = $(patsubst %.c,%.o,$(SRCS))
-GEN_SRCS = instEnum.h insts.gperf insts.c endian.h excEnum.h excMsg.h translators.c
+GEN_SRCS = instEnum.h insts.gperf insts.c endian.h excEnum.h excMsg.h \
+    translators.h translators.c
 PROGS = mit endian
 
 
@@ -39,7 +40,7 @@ depend: $(SRCS) $(GEN_SRCS)
 clean:
 	rm -f $(OBJS)
 
-dist-clean: clean
+veryclean dist-clean: clean
 	rm -f $(PROGS) $(GEN_SRCS)
 
 
@@ -59,7 +60,7 @@ endian.h: endian.c
 	$(CC) -o endian endian.c
 	./endian > $@
 
-insts.gperf translate.h: $(MITE_TOP)/spec.lua procSpec.lua
+insts.gperf translate.h instEnum.h: $(MITE_TOP)/spec.lua procSpec.lua
 	$(RUNLUA) procSpec.lua
 	touch translate.h
 
@@ -75,7 +76,8 @@ excEnum.h excMsg.h: except.lua mkExcept.lua
 
 
 # Translators; this rule should be automated and removed
-translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua interpWrite.lua runWrite.lua mkTrans.lua
+translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua \
+    interpWrite.lua runWrite.lua mkTrans.lua
 	$(RUNLUA) mkTrans.lua transList.lua $*
 
 

@@ -13,12 +13,12 @@
 
 
 long
-flen(FILE *fp);
+flen (FILE *fp);
 
 long
-readFile(const char *file, Byte **data);
+readFile (const char *file, Byte **data);
 
 void
-writeFile(const char *file, Byte *data, long len);
+writeFile (const char *file, Byte *data, long len);
 
 #endif

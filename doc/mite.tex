@@ -28,25 +28,25 @@
 
 %%% Centred tables
 \newenvironment{ctabular}[1]%
-    {\begin{center}\begin{tabular}{#1}}%
+{\begin{center}\begin{tabular}{#1}}%
     {\end{tabular}\end{center}}
 \newcommand{\ctablecaption}{}
 \newenvironment{ctable}[3][tbp]%
-    {\renewcommand{\ctablecaption}{#2}%
-    \begin{table}[#1]\begin{center}\begin{tabular}{#3}}%
-    {\end{tabular}\caption{\ctablecaption}\end{center}\end{table}}
+{\renewcommand{\ctablecaption}{#2}%
+  \begin{table}[#1]\begin{center}\begin{tabular}{#3}}%
+      {\end{tabular}\caption{\ctablecaption}\end{center}\end{table}}
 
 %%% Instruction tables
 \newenvironment{insttab}[1]
-    {\begin{ctable}{#1}{>{\synfont}p{13ex}p{44ex}}\toprule}
-    {\bottomrule\end{ctable}}
+{\begin{ctable}{#1}{>{\synfont}p{13ex}p{44ex}}\toprule}
+  {\bottomrule\end{ctable}}
 
 
 \begin{document}
 
 \title{The Mite virtual machine}
 \author{Reuben Thomas\\\url{rrt@sc3d.org}\\\url{http://sc3d.org/rrt/}}
-\date{12th August 2001}
+\date{16th April 2002}
 \maketitle
 
 
@@ -56,8 +56,8 @@
 Mite is a general-purpose virtual machine. It is designed to be
 capable of efficient implementation, by interpretation or compilation,
 from a binary-portable object format. It has a flat linear memory, and
-single-threaded, non-interruptable execution. The only external access
-provided is the ability to call machine code.
+single-threaded, non-interruptable execution. It is designed to
+interwork with native machine code.
 
 
 
@@ -71,7 +71,7 @@ Mite is parametrized on the following quantities:
 \item[$R$]the number of registers ($R=2^n, 2<n$, for some $n$)
 
 \item[$S$]direction of stack growth ($-1$ for an ascending stack, $1$
-for a descending stack)
+  for a descending stack)
 \end{description}
 
 
@@ -198,12 +198,11 @@ instruction opcodes are shown in table~\ref{opcodetab}. Opcodes
 their number. Label types are encoded as $1$ for \syn{b}, $2$ for
 \syn{s}, and $3$ for \syn{d}.
 
-Labels are encoded as a long number (see section~\ref{longnums}). 
+Labels are encoded as a long number (see section~\ref{longnums}).
 Labels of each type are numbered consecutively from $1$ from the start
 of the translation unit, according to the order in which they are
-declared. For a
-\syn{lab} instruction, only the label type is encoded (the number is
-redundant).
+declared. For a \syn{lab} instruction, only the label type is encoded
+(the number is redundant).
 
 Immediate constants are encoded as a byte encoding the modifiers
 followed by a byte encoding the rotation (if any), followed by the
@@ -228,12 +227,12 @@ Long numbers are encoded as follows:
 \begin{enumerate}
 \item Left-truncate the number to the minimum number of bits in which
   it can be represented.
-      
+  
 \item Remove an $8n-1$-bit word from the most significant end of the
   number, where $n$ is the number of bytes left in the current
   instruction word. If there are fewer than $8n-1$ bits in the number
   then sign-extend it to that length first.
-      
+  
 \item Add a bit to the most significant end of the word, which should
   be zero if more bits remain in the number, and one otherwise.
   
@@ -242,15 +241,15 @@ Long numbers are encoded as follows:
 \item While there are still bits in the number, repeat the following
   steps:
 
-\begin{enumerate}
-\item Remove a $31$-bit word from the most significant end of the
-  number, padding with zeroes if there are fewer than $31$ bits left.
-  
-\item Add a bit to the most significant end of the word, which should
-  be zero if more bits remain in the number, and one otherwise.
+  \begin{enumerate}
+  \item Remove a $31$-bit word from the most significant end of the
+    number, padding with zeroes if there are fewer than $31$ bits left.
+    
+  \item Add a bit to the most significant end of the word, which should
+    be zero if more bits remain in the number, and one otherwise.
 
-\item Store the word, with the bytes in big-endian order.
-\end{enumerate}
+  \item Store the word, with the bytes in big-endian order.
+  \end{enumerate}
 
 \end{enumerate}
 
@@ -260,8 +259,8 @@ Long numbers are encoded as follows:
 
 Martin Richards introduced me to Cintcode~\cite{cintweb}, which
 kindled my interest in virtual machines, and led to
-Beetle~\cite{beetledis} and an earlier version of Mite~\cite{mite0}, of
-which the current Mite is a sort of synthesis.
+Beetle~\cite{beetledis} and an earlier version of Mite~\cite{mite0},
+of which the current Mite is a sort of synthesis.
 GNU~\emph{lightning}~\cite{lightning} helped inspire me to greater
 simplicity, while still aiming for good performance. Alistair Turnbull
 has been a fount of criticism for all my work on virtual machines.
