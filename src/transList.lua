@@ -4,7 +4,7 @@
 -- Each list has the form {reader, writer, {list-of-instrumenters}}
 return {
   {"asm", "obj"},
-  {"obj", "asm"},
-  {"obj", "interp"},
-  {"obj", "run", {"interpDebug"}},
+  -- {"obj", "asm"},
+  -- {"obj", "interp"},
+  -- {"obj", "run", {"interpDebug"}},
 }
