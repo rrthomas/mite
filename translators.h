@@ -9,13 +9,16 @@
 
 #include "translate.h"
 
-Translator *
+TState *
 asmToObj(Byte *rImg, Byte *rEnd);
 
-Translator *
+TState *
 objToObj(Byte *rImg, Byte *rEnd);
 
-Translator *
+TState *
 objToInterp(Byte *rImg, Byte *rEnd);
+
+TState *
+asmToAsm(Byte *rImg, Byte *rEnd);
 
 #endif
