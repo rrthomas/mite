@@ -55,8 +55,8 @@ endian.h: endian.c
 	$(CC) -o endian endian.c
 	./endian > $@
 
-insts.gperf translate.h: $(MITE_TOP)/spec/insts.lua mkinsts.lua
-	lua -f mkinsts.lua $(MITE_TOP)
+insts.gperf translate.h: $(MITE_TOP)/spec.lua procSpec.lua
+	lua -f procSpec.lua $(MITE_TOP)
 	touch translate.h
 
 

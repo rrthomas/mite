@@ -49,8 +49,8 @@ dist-clean:
 
 # File dependencies
 
-$(TEX_TABLES): $(MITE_TOP)/spec/insts.lua mkinsts.lua
-	lua -f mkinsts.lua $(MITE_TOP)
+$(TEX_TABLES): $(MITE_TOP)/spec.lua procSpec.lua
+	lua -f procSpec.lua $(MITE_TOP)
 	touch mite.tex
 
 mite.tex: $(TEX_TABLES)
