@@ -11,7 +11,7 @@
 HashTable *
 hashNew(size_t size, Hasher hash, Comparer compare)
 {
-  HashTable *table = excMalloc(sizeof(HashTable));
+  HashTable *table = new(HashTable);
   table->thread = excCalloc(size, sizeof(HashNode *));
   table->size = size;
   table->hash = hash;

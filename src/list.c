@@ -11,7 +11,7 @@
 List *
 listNew(void)
 {
-  List *l = excMalloc(sizeof(List));
+  List *l = new(List);
   l->next = l->prev = l;
   l->item = NULL;
   return l;
@@ -26,7 +26,7 @@ listEmpty(List *l)
 List *
 listPrefix(List *l, void *i)
 {
-  List *n = excMalloc(sizeof(List));
+  List *n = new(List);
   n->next = l->next;
   n->prev = l;
   n->item = i;

@@ -60,7 +60,7 @@ void
 vThrow(const char *fmt, va_list arg)
 {
   if (!listEmpty(_excBufs))
-    longjmp(*((jmp_buf *)_excBufs->next->item), TRUE);
+    longjmp(*((jmp_buf *)_excBufs->next->item), 1);
   vDie(fmt, arg);
 }
 unVify(vThrow, throw)
@@ -68,7 +68,7 @@ unVify(vThrow, throw)
 jmp_buf *
 _excEnv(void)
 {
-  jmp_buf *env = excMalloc(sizeof(jmp_buf));
+  jmp_buf *env = new(jmp_buf);
   listPrefix(_excBufs, env);
   return env;
 }

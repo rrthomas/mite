@@ -11,12 +11,6 @@
 #include <stdarg.h>
 #include <setjmp.h>
 
-
-#undef FALSE
-#undef TRUE
-#define FALSE 0
-#define TRUE 1
-
 void excInit(void);
 void vWarn(const char *fmt, va_list arg);
 void warn(const char *fmt, ...);
