@@ -20,7 +20,7 @@ exception = {
   Exc{"BadImmRot", "immediate rotation out of range"},
   Exc{"BadImmMod", "invalid immediate modifiers"},
   Exc{"BadAddr", "invalid address"},
-  Exc{"DivZero", "division by zero"},
+  Exc{"DivByZero", "division by zero"},
   Exc{"BadShift", "invalid shift"},
   -- I/O errors
   Exc{"Fopen", "could not open `%s'"},
