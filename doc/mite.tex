@@ -46,7 +46,7 @@
 
 \title{The Mite virtual machine}
 \author{Reuben Thomas\\\url{rrt@sc3d.org}\\\url{http://sc3d.org/rrt/}}
-\date{3rd August 2001}
+\date{12th August 2001}
 \maketitle
 
 
@@ -66,12 +66,11 @@ provided is the ability to call machine code.
 Mite is parametrized on the following quantities:
 
 \begin{description}
-\item[$w$]number of bytes in a word
+\item[$W$]number of bytes in a word
 
-\item[$g$]the number of general-purpose registers ($g=2^n, 2<n$, for
-some $n$)
+\item[$R$]the number of registers ($R=2^n, 2<n$, for some $n$)
 
-\item[$s$]direction of stack growth ($-1$ for an ascending stack, $1$
+\item[$S$]direction of stack growth ($-1$ for an ascending stack, $1$
 for a descending stack)
 \end{description}
 
@@ -79,13 +78,13 @@ for a descending stack)
 
 \section{Registers and memory}
 
-Registers are word-sized. Mite has $g$ general registers \syn{1} to
-$g$, a program counter \syn{P}, and a stack pointer \syn{S}. The stack
-is a LIFO stack; \syn{S} points to the top-most item.
+Registers are word-sized. Mite has $R$ registers \syn{1} to $R$, a
+program counter \syn{P}, and a stack pointer \syn{S}. The stack is a
+LIFO stack; \syn{S} points to the top-most item.
 
 The memory $M$ is an array of bytes. The stack resides in memory. 
 $M(a)$ denotes the word in memory starting at byte $a$; $a$ must be a
-multiple of $w$. Within a word, bytes may be stored in big or
+multiple of $W$. Within a word, bytes may be stored in big or
 little-endian order. Two's complement number representation is used.
 
 
@@ -102,16 +101,11 @@ addresses need not be addresses in $M$.
 
 In the syntax, each operand is denoted by a letter subscripted by a
 number. The letter indicates the sort of operand required, as shown in
-table~\ref{optypetab}; the number shows the number of the operand. A
-name is a string of letters, digits and underscores, and may not start
-with a digit.
+table~\ref{optypetab}; the number shows the number of the operand.
 
 \begin{ctable}{Operand types\label{optypetab}}{>{$}c<{$}l}
 \toprule
-r & a general register\\
-l & a label type\\
-i & an immediate constant\\
-n & a name\\
+\input{types}
 \bottomrule
 \end{ctable}
 
@@ -130,7 +124,11 @@ table~\ref{labtab}.
 
 There are three types of label: branch labels, denoted \syn{b},
 subroutine labels, denoted \syn{s}, and data labels, denoted \syn{d}. 
-Names must be unique within a translation unit.
+Names must be unique within a translation unit. A label is written as
+a label type followed by a name, or if the type is given by the
+operand type, just a name. A label definition is the same; the
+distinction is purely semantic. A name is a string of letters, digits
+and underscores, and may not start with a digit.
 
 The value of a code or subroutine label is the address of the
 instruction immediately following it. A data label's value is the
@@ -151,12 +149,12 @@ The computational instructions are shown in table~\ref{comptab}.
 Immediate constants are of the form
 [\syn{e}][\syn{s}][\syn{w}]$n$[\syn{>\/>}$r$]. $n$ (and $r$, if
 present) is an integer. If \syn{e} (for ``endianness'') is present,
-$n$ is subtracted from $w$ on a big-endian Mite, or left unaltered
-otherwise; then if \syn{s} is present, it is multiplied by $s$, and if
-\syn{w} is present, it is multiplied by $w$. The final value is
-truncated to $8w$ bits, then if
-\syn{>\/>}$r$ is present, it is rotated by $r$ places, to the right if
-positive, and to the left if negative.
+$n$ is subtracted from $W$ on a big-endian Mite, or left unaltered
+otherwise; then if \syn{s} is present, it is multiplied by $S$, and if
+\syn{w} is present, it is multiplied by $W$. The final value is
+truncated to $8W$ bits, then if \syn{>\/>}$r$ is present, it is
+rotated by $r$ places, to the right if positive, and to the left if
+negative.
 
 
 \subsection{Data}
