@@ -34,10 +34,14 @@ excInit(void)
 void
 vWarn(const char *fmt, va_list arg)
 {
-  if (progName) fprintf(stderr, "%s:", progName);
-  if (excFile) fprintf(stderr, "%s:", excFile);
-  if (excLine) fprintf(stderr, "%lu:", excLine);
-  if (progName || excFile || excLine) putc(' ', stderr);
+  if (progName)
+    fprintf(stderr, "%s:", progName);
+  if (excFile)
+    fprintf(stderr, "%s:", excFile);
+  if (excLine)
+    fprintf(stderr, "%lu:", excLine);
+  if (progName || excFile || excLine)
+    putc(' ', stderr);
   vfprintf(stderr, fmt, arg);
   va_end(arg);
   putc('\n', stderr);
@@ -72,7 +76,8 @@ _excEnv(void)
 void
 _endTry(void)
 {
-  if (!listEmpty(_excBufs)) listBehead(_excBufs);
+  if (!listEmpty(_excBufs))
+    listBehead(_excBufs);
 }
 #define endTry _endTry()
 
@@ -80,7 +85,8 @@ void *
 excMalloc(size_t size)
 {
   void *p = malloc(size);
-  if (!p && size) throw("could not allocate memory");
+  if (!p && size)
+    throw("could not allocate memory");
   return p;
 }
 
@@ -88,7 +94,8 @@ void *
 excCalloc(size_t nobj, size_t size)
 {
   void *p = calloc(nobj, size);
-  if (!p && nobj && size) throw("could not allocate memory");
+  if (!p && nobj && size)
+    throw("could not allocate memory");
   return p;
 }
 

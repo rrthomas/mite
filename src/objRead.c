@@ -99,26 +99,49 @@ static const char *badReg = "bad register",
 #define CHECK_l(op)
 #define CHECK_f(op) \
   if (op & ~(FLAG_R | FLAG_S | FLAG_W | FLAG_E)) throwPos(t, badFlags)
-#define CHECK_r(op) if (op == 0 || op > UINT_MAX) throwPos(t, badReg)
-#define CHECK_L(op) if (op == 0 || op > LABEL_TYPES) throwPos(t, badLabTy)
+#define CHECK_r(op) \
+  if (op == 0 || op > UINT_MAX) throwPos(t, badReg)
+#define CHECK_L(op) \
+  if (op == 0 || op > LABEL_TYPES) throwPos(t, badLabTy)
 
-#define OPS(a, b, c) CHECK_ ## a(op1); CHECK_ ## b(op2); CHECK_ ## c(op3)
+#define OPS(a, b, c) \
+  CHECK_ ## a(op1); \
+  CHECK_ ## b(op2); \
+  CHECK_ ## c(op3)
+
 
 #ifdef LITTLE_ENDIAN
-#  define OPCODE(w) (w) & BYTE_MASK
-#  define OP(p) (w >> (BYTE_BIT * (p))) & BYTE_MASK
+
+#  define OPCODE(w) \
+     (w) & BYTE_MASK
+
+#  define OP(p) \
+     (w >> (BYTE_BIT * (p))) & BYTE_MASK
+
 #else /* !LITTLE_ENDIAN */
-#  define OPCODE(w) (w >> (BYTE_BIT * 3)) & BYTE_MASK
-#  define OP(p) (w >> (BYTE_BIT * (WORD_BYTE - (p)))) & BYTE_MASK
+
+#  define OPCODE(w) \
+     (w >> (BYTE_BIT * 3)) & BYTE_MASK
+
+#  define \
+     OP(p) (w >> (BYTE_BIT * (WORD_BYTE - (p)))) & BYTE_MASK
+
 #endif /* LITTLE_ENDIAN */
 
-#define GET_LAB(p) t->rPtr -= 4 - (p); l.n = getNum(t, &sgn); \
-  if (sgn) throwPos(t, badLab)
+
+#define GET_LAB(p) \
+  t->rPtr -= 4 - (p); \
+  l.n = getNum(t, &sgn); \
+  if (sgn) \
+    throwPos(t, badLab)
+
 #define GET_IMM1 \
   r = (op1 & FLAG_R) ? (t->rPtr--, op2) : ((t->rPtr -= 2), 0); \
   n = getNum(t, &sgn)
+
 #define GET_IMM2 \
-  r = (op2 & FLAG_R) ? op3 : (t->rPtr--, 0); n = getNum(t, &sgn)
+  r = (op2 & FLAG_R) ? op3 : (t->rPtr--, 0); \
+  n = getNum(t, &sgn)
 
 static LabelValue
 labelMap(TState *t, Label *l)
@@ -136,50 +159,169 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
   intptr_t n;
   LabelValue l;
   int sgn, i;
-  for (i = 0; i < LABEL_TYPES; i++) t->labels[i] = 0;
+  for (i = 0; i < LABEL_TYPES; i++)
+    t->labels[i] = 0;
   while (t->rPtr < t->rEnd) {
     w = *(Word *)t->rPtr;
-    op1 = OP(1); op2 = OP(2); op3 = OP(3);
+    op1 = OP(1);
+    op2 = OP(2);
+    op3 = OP(3);
     t->rPtr += WORD_BYTE;
     excLine += WORD_BYTE;
     bufEnsure(INST_MAXLEN);
     switch (OPCODE(w)) {
-    case OP_LAB:   OPS(L,_,_); l.n = ++t->labels[op1]; wrLab(op1, l); break;
-    case OP_MOV:   OPS(r,r,_); wrMov(op1, op2); break;
-    case OP_MOVI:  OPS(r,f,_); GET_IMM2; wrMovi(op1, op2, sgn, n, r); break;
-    case OP_LDL:   OPS(r,d,_); GET_LAB(2); wrLdl(op1, l); break;
-    case OP_LD:    OPS(r,r,_); wrLd(op1, op2); break;
-    case OP_ST:    OPS(r,r,_); wrSt(op1, op2); break;
-    case OP_GETS:  OPS(r,_,_); wrGets(op1); break;
-    case OP_SETS:  OPS(r,_,_); wrSets(op1); break;
-    case OP_POP:   OPS(r,_,_); wrPop(op1); break;
-    case OP_PUSH:  OPS(r,_,_); wrPush(op1); break;
-    case OP_ADD:   OPS(r,r,r); wrAdd(op1, op2, op3); break;
-    case OP_SUB:   OPS(r,r,r); wrSub(op1, op2, op3); break;
-    case OP_MUL:   OPS(r,r,r); wrMul(op1, op2, op3); break;
-    case OP_DIV:   OPS(r,r,r); wrDiv(op1, op2, op3); break;
-    case OP_REM:   OPS(r,r,r); wrRem(op1, op2, op3); break;
-    case OP_AND:   OPS(r,r,r); wrAnd(op1, op2, op3); break;
-    case OP_OR:    OPS(r,r,r); wrOr(op1, op2, op3); break;
-    case OP_XOR:   OPS(r,r,r); wrXor(op1, op2, op3); break;
-    case OP_SL:    OPS(r,r,r); wrSl(op1, op2, op3); break;
-    case OP_SRL:   OPS(r,r,r); wrSrl(op1, op2, op3); break;
-    case OP_SRA:   OPS(r,r,r); wrSra(op1, op2, op3); break;
-    case OP_TEQ:   OPS(r,r,r); wrTeq(op1, op2, op3); break;
-    case OP_TLT:   OPS(r,r,r); wrTlt(op1, op2, op3); break;
-    case OP_TLTU:  OPS(r,r,r); wrTltu(op1, op2, op3); break;
-    case OP_B:     OPS(b,_,_); GET_LAB(1); wrB(l); break;
-    case OP_BR:    OPS(r,_,_); wrBr(op1); break;
-    case OP_BF:    OPS(r,b,_); GET_LAB(2); wrBf(op1, l); break;
-    case OP_BT:    OPS(r,b,_); GET_LAB(2); wrBt(op1, l); break;
-    case OP_CALL:  OPS(s,_,_); GET_LAB(1); wrCall(l); break;
-    case OP_CALLR: OPS(r,_,_); wrCallr(op1); break;
-    case OP_RET:   OPS(_,_,_); wrRet(); break;
-    case OP_CALLN: OPS(r,_,_); wrCalln(op1); break;
-    case OP_LIT:   OPS(f,_,_); GET_IMM1; wrLit(op1, sgn, n, r); break;
-    case OP_LITL:  OPS(l,_,_); GET_LAB(2); wrLitl(op1, l); break;
-    case OP_SPACE: OPS(f,_,_); GET_IMM1; wrSpace(op1, sgn, n, r); break;
-    default:       throw("bad instruction");
+    case OP_LAB:
+      OPS(L,_,_);
+      l.n = ++t->labels[op1];
+      wrLab(op1, l);
+      break;
+    case OP_MOV:
+      OPS(r,r,_);
+      wrMov(op1, op2);
+      break;
+    case OP_MOVI:
+      OPS(r,f,_);
+      GET_IMM2;
+      wrMovi(op1, op2, sgn, n, r);
+      break;
+    case OP_LDL:
+      OPS(r,d,_);
+      GET_LAB(2);
+      wrLdl(op1, l);
+      break;
+    case OP_LD:
+      OPS(r,r,_);
+      wrLd(op1, op2);
+      break;
+    case OP_ST:
+      OPS(r,r,_);
+      wrSt(op1, op2);
+      break;
+    case OP_GETS:
+      OPS(r,_,_);
+      wrGets(op1);
+      break;
+    case OP_SETS:
+      OPS(r,_,_);
+      wrSets(op1);
+      break;
+    case OP_POP:
+      OPS(r,_,_);
+      wrPop(op1);
+      break;
+    case OP_PUSH:
+      OPS(r,_,_);
+      wrPush(op1);
+      break;
+    case OP_ADD:
+      OPS(r,r,r);
+      wrAdd(op1, op2, op3);
+      break;
+    case OP_SUB:
+      OPS(r,r,r);
+      wrSub(op1, op2, op3);
+      break;
+    case OP_MUL:
+      OPS(r,r,r);
+      wrMul(op1, op2, op3);
+      break;
+    case OP_DIV:
+      OPS(r,r,r);
+      wrDiv(op1, op2, op3);
+      break;
+    case OP_REM:
+      OPS(r,r,r);
+      wrRem(op1, op2, op3);
+      break;
+    case OP_AND:
+      OPS(r,r,r);
+      wrAnd(op1, op2, op3);
+      break;
+    case OP_OR:
+      OPS(r,r,r);
+      wrOr(op1, op2, op3);
+      break;
+    case OP_XOR:
+      OPS(r,r,r);
+      wrXor(op1, op2, op3);
+      break;
+    case OP_SL:
+      OPS(r,r,r);
+      wrSl(op1, op2, op3);
+      break;
+    case OP_SRL:
+      OPS(r,r,r);
+      wrSrl(op1, op2, op3);
+      break;
+    case OP_SRA:
+      OPS(r,r,r);
+      wrSra(op1, op2, op3);
+      break;
+    case OP_TEQ:
+      OPS(r,r,r);
+      wrTeq(op1, op2, op3);
+      break;
+    case OP_TLT:
+      OPS(r,r,r);
+      wrTlt(op1, op2, op3);
+      break;
+    case OP_TLTU:
+      OPS(r,r,r);
+      wrTltu(op1, op2, op3);
+      break;
+    case OP_B:
+      OPS(b,_,_);
+      GET_LAB(1);
+      wrB(l);
+      break;
+    case OP_BR:
+      OPS(r,_,_);
+      wrBr(op1);
+      break;
+    case OP_BF:
+      OPS(r,b,_);
+      GET_LAB(2);
+      wrBf(op1, l);
+      break;
+    case OP_BT:
+      OPS(r,b,_);
+      GET_LAB(2);
+      wrBt(op1, l);
+      break;
+    case OP_CALL:
+      OPS(s,_,_);
+      GET_LAB(1);
+      wrCall(l);
+      break;
+    case OP_CALLR:
+      OPS(r,_,_);
+      wrCallr(op1);
+      break;
+    case OP_RET:
+      OPS(_,_,_);
+      wrRet();
+      break;
+    case OP_CALLN:
+      OPS(r,_,_);
+      wrCalln(op1);
+      break;
+    case OP_LIT:
+      OPS(f,_,_);
+      GET_IMM1;
+      wrLit(op1, sgn, n, r);
+      break;
+    case OP_LITL:
+      OPS(l,_,_);
+      GET_LAB(2);
+      wrLitl(op1, l);
+      break;
+    case OP_SPACE:
+      OPS(f,_,_);
+      GET_IMM1;
+      wrSpace(op1, sgn, n, r);
+      break;
+    default:
+      throw("bad instruction");
     }
   }
   excLine = 0;

@@ -14,7 +14,8 @@
 #define raise(e)   longjmp(env, (int)(e))
 
 #define seta(a, n, i, e, o) \
-    if ((i) >= (n)) raise(mite_badHeader); (a)[(i)++]= (miteWord)(e) + (o)
+    if ((i) >= (n)) raise(mite_badHeader); \
+    (a)[(i)++]= (miteWord)(e) + (o)
 
 #define alloc(p, s) \
     p= malloc(s);  if (!p) raise(mite_memoryFull)

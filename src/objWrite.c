@@ -29,8 +29,10 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 {
   int len = 1, cur = (WORD_BYTES_LEFT(p) << BYTE_SHIFT) - 1;
   uintptr_t bytes = 0;
-  while (n >> len && len < (int)WORD_BIT) len++; 
-  if (sgn) n = (uintptr_t)(-(intptr_t)n);
+  while (n >> len && len < (int)WORD_BIT)
+    len++;
+  if (sgn)
+    n = (uintptr_t)(-(intptr_t)n);
   while ((bytes += (cur + 1) >> BYTE_SHIFT), len > cur) {
     len -= cur; /* Number of bits left */
     writeBytes(p, (uint32_t)(n >> len));
@@ -43,22 +45,36 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 
 #define NUM_MAX_LENGTH PTR_BYTE + WORD_BYTE
 
-#define B(b) *t->wPtr++ = (Byte)b
+#define B(b) \
+  *t->wPtr++ = (Byte)b
 
 #ifdef LITTLE_ENDIAN
-#  define W(a, b, c, d) *(Word *)t->wPtr = a | (b << BYTE_BIT) | \
-     (c << (BYTE_BIT * 2)) | (d << (BYTE_BIT * 3)); t->wPtr += WORD_BYTE
+#  define W(a, b, c, d) \
+     *(Word *)t->wPtr = a | (b << BYTE_BIT) | \
+       (c << (BYTE_BIT * 2)) | (d << (BYTE_BIT * 3)); \
+     t->wPtr += WORD_BYTE
 #else /* !LITTLE_ENDIAN */
-#  define W(a, b, c, d) *(Word *)t->wPtr = (a << (BYTE_BIT * 3)) | \
-     (b << (BYTE_BIT * 2)) | (c << BYTE_BIT) | d; t->wPtr += WORD_BYTE
+#  define W(a, b, c, d) \
+     *(Word *)t->wPtr = (a << (BYTE_BIT * 3)) | \
+       (b << (BYTE_BIT * 2)) | (c << BYTE_BIT) | d; \
+     t->wPtr += WORD_BYTE
 #endif /* LITTLE_ENDIAN */
 
-#define Lab(ty, l) addDangle(t, ty, l); align(t)
-#define Imm(f, n, v, r) \
-  *t->wPtr++ = (Byte)(f); if (r) *t->wPtr++ = (Byte)r; putInt(t, n, v)
+#define Lab(ty, l) \
+  addDangle(t, ty, l);
+  align(t)
 
-#define putInt(t, sgn, n) t->wPtr += writeInt(t->wPtr, sgn, n)
-#define putUInt(t, n) putInt(t, 0, n)
+#define Imm(f, n, v, r) \
+  *t->wPtr++ = (Byte)(f);
+  if (r) \
+    *t->wPtr++ = (Byte)r;
+  putInt(t, n, v)
+
+#define putInt(t, sgn, n) \
+  t->wPtr += writeInt(t->wPtr, sgn, n)
+
+#define putUInt(t, n) \
+  putInt(t, 0, n)
 
 #define wrLab(L1, l2)          W(OP_LAB, L1, 0, 0)
 #define wrMov(r1, r2)          W(OP_MOV, r1, r2, 0)

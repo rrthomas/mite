@@ -27,8 +27,11 @@ List *
 listPrefix(List *l, void *i)
 {
   List *n = excMalloc(sizeof(List));
-  n->next = l->next; n->prev = l; n->item = i;
-  l->next->prev = n; l->next = n;
+  n->next = l->next;
+  n->prev = l;
+  n->item = i;
+  l->next->prev = n;
+  l->next = n;
   return n;
 }
 

@@ -21,25 +21,39 @@
 static uintptr_t
 eval(Byte f, int n, uintptr_t v, uintptr_t r)
 {
-  if (n) v = (uintptr_t)(-(intptr_t)n);
+  if (n)
+    v = (uintptr_t)(-(intptr_t)n);
 #ifndef LITTLE_ENDIAN
-  if (f & FLAG_E) n = PTR_BYTE - n;
+  if (f & FLAG_E)
+    n = PTR_BYTE - n;
 #endif
   /* s is 1 for the interpreter */
-  if (f & FLAG_W) n *= PTR_BYTE;
+  if (f & FLAG_W)
+    n *= PTR_BYTE;
   if (r > 0) {
-    if (r > PTR_BIT) r = PTR_BIT;
+    if (r > PTR_BIT)
+      r = PTR_BIT;
     n = (n >> r) | (n << (PTR_BIT - r));
   }
   if (r < 0) {
-    if (r < -PTR_BIT) r = -PTR_BIT;
+    if (r < -PTR_BIT)
+      r = -PTR_BIT;
     n = (n >> -r) | (n << (PTR_BIT - -r));
   }
 }
 
-#define Lab(ty, l) addDangle(t, ty, l); t->wPtr += PTR_BYTE
-#define Imm(n) *(uintptr_t *)t->wPtr = n; t->wPtr += PTR_BYTE
-#define Zero(n) l = n * PTR_BYTE; bufEnsure(l); memset(t->wPtr, 0, l); \
+#define Lab(ty, l) \
+  addDangle(t, ty, l); \
+  t->wPtr += PTR_BYTE
+
+#define Imm(n) \
+  *(uintptr_t *)t->wPtr = n; \
+  t->wPtr += PTR_BYTE
+
+#define Zero(n) \
+  l = n * PTR_BYTE; \
+  bufEnsure(l); \
+  memset(t->wPtr, 0, l); \
   t->wPtr += l
 
 #define wrLab(L1, l2)          newLab(L1, l2)

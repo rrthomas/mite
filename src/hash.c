@@ -13,7 +13,9 @@ hashNew(size_t size, Hasher hash, Comparer compare)
 {
   HashTable *table = excMalloc(sizeof(HashTable));
   table->thread = excCalloc(size, sizeof(HashNode *));
-  table->size = size; table->hash = hash; table->compare = compare;
+  table->size = size;
+  table->hash = hash;
+  table->compare = compare;
   return table;
 }
 
@@ -64,7 +66,8 @@ void *
 hashFind(HashTable *table, void *key)
 {
   HashLink l = hashSearch(table, key);
-  if (l.found == HASH_NOTFOUND) return NULL;
+  if (l.found == HASH_NOTFOUND)
+    return NULL;
   return l.curr->body;
 }
 
@@ -73,11 +76,16 @@ hashInsert(HashTable *table, void *key, void *body)
 {
   HashLink l = hashSearch(table, key);
   HashNode *n;
-  if (l.found == HASH_FOUND) return l.curr->body;
+  if (l.found == HASH_FOUND)
+    return l.curr->body;
   n = excMalloc(sizeof(HashNode));
-  if (l.prev == NULL) table->thread[l.entry] = n;
-  else l.prev->next = n;
-  n->next = l.curr; n->key = key; n->body = body;
+  if (l.prev == NULL)
+    table->thread[l.entry] = n;
+  else
+    l.prev->next = n;
+  n->next = l.curr;
+  n->key = key;
+  n->body = body;
   return NULL;
 }
 
@@ -85,9 +93,12 @@ int
 hashRemove(HashTable *table, void *key)
 {
   HashLink l = hashSearch(table, key);
-  if (l.found == HASH_NOTFOUND) return HASH_NOTFOUND;
-  if (l.prev == NULL) table->thread[l.entry] = l.curr->next;
-  else l.prev->next = l.curr->next;
+  if (l.found == HASH_NOTFOUND)
+    return HASH_NOTFOUND;
+  if (l.prev == NULL)
+    table->thread[l.entry] = l.curr->next;
+  else
+    l.prev->next = l.curr->next;
   free(l.curr->key);
   free(l.curr->body);
   free(l.curr);

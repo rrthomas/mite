@@ -55,9 +55,15 @@ static void
 putLabTy(TState *t, unsigned int ty)
 {
   switch (ty) {
-  case LABEL_B: putChar(t, 'b'); return;
-  case LABEL_S: putChar(t, 's'); return;
-  case LABEL_D: putChar(t, 'd'); return;
+  case LABEL_B:
+    putChar(t, 'b');
+    return;
+  case LABEL_S:
+    putChar(t, 's');
+    return;
+  case LABEL_D:
+    putChar(t, 'd');
+    return;
   }
 }
 
@@ -66,10 +72,14 @@ putLabTy(TState *t, unsigned int ty)
 static void
 putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
 {
-  if (f & FLAG_E) putChar(t, 'e');
-  if (f & FLAG_S) putChar(t, 's');
-  if (f & FLAG_W) putChar(t, 'w');
-  if (n) putChar(t, '-');
+  if (f & FLAG_E)
+    putChar(t, 'e');
+  if (f & FLAG_S)
+    putChar(t, 's');
+  if (f & FLAG_W)
+    putChar(t, 'w');
+  if (n)
+    putChar(t, '-');
   putNum(t, v);
   if (r) {
     S(">>");
@@ -77,15 +87,35 @@ putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
   }
 }
 
-#define NL *(t->wPtr)++ = '\n'
-#define SP *(t->wPtr)++ = ' '
-#define R(r) SP; putNum(t, r)
-#define LabTy(L) SP; putLabTy(t, L)
-#define Lab(ty, l) SP; putLabTy(t, ty); addDangle(t, ty, l)
-#define Imm(f, n, v, r) SP; putImm(t, f, n, v, r)
+#define NL \
+  *(t->wPtr)++ = '\n'
 
-#define putInt(t, sgn, n) t->wPtr += writeInt(t->wPtr, sgn, n)
-#define putUInt(t, n) putInt(t, 0, n)
+#define SP \
+  *(t->wPtr)++ = ' '
+
+#define R(r) \
+  SP;
+  putNum(t, r)
+
+#define LabTy(L) \
+  SP;
+  putLabTy(t, L)
+
+#define Lab(ty, l) \
+  SP;
+  putLabTy(t, ty);
+  addDangle(t, ty, l)
+
+#define Imm(f, n, v, r) \
+  SP;
+  putImm(t, f, n, v, r)
+
+
+#define putInt(t, sgn, n) \
+  t->wPtr += writeInt(t->wPtr, sgn, n)
+#define putUInt(t, n) \
+  putInt(t, 0, n)
+
 
 #define wrLab(L1, l2)          S("lab"); LabTy(L1); Lab(L1, l2); NL
 #define wrMov(r1, r2)          S("mov"); R(r1); R(r2); NL
