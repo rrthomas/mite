@@ -127,7 +127,6 @@ function shell(c)
 end
 
 -- Process all the files specified on the command-line with function f
--- f: process a file
 --   name: the name of the file being read
 --   i: the number of the argument
 function processFiles(f)
