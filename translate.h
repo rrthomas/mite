@@ -40,16 +40,10 @@ typedef uint32_t Word;
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-#define ensure(n) bufExt(t->wImg, t->wSize, t->wPtr - t->wImg + (n))
-
 /* Instruction opcodes */
 enum {
-  OP_LAB = 0x01, OP_MOV, OP_MOVI, OP_LDL, OP_LD, OP_ST, OP_GETS, OP_SETS,
-  OP_POP, OP_PUSH, OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_REM, OP_AND, OP_OR,
-  OP_XOR, OP_SL, OP_SRL, OP_SRA, OP_TEQ, OP_TLT, OP_TLTU, OP_B, OP_BR, OP_BF,
-  OP_BT, OP_CALL, OP_CALLR, OP_RET, OP_CALLN, OP_LIT, OP_LITL, OP_SPACE 
+#include "opEnum.h"
 };
-#define INSTS OP_SPACE
 
 /* Operand types */
 enum {
@@ -120,27 +114,27 @@ typedef struct {
   Dangle *dangles, *dangleEnd;
   HashTable *labelHash; /* Assembly reader hash table for label names */
   int eol; /* Assembly reader EOL state */
-} Translator;
+} TState;
 
-typedef Translator *TranslatorFunction(Byte *rImg, Byte *rEnd);
+typedef TState *Translator(Byte *rImg, Byte *rEnd);
 
 #define MIN_IMAGE_SIZE 16384
 
 void
-addDangle(Translator *t, unsigned int ty, uintptr_t n);
+addDangle(TState *t, unsigned int ty, uintptr_t n);
 
 void
-insertDangles(Translator *t, Byte *fImg, Byte *fPtr,
+insertDangles(TState *t, Byte *finalImg, Byte *fPtr,
 	      uintptr_t (*write)(Byte **p, uintptr_t n),
-	      LabelValue (*labelMap)(Translator *t, Label *l));
+	      LabelValue (*labelMap)(TState *t, Label *l));
 
 void
-align(Translator *t);
+align(TState *t);
 
 void
-nullLabNew(Translator *t, unsigned int ty, uintptr_t n);
+nullLabNew(TState *t, unsigned int ty, uintptr_t n);
 
-Translator *
+TState *
 translatorNew(Byte *img, Byte *end);
 
 #endif
