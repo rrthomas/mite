@@ -119,8 +119,8 @@ objR_readerNew (objR_Input *inp)
   opType = {
     r = OpType {[[#undef r%n
         #define r%n objR_op%n]],
-        [[if (r%n == 0) /* r%n can't be > UINT_MAX */
-          diePos (R, ExcBadReg);]]},
+        [[if (r%n == 0 || r%n > REGISTER_MAX)
+          diePos (R, ExcBadRegister);]]},
     i = OpType {[[#undef i%n_f
         #define i%n_f objR_op%n
         int i%n_sgn, i%n_r;
@@ -137,14 +137,14 @@ objR_readerNew (objR_Input *inp)
     t = OpType {[[#undef t%n
         #define t%n objR_op%n]],
         [[if (objR_op%n == 0 || objR_op%n > LABEL_TYPES)
-          diePos (R, ExcBadLabTy);]]},
+          diePos (R, ExcBadLabelType);]]},
     l = OpType {[[int l%n_sgn;
         LabelValue l%n;]],
                function (inst, op)
                  return [[R->ptr -= 4 - %n;
         l%n.n = objR_getNum (R, &l%n_sgn);
         if (l%n_sgn)
-          diePos (R, ExcBadLab);]]
+          diePos (R, ExcBadLabel);]]
                end},
     n = OpType {"LabelValue l%n;",
                function (inst, op)
