@@ -4,31 +4,28 @@
                    by Reuben Thomas (rrt@sc3d.org)
 
 
-This package contains the design and implementation of Mite 2, a simple
+This package contains the design and implementation of Mite, a simple
 general-purpose virtual machine. See {mite,iface,mit}.pdf for documentation.
 
-The URL for the primary distribution is http://sc3d.org/rrt/
+The URL for the primary distribution is http://mite.sourceforge.net/.
 
 
 License
 
-Mite is distributed under a BSD-like license, included in the file LICENSE.
+Mite is distributed under the BSD license; see the file LICENSE.
 
 
 Quick start and extras
 
-Mite should work on almost any ISO 99 *or* ANSI 89 C system (see the docs
-for the small print). A Makefile is provided. "make all" makes mit, the Mite
+Mite should work on almost any ISO C system (see the docs for the
+small print). A Makefile is provided. "make all" makes mit, the Mite
 translator; you should check the Makefile first.
 
-The design is described in mite.tex; the API is in iface.w and the
-implementation in mit.w. The .w files are nuweb files; nuweb is also
-available from the URL above, or from http://nuweb.sourceforge.net/. Some
-custom LaTeX packages are used in the documentation, which are available in
-my LaTeX package collection from the URL above.
+The design is described in mite.tex; the API is in iface.tex.
 
 
 Bugs
 
 Bug reports, especially of systems on which Mite doesn't work when it
-should, are welcome. There are no known bugs. 
+should, are welcome. Please use the bug-tracker at
+http://sourceforge.net/projects/mite/.
