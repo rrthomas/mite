@@ -2,5 +2,8 @@
 
 #include "translators.h"
 
-TState *(*translator[Asm][Asm])(Byte *, Byte *) =
-{{NULL, &objToAsm}, {&asmToObj, NULL}};
+TState *(*translator[Interp][Interp])(Byte *, Byte *) =
+{{NULL, &objToAsm, &objToInterp},
+ {&asmToObj, NULL, NULL},
+ {NULL, NULL, NULL}
+};
