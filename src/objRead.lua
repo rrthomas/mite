@@ -4,12 +4,7 @@
 
 return Reader{
   "Mite object code",
-  [[/* Reader input */
-typedef struct {
-  Byte *img;
-  uintptr_t size;
-} objR_Input;
-]],
+  "typedef interpW_Output objR_Input;",
   [[
 #include <stdint.h>
 #include <limits.h>
@@ -17,17 +12,17 @@ typedef struct {
 /* TODO: Need a post-pass to verify everything else (what is there?) */
 
 
-/* Reader state */
+/* Object reader state */
 typedef struct {
   Byte *img, *end, *ptr;
 } objR_State;
 
-/* set excLine to the current offset into the image, then throw an
+/* set excPos to the current offset into the image, then throw an
    exception */ 
 static void
 throwPos(objR_State *R, int exc)
 {
-  excLine = R->ptr - R->img;
+  excPos = R->ptr - R->img;
   throw(exc);
 }
 
@@ -83,17 +78,17 @@ objR_getNum(objR_State *R, int *sgnRet)
 
 #ifdef LITTLE_ENDIAN
 
-#  define objR_OPCODE(w) \
+#  define objR_OPCODE \
      (objR_w) & BYTE_MASK
 #  define objR_OP(p) \
      (objR_w >> (BYTE_BIT * (p))) & BYTE_MASK
 
 #else /* !LITTLE_ENDIAN */
 
-#  define objR_OPCODE(w) \
-     (w >> (BYTE_BIT * 3)) & BYTE_MASK
+#  define objR_OPCODE \
+     (objR_w >> (BYTE_BIT * 3)) & BYTE_MASK
 #  define objR_OP(p) \
-     (w >> (BYTE_BIT * (WORD_BYTE - (p)))) & BYTE_MASK
+     (objR_w >> (BYTE_BIT * (WORD_BYTE - (p)))) & BYTE_MASK
 
 #endif /* LITTLE_ENDIAN */
 
@@ -153,7 +148,7 @@ objR_readerNew(objR_Input *inp)
     objR_op1 = objR_OP(1);
     objR_op2 = objR_OP(2);
     objR_op3 = objR_OP(3);
-    o = objR_OPCODE(objR_w);
+    o = objR_OPCODE;
     R->ptr = (Byte *)(R->ptr) + WORD_BYTE;]], -- update
     "",                                       -- finish
   }

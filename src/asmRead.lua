@@ -23,7 +23,7 @@ end
 return Reader{
   "Mite assembly",
   [[
-/* Reader input */
+/* Assembly reader input */
 typedef struct {
   char *img;
   uintptr_t size;
@@ -37,7 +37,7 @@ typedef struct {
 #include <string.h>
 
 
-/* Reader state */
+/* Assembly reader state */
 typedef struct {
   char *img, *end, *ptr;
   HashTable *labHash; /* table of label names */
@@ -52,7 +52,7 @@ asmR_tok(asmR_State *R, char **tok, int (*f)(int))
 { 
 #define p R->ptr
   if (R->eol) {
-    excLine++;
+    excPos++;
     R->eol = 0;
   }
   while (*p && (isspace((char)*p) || (char)*p == '#')) {
@@ -61,7 +61,7 @@ asmR_tok(asmR_State *R, char **tok, int (*f)(int))
         p++;
       } while (*p && (char)*p != '\n');
     if ((char)*p == '\n')
-      excLine++;
+      excPos++;
     p++;
   }
   *tok = (char *)p;

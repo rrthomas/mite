@@ -48,6 +48,7 @@ Writer = constructor{
   "macros",  -- writer macros
   "inst",    -- instruction table
   "trans",   -- writer-specific parts of translator function
+  "resolve", -- flag indicating whether dangles resolution is required
 }
 
 Inst = constructor{
@@ -86,6 +87,7 @@ function mkTrans(arg)
 
   -- Check the writer implements the correct instructions
   for i = 1, getn(inst) do
+    affirm(w.inst[i], "instruction " .. inst[i].name .. " missing")
     affirm(w.inst[i].name == inst[i].name,
            "instruction " .. tostring(i) .. " ('" .. w.inst[i].name ..
              "') should be '" .. inst[i].name .. "'")
@@ -97,9 +99,10 @@ function mkTrans(arg)
     " translator */\n\n"
 
   -- Dangle resolution function
-  out = out .. "static void\n" .. resolveFunc .. "(TState *T, " ..
-    rstate .. " *R, " .. wstate ..
-    " *W, Byte *finalImg, Byte *finalPtr)\n" ..
+  if w.resolve then
+    out = out .. "static void\n" .. resolveFunc .. "(TState *T, " ..
+      rstate .. " *R, " .. wstate ..
+      " *W, Byte *finalImg, Byte *finalPtr)\n" ..
 [[{
   Dangle *d;
   uintptr_t prev = 0, extras, n, off = finalPtr - finalImg;
@@ -113,7 +116,7 @@ function mkTrans(arg)
     /* fooW_UInt must set extras */
 ]] ..
   "    " .. writes .. "W_UInt(&finalPtr, " .. reads ..
-    "R_labelAddr(R, d->l).n);\n" ..
+  "R_labelAddr(R, d->l).n);\n" ..
 [[    prev = d->off + extras;
   }
   memcpy(finalPtr, W->img + prev,
@@ -125,10 +128,11 @@ function mkTrans(arg)
 }
 
 ]]
+  end
 
   -- Writer Macros
   out = out .. "/* Writer macros */\n\n" ..
-    w.macros .. "\n\n"
+  w.macros .. "\n/* end of writer macros */\n\n"
 
   -- Head of the translator function
   out = out .. outputType .. " *\n" ..
@@ -138,26 +142,32 @@ function mkTrans(arg)
 ]] ..
   "  " .. rstate .. " *R = " .. reads .. "R_readerNew(inp);\n" ..
   "  " .. wstate .. " *W = " .. writes .. "W_writerNew();\n" ..
-  "  " .. outputType .. "*out = new(" .. outputType .. ");\n" ..
+  "  " .. outputType .. " *out = new(" .. outputType .. ");\n" ..
 [[  LabelType ty;
   Opcode o;
   /* reader declarations */
 ]] ..
  "  " .. r.trans.decls .. "\n" ..
+ "  /* end of reader declarations */\n" ..
  "  /* writer declarations */\n" ..
  "  " .. w.trans.decls .. "\n" ..
+ "  /* end of writer declarations */\n" ..
 [[  for (ty = 0; ty < LABEL_TYPES; ty++)
     T->labels[ty] = 0;
   /* reader initialisation */
 ]] ..
  "  " .. r.trans.init .. "\n" ..
+ "  /* end of reader initialisation */\n" ..
  "  /* writer initialisation */\n" ..
  "  " .. w.trans.init .. "\n" ..
+ "  /* end of writer initialisation */\n" ..
  "  while (R->ptr < R->end) {\n" ..
  "    /* reader update */\n" ..
  "    " .. r.trans.update .. "\n" ..
+ "    /* end of reader update */\n" ..
  "    /* writer update */\n" ..
  "    " .. w.trans.update .. "\n" ..
+ "    /* end of writer update */\n" ..
  "    switch (o) {\n"
 
   -- The instruction cases
@@ -185,21 +195,27 @@ function mkTrans(arg)
   end
   out = out ..
 [[    default:
-      throw(ExcBadInst);]]
+      throw(ExcBadInst);
+]]
 
   -- End of the translator function
   out = out ..
 [[    }
   }
-  excLine = 0;
-]] ..
-  "  " .. resolveFunc ..
-[[(T, R, W, RESOLVE_IMG, RESOLVE_PTR);
-  /* reader finish */
+  excPos = 0;
+]]
+  if w.resolve then
+    out = out .."  " .. resolveFunc ..
+      "(T, R, W, RESOLVE_IMG, RESOLVE_PTR);"
+  end
+  out = out ..
+[[  /* reader finish */
 ]] ..
 "  " .. r.trans.finish .. "\n" ..
+"  /* end of reader finish*/\n" ..
 "  /* writer finish */\n" ..
 "  " .. w.trans.finish .. "\n" ..
+"  /* end of writer finish */\n" ..
 [[  return out;
 }]]
 
@@ -233,11 +249,11 @@ writeLine("/* Mite translator",
           "",
           "#include \"translate.h\"",
           "")
-for i, _ in readers do
-  writeLine(readers[i].input)
-end
 for i, _ in writers do
   writeLine(writers[i].output)
+end
+for i, _ in readers do
+  writeLine(readers[i].input)
 end
 for i = 1, getn(translators) do
   writeLine(translators[i][2] .. "W_Output *",

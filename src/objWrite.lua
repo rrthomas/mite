@@ -3,7 +3,7 @@
 
 return Writer{
   "Mite object",
-  [[/* Writer output */
+  [[/* Object writer output */
 typedef struct {
   Byte *img;
   uintptr_t size;
@@ -14,7 +14,7 @@ typedef struct {
 #include <limits.h>
 
 
-/* Writer state */
+/* Object writer state */
 typedef struct {
   Byte *img, *ptr;
   uintptr_t size;
@@ -114,5 +114,6 @@ objW_writerNew(void)
              "ensure(INST_MAXLEN);", -- update
              [[out->img = W->img;
   out->size = W->ptr - W->img;]],    -- finish
-  }
+  },
+  1,
 }

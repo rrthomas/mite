@@ -3,16 +3,17 @@
 
 return Writer{
   "Mite interpretive code",
--- The interpreter writer calculates the label addresses and writes
--- out the data from the object code; the interpreter uses all three
--- to intepret the code.
+-- The interpretive code writer merely works out the label addresses.
+-- The original object code is actually interpreted.
+  [[/* Interpreter writer output */
+/* Interpreter state should contain:
 
--- TODO: To speed up interpretation, could have top-bit-set
--- instruction variants which take a simple number in the rest of the
--- word; non-top-bit set indicates that flags or multiple words are
--- used; could also write out modified code which expands constants
--- and addresses inline.
-  [[/* Writer output */
+   Registers (R array, S, P)
+   Code image (two pointers)
+   Label arrays
+   Data image (purely to be able to free it)
+   Stack (two pointers for now, eventually a linked list)
+*/
 typedef struct {
   Byte *img;
   uintptr_t size, labels[LABEL_TYPES];
@@ -23,7 +24,7 @@ typedef struct {
 #include <stdint.h>
 
 
-/* Writer state */
+/* Interpreter writer state */
 typedef struct {
   Byte *img, *ptr;
   uintptr_t size, labSize[LABEL_TYPES];
@@ -75,6 +76,10 @@ interpW_writerNew(void)
   W->ptr = W->img;
   return W;
 }
+
+#define A(i) \
+  *W->ptr = &i ## Action(state); \
+  W->ptr += PTR_BYTE;
 ]],
 "",
   {
@@ -82,16 +87,16 @@ interpW_writerNew(void)
                   "T->labels[t1] * PTR_BYTE); " ..
                   "W->labAddr[t1][T->labels[t1]] = t1 == LABEL_D " ..
                   "? W->ptr - W->img : R->ptr - R->img"},
-    Inst{"mov",   ""}, Inst{"movi",  ""}, Inst{"ldl",   ""},
-    Inst{"ld",    ""}, Inst{"st",    ""}, Inst{"gets",  ""},
-    Inst{"sets",  ""}, Inst{"pop",   ""}, Inst{"push",  ""},
-    Inst{"add",   ""}, Inst{"sub",   ""}, Inst{"mul",   ""},
-    Inst{"div",   ""}, Inst{"rem",   ""}, Inst{"and",   ""},
-    Inst{"or",    ""}, Inst{"xor",   ""}, Inst{"sl",    ""},
-    Inst{"srl",   ""}, Inst{"sra",   ""}, Inst{"teq",   ""},
-    Inst{"tlt",   ""}, Inst{"tltu",  ""}, Inst{"b",     ""},
-    Inst{"br",    ""}, Inst{"bf",    ""}, Inst{"bt",    ""},
-    Inst{"call",  ""}, Inst{"callr", ""}, Inst{"ret",   ""},
+    Inst{"mov",   ""},    Inst{"movi",  ""},    Inst{"ldl",   ""},
+    Inst{"ld",    ""},    Inst{"st",    ""},    Inst{"gets",  ""},
+    Inst{"sets",  ""},    Inst{"pop",   ""},    Inst{"push",  ""},
+    Inst{"add",   ""},    Inst{"sub",   ""},    Inst{"mul",   ""},
+    Inst{"div",   ""},    Inst{"rem",   ""},    Inst{"and",   ""},
+    Inst{"or",    ""},    Inst{"xor",   ""},    Inst{"sl",    ""},
+    Inst{"srl",   ""},    Inst{"sra",   ""},    Inst{"teq",   ""},
+    Inst{"tlt",   ""},    Inst{"tltu",  ""},    Inst{"b",     ""},
+    Inst{"br",    ""},    Inst{"bf",    ""},    Inst{"bt",    ""},
+    Inst{"call",  ""},    Inst{"callr", ""},    Inst{"ret",   ""},
     Inst{"calln", ""},
     Inst{"lit",   "*(Word *)W->ptr = evalImm(i1_f, i1_sgn, " ..
                   "i1_r, i1_v); W->ptr += PTR_BYTE"},
@@ -113,5 +118,6 @@ interpW_writerNew(void)
   }
   out->img = W->img;
   out->size = W->ptr - W->img;]]          -- finish
-  }
+  },
+  1
 }

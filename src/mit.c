@@ -65,7 +65,7 @@ main(int argc, char *argv[])
       die("unknown output file type `%s'", wSuff ? wSuff : "");
   } else
     w = Asm;
-  excLine = 1;
+  excPos = 1;
   if (r == Obj) {
     objR_Input *inp = new(objR_Input);
     inp->img = img;
@@ -75,6 +75,7 @@ main(int argc, char *argv[])
       writeFile(outFile, (Byte *)out->img, out->size);
     } else if (w == Interp) {
       interpW_Output *out = objToInterp(inp);
+      objToRun(out);
     }
   } else if (r == Asm && w == Obj) {
     asmR_Input *inp = new(asmR_Input);
