@@ -7,9 +7,10 @@
 CC = gcc
 WARN = -Wall -W -Wundef -Wpointer-arith -Wbad-function-cast -Wcast-qual \
        -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
-CFLAGS = -ansi -pedantic $(WARN) -g # -O2 -fomit-frame-pointer 
+COPTS = -ansi -pedantic -g # -O2 -fomit-frame-pointer 
+CFLAGS = $(COPTS) $(WARN)
 LDFLAGS = -lm
-HEVEA_FLAGS= -I texmf
+HEVEA_FLAGS = -I texmf
 
 
 # Suffix rules
@@ -18,7 +19,10 @@ HEVEA_FLAGS= -I texmf
 .SUFFIXES:
 .SUFFIXES: .c .h .o .tex .dvi .ps .pdf .html
 .tex.dvi:
-	lmk -q -co $<
+	latex $<
+	bibtex $(basename $<)
+	latex $<
+	latex $<
 .dvi.ps:
 	dvips $<
 .ps.pdf:
@@ -29,12 +33,12 @@ HEVEA_FLAGS= -I texmf
 
 # Source files
 
-TRANS_SRC = objToObj.c asmToAsm.c asmToObj.c
-TRANS_OBJ = objToObj.o asmToAsm.o asmToObj.o
+TRANS_SRC = asmToObj.c objToAsm.c
+TRANS_OBJ = asmToObj.o objToAsm.o
 SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c $(TRANS_SRC)
 OBJS = mit.o translate.o except.o list.o hash.o flen.o insts.o $(TRANS_OBJ)
 
-DOCS = README TODO Manifesto mite.pdf mit.pdf iface.pdf
+DOCS = README TODO MANIFESTO mite.pdf iface.pdf
 TEX_TABLES = instLab.tex instComp.tex instData.tex instOpcode.tex
 
 # Top-level targets
@@ -51,8 +55,7 @@ dist: $(DOCS)
 	zip -qr mite.zip Makefile README ToDo Manifesto *.pdf *.tex *.c *.h
 
 clean:
-	rm -f $(OBJS)
-	lmk -clean mite.tex mit.tex iface.tex
+	rm -f $(OBJS) *.log *.aux *.blg *.bbl
 
 
 # File dependencies
@@ -62,6 +65,10 @@ clean:
 
 mit: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
+
+# avoid spurious warnings when compiling gperf output
+insts.o:
+	$(CC) -c $(COPTS) -o $@ $<
 
 insts.c: insts.gperf
 	gperf -L ANSI-C -N findInst -t -k 1,2,'$$' $< > $@
