@@ -59,8 +59,9 @@ extern OpList opType[];
 
 /* Label types */
 typedef enum {
-  LABEL_B = 1, LABEL_S, LABEL_D, LABEL_TYPES = 3
+  LABEL_B = 1, LABEL_S, LABEL_D
 } LabelType;
+#define LABEL_TYPES LABEL_D
 
 /* Label value */
 typedef union {
@@ -103,16 +104,6 @@ typedef TState *Translator(Byte *rImg, Byte *rEnd);
 
 void
 addDangle(TState *t, LabelType ty, LabelValue n);
-
-void
-resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
-               uintptr_t maxlen,
-               uintptr_t (*writeUInt)(Byte **p, uintptr_t n),
-               LabelValue (*labelAddr)(TState *t, Label *l));
-
-#define resolve(t) \
-  resolveDangles(t, RESOLVE_IMG, RESOLVE_PTR, DANGLE_MAXLEN, \
-                 writeUInt, labelAddr)
 
 void
 align(TState *t);
