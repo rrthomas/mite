@@ -1,5 +1,3 @@
-Put date in mite.tex using CVS token.
-
 Extend mkinsts.lua to handle readers and writers, which should be
 written in a yacc-like style. Specify interfaces for readers and
 writers, so that more can more easily be written.
@@ -37,14 +35,14 @@ The output is piped back in and compared against each output in the
 test table, which can be either genuine output or an error. If one
 matches, the test passes; otherwise it fails.
 
-Have another script that takes an input file, input type, output type and
-flags, and produces a test file from it.
+Have another script that takes an input file, input type, output type
+and flags, and produces a test file from it.
 
 
 Extensions:
 
-Accessing dynamic libs: return the address of the given symbol; should work
-at least for the standard C library.
+Accessing dynamic libs: return the address of the given symbol; should
+work at least for the standard C library.
 
 FP instruction set (using new reg set, use only 64-bit IEEE numbers).
 
@@ -55,16 +53,17 @@ Separate compilation of Mite code
 
 Use a custom format, and dynamic linking.
 
-Allow dynamic linking? Mite code could be DLed to native code. Would need to
-distinguish Mite symbols from native ones.
+Allow dynamic linking? Mite code could be DLed to native code. Would
+need to distinguish Mite symbols from native ones.
 
-Mite starts by loading a single object file. All other facilities can be
-provided in virtual code; just need to add access to libffi/Swig. Allow
-Mite modules to be loaded and linked in. Preferably possible to load just
-code (no symbols) if desired. Need export/import labels for Mite and native
-symbols.
+Mite starts by loading a single object file. All other facilities can
+be provided in virtual code; just need to add access to libffi/Swig. 
+Allow Mite modules to be loaded and linked in. Preferably possible to
+load just code (no symbols) if desired. Need export/import labels for
+Mite and native symbols.
 
 Addresses can only be known after word-length independence adjustment.
 
 
-Good magic value for 7-coded stream: 37F06EDh (becomes 1B7C0DEDh when 7-coded).
+Good magic value for 7-coded stream: 37F06EDh (becomes 1B7C0DEDh when
+7-coded).
