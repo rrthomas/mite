@@ -3,10 +3,6 @@
 */
 
 
-#include <string.h>
-
-#include "except.h"
-#include "buffer.h"
 #include "translate.h"
 
 
@@ -37,9 +33,10 @@ translatorNew(Byte *img, Byte *end)
   TState *t = new(TState);
   t->rPtr = t->rImg = img;
   t->rEnd = end;
-  t->wImg = bufNew(t->wSize, MIN_IMAGE_SIZE);
+  t->wImg = bufNew(t->wSize, INIT_IMAGE_SIZE);
   t->wPtr = t->wImg;
   t->dangles = new(Dangle);
+  t->dangles->next = NULL;
   t->dangleEnd = t->dangles;
   return t;
 }  
