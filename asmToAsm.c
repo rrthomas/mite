@@ -4,6 +4,7 @@
 
 
 #include "translate.h"
+#include "translator.h"
 
 #define TRANSLATOR asmToAsm
 Translator TRANSLATOR;

@@ -1,10 +1,10 @@
-/* Mite abstract grammar
+/* Mite translator
    (c) Reuben Thomas 2000
 */
 
 
-#ifndef MITE_ABSGRAM
-#define MITE_ABSGRAM
+#ifndef MITE_TRANSLATE
+#define MITE_TRANSLATE
 
 
 #include <stddef.h>
@@ -124,9 +124,14 @@ void
 addDangle(TState *t, unsigned int ty, uintptr_t n);
 
 void
-insertDangles(TState *t, Byte *finalImg, Byte *fPtr,
-	      uintptr_t (*write)(Byte **p, uintptr_t n),
-	      LabelValue (*labelMap)(TState *t, Label *l));
+resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
+               uintptr_t maxlen,
+               uintptr_t (*writeUInt)(Byte **p, uintptr_t n),
+               LabelValue (*labelMap)(TState *t, Label *l));
+
+#define resolve(t) \
+  resolveDangles(t, RESOLVE_IMG, RESOLVE_PTR, DANGLE_MAXLEN, \
+                 writeUInt, labelMap)
 
 void
 align(TState *t);

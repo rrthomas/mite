@@ -184,10 +184,8 @@ getInst(TState *t, unsigned int *i,
   if (OP3(ops)) *op3 = getOp(t, OP3(ops));
 }
 
-#define labelMap(l) ((uintptr_t)hashFind(t->labelHash, (l)->v.p))
-
 static LabelValue
-labelMapFunc(TState *t, Label *l)
+labelMap(TState *t, Label *l)
 {
   LabelValue ret;
   ret.p = hashFind(t->labelHash, l->v.p);
@@ -256,6 +254,6 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
     }
   }
   excLine = 0;
-  resolve(t, labelMapFunc);
+  resolve(t);
   return t;
 }

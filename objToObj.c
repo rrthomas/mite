@@ -6,6 +6,7 @@
 
 
 #include "translate.h"
+#include "translator.h"
 
 #define TRANSLATOR objToObj
 Translator TRANSLATOR;

@@ -84,23 +84,27 @@ addDangle(TState *t, unsigned int ty, uintptr_t n)
 }
 
 void
-insertDangles(TState *t, Byte *finalImg, Byte *fPtr,
-	      uintptr_t (*write)(Byte **p, uintptr_t n),
+resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
+              uintptr_t maxlen,
+	      uintptr_t (*writeUInt)(Byte **p, uintptr_t n),
 	      LabelValue (*labelMap)(TState *t, Label *l))
 {
   Dangle *d;
-  uintptr_t prev = 0, extras;
+  uintptr_t prev = 0, extras, n;
+  for (d = t->dangles->next, n = 0; d; d = d->next, n++);
+  finalImg = excRealloc(finalImg, (finalPtr - finalImg) +
+                        t->wPtr - t->wImg + n * maxlen);
   for (d = t->dangles->next; d; d = d->next) {
-    memcpy(fPtr, t->wImg + prev, d->ins - prev);
-    fPtr += d->ins - prev;
-    extras = write(&fPtr, labelMap(t, d->l).n);
+    memcpy(finalPtr, t->wImg + prev, d->ins - prev);
+    finalPtr += d->ins - prev;
+    extras = writeUInt(&finalPtr, labelMap(t, d->l).n);
     prev = d->ins + extras;
   }
-  memcpy(fPtr, t->wImg + prev, t->wPtr - t->wImg - prev);
-  fPtr += t->wPtr - t->wImg - prev;
+  memcpy(finalPtr, t->wImg + prev, t->wPtr - t->wImg - prev);
+  finalPtr += t->wPtr - t->wImg - prev;
   free(t->wImg);
-  t->wImg = realloc(finalImg, fPtr - finalImg);
-  t->wPtr = t->wImg + (fPtr - finalImg);
+  t->wImg = realloc(finalImg, finalPtr - finalImg);
+  t->wPtr = t->wImg + (finalPtr - finalImg);
 }
 
 TState *
@@ -116,21 +120,3 @@ translatorNew(Byte *img, Byte *end)
   return t;
 }  
 
-/* 
- * TState *
- * translate(Byte *rImg, Byte *rEnd)
- * {
- * TState *t = translatorNew(rImg, rEnd);
- * unsigned int i;
- * MiteValue op1, op2, op3;
- * 
- * while (t->rPtr < t->rEnd) {
- *   getInst(t, &i, &op1, &op2, &op3);
- *   putInst(t, i, op1, op2, op3);
- * }
- * t->writer->resolve(t);
- * excLine = 0;
- * return t;
- * }
- * 
- */

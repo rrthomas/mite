@@ -182,6 +182,6 @@ TRANSLATOR(Byte *rImg, Byte *rEnd)
     }
   }
   excLine = 0;
-  resolve(t, labelMap);
+  resolve(t);
   return t;
 }

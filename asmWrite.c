@@ -14,7 +14,8 @@
 #include "translate.h"
 
 
-/* maximum number of octal digits in a Word */
+/* maximum number of octal digits in a Word
+   (upper bound on max. no. of decimal digits) */
 #define WORD_MAXLEN (sizeof(Word) * CHAR_BIT / 3)
 
 /* Instructions indexed by opcode */
@@ -38,7 +39,7 @@ putStr(TState *t, const char *s, uintptr_t len)
 }
 
 static uintptr_t
-writeNum(char *s, uintptr_t n)
+writeNum(Byte *s, uintptr_t n)
 {
   uintptr_t last = n ? log10(n) : 0;
   s += last;
@@ -77,7 +78,7 @@ putLab(TState *t, Label *l)
 #define S(s) putStr(t, s, sizeof(s) / sizeof(char))
 
 static void
-putImm(TState *t, f, n, v, r)
+putImm(TState *t, int f, int n, uintptr_t v, uintptr_t r)
 {
   if (f & FLAG_E) putChar(t, 'e');
   if (f & FLAG_S) putChar(t, 's');
@@ -90,11 +91,11 @@ putImm(TState *t, f, n, v, r)
   }
 }
 
-#define R(r) putNum(r)
-#define NL bufEnsure(sizeof(char)); *(*t->wPtr++) = '\n'
+#define R(r) putNum(t, r)
+#define NL bufEnsure(sizeof(char)); *(t->wPtr)++ = '\n'
 #define LabTy(L) putLabTy(t, L)
 #define Lab(ty, l) addDangle(t, ty, l)
-#define Imm(f, n, v, r) putImm(f, n, v, r)
+#define Imm(f, n, v, r) putImm(t, f, n, v, r)
 
 #define putInt(t, sgn, n) t->wPtr += writeInt(t->wPtr, sgn, n)
 #define putUInt(t, n) putInt(t, 0, n)
@@ -138,17 +139,10 @@ putImm(TState *t, f, n, v, r)
 static uintptr_t
 writeUInt(Byte **s, uintptr_t n)
 {
-  *s += writeNum((char *)*s, n);
+  *s += writeNum(*s, n);
   return 0;
 }
 
-static void
-resolve(TState *t, LabelValue (*labelMap)(TState *t, Label *l))
-{
-  Byte *finalImg;
-  Dangle *d;
-  uintptr_t n;
-  for (d = t->dangles->next, n = 0; d; d = d->next, n++);
-  finalImg = excMalloc(t->wPtr - t->wImg + n * WORD_MAXLEN);
-  insertDangles(t, finalImg, finalImg, writeUInt, labelMap);
-}
+#define DANGLE_MAXLEN WORD_MAXLEN
+#define RESOLVE_IMG NULL
+#define RESOLVE_PTR NULL

@@ -104,13 +104,6 @@ writeUInt(Byte **p, uintptr_t n)
   return len & WORD_ALIGN;
 }
 
-static void
-resolve(TState *t, LabelValue (*labelMap)(TState *t, Label *l))
-{
-  Byte *finalImg;
-  Dangle *d;
-  uintptr_t n;
-  for (d = t->dangles->next, n = 0; d; d = d->next, n++);
-  finalImg = excMalloc(t->wPtr - t->wImg + n * (WORD_BYTE * 2));
-  insertDangles(t, finalImg, finalImg, writeUInt, labelMap);
-}
+#define DANGLE_MAXLEN (WORD_BYTE * 2)
+#define RESOLVE_IMG NULL
+#define RESOLVE_PTR NULL
