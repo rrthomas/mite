@@ -19,13 +19,15 @@ labTyToChar (LabelType ty)
     return 's';
   case LABEL_D:
     return 'd';
+  case LABEL_F:
+    return 'f';
   }
 }
 
 static Word
 writeNum (char *s, Word n)
 {
-  Word last = n ? log10(n) : 0;
+  Word last = n ? (Word)(log10 (n)) : 0;
   s += last;
   do {
     *s-- = '0' + n % 10;
