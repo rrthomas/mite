@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <limits.h>
 
+#include "endian.h"
 #include "except.h"
 #include "translate.h"
 
@@ -42,7 +43,7 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 
 #define NUM_MAX_LENGTH PTR_BYTE + WORD_BYTE
 
-#define EN ensure(WORD_BYTE)
+#define EN bufEnsure(WORD_BYTE)
 #define B(b) *t->wPtr++ = (Byte)b
 #ifdef LITTLE_ENDIAN
   #define W(a, b, c, d) *(Word *)t->wPtr = a | (b << BYTE_BIT) | \
@@ -53,9 +54,9 @@ writeInt(Byte *p, int sgn, uintptr_t n)
 #endif /* LITTLE_ENDIAN */
 #define Lab(ty, l) addDangle(t, ty, l); align(t)
 #define Imm(f, n, v, r) *t->wPtr++ = (Byte)(f); if (r) *t->wPtr++ = (Byte)r; \
-  putInt(t, n, v);
+  putInt(t, n, v)
 
-#define putInt(t, sgn, n) ensure(NUM_MAX_LENGTH); \
+#define putInt(t, sgn, n) bufEnsure(NUM_MAX_LENGTH); \
   t->wPtr += writeInt(t->wPtr, sgn, n)
 #define putUInt(t, n) putInt(t, 0, n)
 
@@ -104,12 +105,12 @@ writeUInt(Byte **p, uintptr_t n)
 }
 
 static void
-resolve(Translator *t, LabelValue (*labelMap)(Translator *t, Label *l))
+resolve(TState *t, LabelValue (*labelMap)(TState *t, Label *l))
 {
-  Byte *fImg;
+  Byte *finalImg;
   Dangle *d;
   uintptr_t n;
   for (d = t->dangles->next, n = 0; d; d = d->next, n++);
-  fImg = excMalloc(t->wPtr - t->wImg + n * (WORD_BYTE * 2));
-  insertDangles(t, fImg, fImg, writeUInt, labelMap);
+  finalImg = excMalloc(t->wPtr - t->wImg + n * (WORD_BYTE * 2));
+  insertDangles(t, finalImg, finalImg, writeUInt, labelMap);
 }
