@@ -6,7 +6,7 @@
 #define MITE_INSTS
 
 
-#include "opEnum.h"
+#include "instEnum.h"
 
 #include <string.h>
 

@@ -72,16 +72,19 @@ getNum(TState *t, int *sgnRet)
   uint32_t h = *p & (BYTE_SIGN_BIT - 1);
   uintptr_t n;
   int sgn;
-  unsigned int o;
+  unsigned int len;
   sgn = -(h >> (BYTE_BIT - 2));
   n = getBits(t, (uintptr_t)sgn);
-  o = (unsigned)(p - start - 1); /* Don't count first byte, which is in h */
-  if ((BYTE_BIT - 1) * o + bits((int)(sgn == 0 ? h : ~h & (BYTE_SIGN_BIT - 1)))
+  len = (unsigned int)(p - start - 1); /* Don't count first byte,
+                                          which is in h */
+  if ((BYTE_BIT - 1) * len +
+      bits((int)(sgn == 0 ? h : ~h & (BYTE_SIGN_BIT - 1)))
       > WORD_BIT + sgn)
     throwPos(t, "number too large");
-      /* (BYTE_BIT - 1) * o is the no. of significant bits in the bottom bytes
-       * bits(...) is the number in the most significant byte
-       * if we're reading a negative number, the maximum size is one less */
+      /* (BYTE_BIT - 1) * len is the no. of significant bits in the
+         bottom bytes bits(...) is the number in the most significant
+         byte if we're reading a negative number, the maximum size is
+         one less */
   *sgnRet = sgn;
   return sgn ? (uintptr_t)(-(intptr_t)n) : n;
 #undef p
@@ -93,15 +96,13 @@ static const char *badReg = "bad register",
   *badFlags = "bad immediate flags";
 
 #define CHECK__(op)
-#define CHECK_b(op)
-#define CHECK_d(op)
-#define CHECK_s(op)
 #define CHECK_l(op)
+#define CHECK_n(op)
 #define CHECK_f(op) \
   if (op & ~(FLAG_R | FLAG_S | FLAG_W | FLAG_E)) throwPos(t, badFlags)
 #define CHECK_r(op) \
   if (op == 0 || op > UINT_MAX) throwPos(t, badReg)
-#define CHECK_L(op) \
+#define CHECK_t(op) \
   if (op == 0 || op > LABEL_TYPES) throwPos(t, badLabTy)
 
 #define OPS(a, b, c) \
@@ -144,7 +145,7 @@ static const char *badReg = "bad register",
   n = getNum(t, &sgn)
 
 static LabelValue
-labelMap(TState *t, Label *l)
+labelAddr(TState *t, Label *l)
 {
   return l->v;
 }

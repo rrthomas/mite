@@ -10,36 +10,42 @@ MITE_TOP = ..
 CC = gcc
 WARN = -Wall -W -Wundef -Wpointer-arith -Wbad-function-cast -Wcast-qual \
        -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
-COPTS = -ansi -pedantic -g # -O2 -fomit-frame-pointer 
+COPTS = -ansi -pedantic -g # -O2 -fomit-frame-pointer
 CFLAGS = $(COPTS) $(WARN)
 LDFLAGS = -lm
+
+RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 
 # Source files
 
-TRANS_SRC = asmToObj.c objToAsm.c
-TRANS_OBJ = asmToObj.o objToAsm.o
-SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c $(TRANS_SRC)
-OBJS = mit.o translate.o except.o list.o hash.o flen.o insts.o $(TRANS_OBJ)
-GEN_SRCS = opToTypes.c opEnum.h insts.gperf insts.c endian.h
+include translator.make
+TRANS_OBJS = $(patsubst %.c,%.o,$(TRANS_SRCS))
+SRCS = mit.c translate.c except.c list.c hash.c flen.c insts.c
+
+
+# Generated files
+
+OBJS = $(patsubst %.c,%.o,$(SRCS) $(TRANS_SRCS))
+GEN_SRCS = instEnum.h insts.gperf insts.c endian.h
 PROGS = mit endian
+
 
 # Top-level targets
 
 all: mit
 
-depend: .depend
+depend: $(SRCS) $(GEN_SRCS) $(TRANS_SRCS)
+	mkdep -p $(CFLAGS) $(SRCS) $(TRANS_SRCS)
 
 clean:
 	rm -f $(OBJS)
 
-dist-clean:
-	rm -f $(PROGS) $(GEN_SRCS)
+dist-clean: clean
+	rm -f $(PROGS) $(GEN_SRCS) $(TRANS_SRCS)
+
 
 # File dependencies
-
-.depend: $(SRCS) $(GEN_SRCS)
-	mkdep -p $(CFLAGS) $(SRCS)
 
 mit: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
@@ -56,7 +62,7 @@ endian.h: endian.c
 	./endian > $@
 
 insts.gperf translate.h: $(MITE_TOP)/spec.lua procSpec.lua
-	lua -f procSpec.lua $(MITE_TOP)
+	$(RUNLUA) procSpec.lua
 	touch translate.h
 
 

@@ -10,12 +10,6 @@
 #include "translate.h"
 
 
-/* Instructions' operand types */
-#define OPS(t1, t2, t3)  ((op_ ## t3) << 8) | ((op_ ## t2) << 4) | (op_ ## t1)
-unsigned int opType[] = {
-#include "opToTypes.c"
-};
-
 const char *labelType[] = {
   "branch",
   "subroutine",
@@ -31,7 +25,7 @@ align(TState *t)
 }
 
 void
-addDangle(TState *t, unsigned int ty, LabelValue v)
+addDangle(TState *t, LabelType ty, LabelValue v)
 {
   Dangle *d = new(Dangle);
   Label *l = new(Label);
@@ -47,7 +41,7 @@ void
 resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
               uintptr_t maxlen,
 	      uintptr_t (*writeUInt)(Byte **p, uintptr_t n),
-	      LabelValue (*labelMap)(TState *t, Label *l))
+	      LabelValue (*labelAddr)(TState *t, Label *l))
 {
   Dangle *d;
   uintptr_t prev = 0, extras, n, off = finalPtr - finalImg;
@@ -57,7 +51,7 @@ resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
   for (d = t->dangles->next; d; d = d->next) {
     memcpy(finalPtr, t->wImg + prev, d->ins - prev);
     finalPtr += d->ins - prev;
-    extras = writeUInt(&finalPtr, labelMap(t, d->l).n);
+    extras = writeUInt(&finalPtr, labelAddr(t, d->l).n);
     prev = d->ins + extras;
   }
   memcpy(finalPtr, t->wImg + prev, t->wPtr - t->wImg - prev);

@@ -15,6 +15,12 @@
 #include "translate.h"
 
 
+/* Extract operand types from opType entries (opposite of OPS() macro
+   in translate.c) */
+#define OP1(ty) ((ty) & 0xf)
+#define OP2(ty) (((ty) >> 4) & 0xf)
+#define OP3(ty) (((ty) >> 8) & 0xf)
+
 static int
 issym(int c)
 {
@@ -28,8 +34,8 @@ isimm(int c)
 }
 
 /* Get next token consisting of characters for which f() returns true into
- * *tok, advancing t->rPtr past it, and discarding leading non-f() characters
- * and comments */
+   *tok, advancing t->rPtr past it, and discarding leading non-f() characters
+   and comments */
 static uintptr_t
 getTok(TState *t, char **tok, int (*f)(int))
 { 
@@ -60,7 +66,7 @@ getTok(TState *t, char **tok, int (*f)(int))
 #undef p
 }
 
-static unsigned int
+static Opcode
 getInstNum(TState *t)
 {
   char *tok;
@@ -68,16 +74,15 @@ getInstNum(TState *t)
   struct Inst *i = findInst(tok, len);
   if (i == NULL)
     throw("bad instruction");
-  return (unsigned int)i->opcode;
+  return i->opcode;
 }
 
-/* Use the function (whose existence ISO C guarantees), not the macro */
-#undef isdigit
+#undef isdigit /* use the function, not the macro */
 static MiteValue
 getReg(TState *t)
 {
   char *tok, *nend;
-  unsigned long n;
+  Register n;
   MiteValue ret;
   uintptr_t len = getTok(t, &tok, isdigit);
   n = strtoul(tok, &nend, 10);
@@ -87,29 +92,25 @@ getReg(TState *t)
   return ret;
 }
 
-static MiteValue
+static LabelType
 getLabTy(TState *t)
 {
   char *tok;
-  MiteValue ret;
   uintptr_t len = getTok(t, &tok, isalpha);
   if (len == 1)
     switch (*tok) {
-      case 'b':
-        ret.ty = LABEL_B;
-        return ret;
-      case 's':
-        ret.ty = LABEL_S;
-        return ret;
-      case 'd':
-        ret.ty = LABEL_D;
-        return ret;
+    case 'b':
+      return LABEL_B;
+    case 's':
+      return LABEL_S;
+    case 'd':
+      return LABEL_D;
     }
   throw("bad label type");
 }
 
 static MiteValue
-getLab(TState *t, unsigned int ty)
+getLab(TState *t, LabelType ty)
 {
   MiteValue ret;
   ret.l = new(Label);
@@ -149,7 +150,7 @@ getImm(TState *t)
   i->v = strtoul(tok, &nend, 0);
   if (errno == ERANGE || (i->sgn && i->v > (unsigned long)(LONG_MAX) + 1))
     /* rather than -LONG_MIN; we're assuming two's complement anyway, and
-     * negating LONG_MIN overflows long before the cast to unsigned long */
+       negating LONG_MIN overflows long */
     throw("immediate value out of range");
   tok = nend;
   rsgn = 0;
@@ -175,43 +176,37 @@ getImm(TState *t)
 }
 
 static MiteValue
-getOp(TState *t, unsigned int ty)
+getOp(TState *t, OpType ty)
 {
   switch (ty) {
-    case op_r:
-      return getReg(t);
-    case op_l: case op_L:
-      return getLab(t, getLabTy(t).ty);
-    case op_b:
-      return getLab(t, LABEL_B);
-    case op_s:
-      return getLab(t, LABEL_S);
-    case op_d:
-      return getLab(t, LABEL_D);
-    case op_i:
-      return getImm(t);
-    default:
-      throw("bad operand type");
+  case op_r:
+    return getReg(t);
+  case op_i:
+    return getImm(t);
+  case op_t:
+    return getLab(t, getLabTy(t));
+  default:
+    throw("bad operand type");
   }
 }
 
 static void
-getInst(TState *t, unsigned int *i,
-	MiteValue *op1, MiteValue *op2, MiteValue *op3)
+getInst(TState *t, Opcode *i, MiteValue *op1, MiteValue *op2, MiteValue *op3)
 {
-  unsigned int ops;
+  OpList ops;
+  OpType ty;
   *i = getInstNum(t);
   ops = opType[*i];
-  if (OP1(ops))
-    *op1 = getOp(t, OP1(ops));
-  if (OP2(ops))
-    *op2 = getOp(t, OP2(ops));
-  if (OP3(ops))
-    *op3 = getOp(t, OP3(ops));
+  if ((ty = OP1(ops)))
+    *op1 = getOp(t, ty);
+  if ((ty = OP2(ops)))
+    *op2 = getOp(t, ty);
+  if ((ty = OP3(ops)))
+    *op3 = getOp(t, ty);
 }
 
 static LabelValue
-labelMap(TState *t, Label *l)
+labelAddr(TState *t, Label *l)
 {
   LabelValue ret;
   ret.p = hashFind(t->labelHash, l->v.p);
@@ -222,18 +217,19 @@ TState *
 TRANSLATOR(Byte *rImg, Byte *rEnd)
 {
   TState *t = translatorNew(rImg, rEnd);
-  unsigned int i;
+  LabelType l;
+  Opcode o;
   MiteValue op1, op2, op3;
   Label *old;
-  for (i = 0; i < LABEL_TYPES; i++)
-    t->labels[i] = 0;
+  for (l = 0; l < LABEL_TYPES; l++)
+    t->labels[l] = 0;
   t->labelHash = hashNew(4096, hashStrHash, hashStrcmp);
   t->eol = 0;
   while (t->rPtr < t->rEnd) {
-    getInst(t, &i, &op1, &op2, &op3);
+    getInst(t, &o, &op1, &op2, &op3);
     excLine += 1;
     ensure(INST_MAXLEN);
-    switch (i) {
+    switch (o) {
     case OP_LAB:
       t->labels[op1.l->ty]++;
       if ((old = hashFind(t->labelHash, op1.l->v.p))) {

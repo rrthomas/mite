@@ -10,6 +10,6 @@
 #include "translate.h"
 
 static LabelValue
-labelMap(TState *t, Label *l);
+labelAddr(TState *t, Label *l);
 
 #endif

@@ -97,5 +97,5 @@ resolve(TState *t)
 {
   Dangle *d;
   for (d = t->dangles->next; d; d = d->next)
-    (uintptr_t)d->ins = labelMap(t, d->l).n;
+    (uintptr_t)d->ins = labelAddr(t, d->l).n;
 }

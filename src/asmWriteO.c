@@ -51,7 +51,7 @@ putNum(TState *t, uintptr_t n)
 }
 
 static void
-putLabTy(TState *t, unsigned int ty)
+putLabTy(TState *t, LabelType ty)
 {
   switch (ty) {
   case LABEL_B:

@@ -1,21 +1,36 @@
-/* Open hash tables
+/* Open string hash tables
    (c) Reuben Thomas 1996
 */
 
 
 #include <stdlib.h>
 #include <string.h>
+
 #include "except.h"
 #include "hash.h"
 
+
+size_t
+strHash(char *str)
+{
+  char *p = str;
+  unsigned long h = 0, g;
+  for (p = str; *p != '\0'; p++) {
+    h = (h << 4) + *p;
+    if ((g = h & 0xf0000000)) {
+      h ^= (g >> 24);
+      h ^= g;
+    }
+  }
+  return h;
+}
+
 HashTable *
-hashNew(size_t size, Hasher hash, Comparer compare)
+hashNew(size_t size)
 {
   HashTable *table = new(HashTable);
   table->thread = excCalloc(size, sizeof(HashNode *));
   table->size = size;
-  table->hash = hash;
-  table->compare = compare;
   return table;
 }
 
@@ -45,14 +60,14 @@ typedef struct {
 static HashLink
 hashSearch(HashTable *table, void *key)
 {
-  size_t entry = table->hash(key) % table->size;
+  size_t entry = strHash(key) % table->size;
   HashLink ret;
   ret.entry = entry;
   ret.prev = NULL;
   ret.curr = table->thread[entry];
   ret.found = HASH_NOTFOUND;
   while (ret.curr != NULL) {
-    if (table->compare(key, ret.curr->key)) {
+    if (strcmp((char *)key, (char *)ret.curr->key) == 0) {
       ret.found = HASH_FOUND;
       return ret;
     }
@@ -103,24 +118,4 @@ hashRemove(HashTable *table, void *key)
   free(l.curr->body);
   free(l.curr);
   return HASH_OK;
-}
-
-size_t
-hashStrHash(void *str)
-{
-  char *p, *s = (char *)str;
-  unsigned long h = 0, g;
-  for (p = s; *p != '\0'; p++) {
-    h = (h << 4) + *p;
-    if ((g = h & 0xf0000000)) {
-      h ^= (g >> 24);
-      h ^= g;
-    }
-  }
-  return h;
-}
-
-int hashStrcmp(void *s, void *t)
-{
-  return (strcmp((char *)s, (char *)t) == 0);
 }

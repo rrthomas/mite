@@ -11,7 +11,6 @@
 #include "flen.h"
 #include "string.h"
 #include "translate.h"
-#include "translators.h"
 
 
 #if CHAR_BIT != 8
@@ -20,16 +19,18 @@
 
 char *progName;
 
-enum {
+typedef enum {
   None, Obj, Asm
-};
+} FileType;
 
-static unsigned int
+#include "translators.c"
+
+static FileType
 typeFromSuffix(const char *s)
 {
   if (strcmp(s, "o") == 0)
     return Obj;
-  else if (s == None || *s == '\0' || strcmp(s, "s") == 0)
+  else if (s == NULL || *s == '\0' || strcmp(s, "s") == 0)
     return Asm;
   return None;
 }
@@ -98,7 +99,7 @@ main(int argc, char *argv[])
   const char *rSuff, *wSuff;
   long len;
   TState *t = NULL;
-  unsigned int r, w;
+  FileType r, w;
   progName = argv[0];
   excInit();
   if (argc < 2 || argc > 3) {
@@ -116,21 +117,10 @@ main(int argc, char *argv[])
       die("unknown output file type `%s'", wSuff ? wSuff : "");
   } else w = Asm;
   excLine = 1;
-  switch (r) {
-  case Asm:
-    if (w == Obj)
-      t = asmToObj(img, img + len);
-    break;
-  case Obj:
-    switch (w) {
-    case Asm:
-      t = objToAsm(img, img + len);
-      break;
-    }
-  }
-  if (!t)
+  if (translator[r][w])
+    t = translator[r][w](img, img + len);
+  else
     die("no translator from `%s' to `%s'", rSuff, wSuff);
-  /* Translate by more than one step */
   free(img);
   writeFile(argc == 3 ? argv[2] : "-", t->wImg, (long)(t->wPtr - t->wImg));
   return EXIT_SUCCESS;

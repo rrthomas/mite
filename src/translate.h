@@ -1,4 +1,4 @@
-/* Mite translator
+/* Mite translator types and functions
    (c) Reuben Thomas 2000
 */
 
@@ -15,6 +15,7 @@
 #include "hash.h"
 
 
+typedef int Bool;
 typedef uint8_t Byte;
 typedef int8_t SByte;
 typedef uint32_t Word;
@@ -46,28 +47,18 @@ typedef uint32_t Word;
 #define ensure(n) \
   bufExt(t->wImg, t->wSize, (uintptr_t)(t->wPtr - t->wImg + (n)))
 
-#include "opEnum.h"
-struct Inst { const char *name; unsigned int opcode; };
+#include "instEnum.h"
+struct Inst { const char *name; Opcode opcode; };
 #include "insts.h"
 
-/* Operand types */
-enum {
-  op__, op_r, op_l, op_L, op_b, op_s, op_d, op_i 
-};
-
 /* Mapping from instruction to operand types */
-extern unsigned int opType[];
-
-/* Extract operand types from opType entries
- * (opposite of OPS() macro in Translate.c) */
-#define OP1(ty) ((ty) & 0xf)
-#define OP2(ty) (((ty) >> 4) & 0xf)
-#define OP3(ty) (((ty) >> 8) & 0xf)
+typedef unsigned int OpList;
+extern OpList opType[];
 
 /* Label types */
-enum {
+typedef enum {
   LABEL_B = 1, LABEL_S, LABEL_D, LABEL_TYPES = 3
-};
+} LabelType;
 extern const char *labelType[]; /* names */
 
 /* Label value */
@@ -78,7 +69,7 @@ typedef union {
 
 /* Label */
 typedef struct {
-  unsigned int ty;
+  LabelType ty;
   LabelValue v; /* (assigned by reader) */
 } Label;
 
@@ -103,14 +94,6 @@ typedef struct {
   SByte sgn; /* sign */
 } Immediate;
 
-/* Mite values */
-typedef union {
-  unsigned int r;
-  unsigned int ty;
-  Label *l;
-  Immediate *i;
-} MiteValue;
-
 /* Translator state */
 typedef struct {
   Byte *rImg, *rEnd, *rPtr;
@@ -118,7 +101,7 @@ typedef struct {
   uintptr_t wSize, labels[LABEL_TYPES];
   Dangle *dangles, *dangleEnd;
   HashTable *labelHash; /* Assembly reader hash table for label names */
-  int eol; /* Assembly reader EOL state */
+  Bool eol; /* Assembly reader EOL state */
 } TState;
 
 typedef TState *Translator(Byte *rImg, Byte *rEnd);
@@ -126,17 +109,17 @@ typedef TState *Translator(Byte *rImg, Byte *rEnd);
 #define MIN_IMAGE_SIZE 16384
 
 void
-addDangle(TState *t, unsigned int ty, LabelValue n);
+addDangle(TState *t, LabelType ty, LabelValue n);
 
 void
 resolveDangles(TState *t, Byte *finalImg, Byte *finalPtr,
                uintptr_t maxlen,
                uintptr_t (*writeUInt)(Byte **p, uintptr_t n),
-               LabelValue (*labelMap)(TState *t, Label *l));
+               LabelValue (*labelAddr)(TState *t, Label *l));
 
 #define resolve(t) \
   resolveDangles(t, RESOLVE_IMG, RESOLVE_PTR, DANGLE_MAXLEN, \
-                 writeUInt, labelMap)
+                 writeUInt, labelAddr)
 
 void
 align(TState *t);
