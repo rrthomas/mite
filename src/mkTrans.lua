@@ -147,7 +147,8 @@ function mkTrans (arg)
   Dangle *d;
   uintptr_t prev = 0, extras, n, off = finalPtr - finalImg;
   for (d = T->dangles->next, n = 0; d; d = d->next, n++);
-  finalImg = excRealloc (finalImg, W->ptr - W->img + n * DANGLE_MAXLEN
+  finalImg = excRealloc (finalImg, W->ptr - W->img + n * ]] ..
+  writes .. [[W_DANGLE_MAXLEN
                         + off);
   finalPtr = finalImg + off;
   for (d = T->dangles->next; d; d = d->next) {
@@ -200,20 +201,27 @@ function mkTrans (arg)
     out = out .. "    case " .. opify (inst[i].name) .. ":\n" ..
       "      {\n"
     local inst = inst[i]
+
     for j = 1, getn (inst.ops) do
-      local opTypeInfo = r.opType[inst.ops[j]]
+      local opType = inst.ops[j]
+      local opRepeat
+      if strsub (opType, -1, -1) == "+" then
+        opType = strsub (opType, 1, -2)
+        opRepeat = 1
+      end
+      local opTypeInfo = r.opType[opType]
+
       local decls = opTypeInfo.decls (inst, j)
       if decls ~= "" then
         out = out .. "        " .. decls .. "\n"
       end
-    end
-    for j = 1, getn (inst.ops) do
-      local opTypeInfo = r.opType[inst.ops[j]]
+
       local code = opTypeInfo.code (inst, j)
       if code ~= "" then
         out = out .. "        " .. code .. "\n"
       end
     end
+
     for j = 1, getn (instrum) do
       out = out .. "        " .. instrum[j].inst[i].def .. ";\n"
     end
@@ -234,7 +242,8 @@ function mkTrans (arg)
 ]]
   if w.resolve then
     out = out .."  " .. resolveFunc ..
-      "(T, R, W, RESOLVE_IMG, RESOLVE_PTR);\n"
+      "(T, R, W, " .. writes .. "W_RESOLVE_IMG, " .. writes ..
+      "W_RESOLVE_PTR);\n"
   end
   out = out .. mkInsert ("finish", "finish", "  ") ..
 [[  return out;
