@@ -6,7 +6,7 @@
 -- either a type variable, or determined by the instruction
 function labelType (inst, op)
   if op > 1 and inst.ops[op - 1] == "t" then
-    return "t" .. tostring (op - 1)
+    return "t" .. tostring(op - 1)
   else
     local tyToNum = {
       ldl    = "LABEL_D",
@@ -48,27 +48,27 @@ typedef struct {
 } asmR_State;
 
 static int
-asmR_isSym (int c)
+asmR_isSym(int c)
 {
-  return isalnum (c) || (c == '_');
+  return isalnum(c) || (c == '_');
 }
 
 static int
-asmR_isImm (int c)
+asmR_isImm(int c)
 {
-  return isxdigit (c) || strchr (">-_swx", c);
+  return isxdigit(c) || strchr(">-_swx", c);
 }
 
 /* Discard leading white space and comments */
 static Word
-asmR_skipSpace (asmR_State *R)
+asmR_skipSpace(asmR_State *R)
 { 
 #define p R->ptr
   if (R->eol) {
     excPos++;
     R->eol = 0;
   }
-  while (*p && (isspace ((char)*p) || (char)*p == '#')) {
+  while (*p && (isspace((char)*p) || (char)*p == '#')) {
     if ((char)*p == '#')
       do {
         p++;
@@ -80,20 +80,20 @@ asmR_skipSpace (asmR_State *R)
 #undef p
 }
 
-/* Read next token consisting of characters for which f () returns
+/* Read next token consisting of characters for which f() returns
    true, advancing R->ptr past it, and discarding leading white
    space characters and comments; return pointer to token in *tok, and
    length of token as return value*/
 static Word
-asmR_tok (asmR_State *R, char **tok, int (*f)(int))
+asmR_tok(asmR_State *R, char **tok, int (*f)(int))
 { 
 #define p R->ptr
-  asmR_skipSpace (R);
+  asmR_skipSpace(R);
   *tok = (char *)p;
-  while (f ((char)*p))
+  while (f((char)*p))
     p++;
-  if (*tok == (char *)p || (!isspace ((char)*p) && *p != '\0'))
-    die (ExcBadToken);
+  if (*tok == (char *)p || (!isspace((char)*p) && *p != '\0'))
+    die(ExcBadToken);
   else if ((char)*p == '\n')
     R->eol = 1;
   *p = '\0';
@@ -107,42 +107,42 @@ asmR_tok (asmR_State *R, char **tok, int (*f)(int))
 #undef isalnum
 
 static Opcode
-asmR_inst (asmR_State *R)
+asmR_inst(asmR_State *R)
 {
   char *tok;
   struct Inst *i;
-  Word len = asmR_tok (R, &tok, asmR_isSym);
-  i = findInst (tok, len);
+  Word len = asmR_tok(R, &tok, asmR_isSym);
+  i = findInst(tok, len);
   if (i == NULL)
-    die (ExcBadInst);
+    die(ExcBadInst);
   return i->opcode;
 }
 
 static Word
-asmR_strToNum (char *tok, Word len)
+asmR_strToNum(char *tok, Word len)
 {
   char *nend;
-  Word w = strtoul (tok, &nend, 10);
+  Word w = strtoul(tok, &nend, 10);
   if ((Word)(nend - tok) != len || w > UINT_MAX)
-    die (ExcBadNumber);
+    die(ExcBadNumber);
   return w;
 }
 
 static Register
-asmR_intReg (asmR_State *R)
+asmR_intReg(asmR_State *R)
 {
   char *tok;
-  Word len = asmR_tok (R, &tok, isdigit);
-  Word r = asmR_strToNum (tok, len);
+  Word len = asmR_tok(R, &tok, isdigit);
+  Word r = asmR_strToNum(tok, len);
   if (r == 0 || r > REGISTER_MAX)
-    die (ExcBadRegister);
+    die(ExcBadRegister);
   return r;
 }
 
 static Register
-asmR_intRegFS (asmR_State *R)
+asmR_intRegFS(asmR_State *R)
 {
-  asmR_skipSpace (R);
+  asmR_skipSpace(R);
   switch (*(R->ptr)) {
   case 'S':
     (char *)(R->ptr)++;
@@ -151,21 +151,21 @@ asmR_intRegFS (asmR_State *R)
     (char *)(R->ptr)++;
     return REGISTER_F;
   }
-  return asmR_intReg (R);
+  return asmR_intReg(R);
 }
 
 static Size
-asmR_size (asmR_State *R)
+asmR_size(asmR_State *R)
 {
   char *tok;
   Size s = 0;
   Word n;
-  Word len = asmR_tok (R, &tok, isalnum);
+  Word len = asmR_tok(R, &tok, isalnum);
   if (len == 1 && *tok == 'a')
     return SIZE_A;
-  n = asmR_strToNum (tok, len);
+  n = asmR_strToNum(tok, len);
   if (n == 0 || n & (n - 1))    /* Sizes have exactly one bit set */
-    die (ExcBadSize);
+    die(ExcBadSize);
   do {
     n >>= 1;
     s++;
@@ -174,16 +174,16 @@ asmR_size (asmR_State *R)
 }
 
 static ArgType
-asmR_argTy (asmR_State *R, Word *size)
+asmR_argTy(asmR_State *R, Word *size)
 {
   char *tok;
   ArgType ty;
-  Word len = asmR_tok (R, &tok, isalnum);
+  Word len = asmR_tok(R, &tok, isalnum);
   if (len > 1) {
     if (*tok != 'b')
-      die (ExcBadArgType);
+      die(ExcBadArgType);
     ty = ARG_TYPE_B;
-    *size = asmR_strToNum (tok, len);
+    *size = asmR_strToNum(tok, len);
   } else
     switch (*tok) {
     case 'r':
@@ -193,16 +193,16 @@ asmR_argTy (asmR_State *R, Word *size)
       ty = ARG_TYPE_F;
       break;
     default:
-      die (ExcBadArgType);
+      die(ExcBadArgType);
     }
   return ty;
 }
 
 static LabelType
-asmR_labTy (asmR_State *R)
+asmR_labTy(asmR_State *R)
 {
   char *tok;
-  Word len = asmR_tok (R, &tok, isalpha);
+  Word len = asmR_tok(R, &tok, isalpha);
   if (len == 1)
     switch (*tok) {
     case 'b':
@@ -214,47 +214,47 @@ asmR_labTy (asmR_State *R)
     case 'f':
       return LABEL_F;
     }
-  die (ExcBadLabelType);
+  die(ExcBadLabelType);
 }
 
 static List *
-asmR_lab (asmR_State *R, LabelType ty)
+asmR_lab(asmR_State *R, LabelType ty)
 {
   char *tok;
   Label *l;
   List *hp;
   uint32_t hEntry;
-  asmR_tok (R, &tok, asmR_isSym);
-  hp = hashGet (R->labHash, tok, &hEntry);
+  asmR_tok(R, &tok, asmR_isSym);
+  hp = hashGet(R->labHash, tok, &hEntry);
   if (hp) {
     l = hp->body;
     if (l->ty != ty)
-      die (ExcWrongLabel);
+      die(ExcWrongLabel);
     return hp;
   } else {
-    l = new (Label);
+    l = new(Label);
     l->ty = ty;
     l->v.n = 0;
-    return hashSet (R->labHash, hp, hEntry, tok, l);
+    return hashSet(R->labHash, hp, hEntry, tok, l);
   }
 }
 
 static Word
-asmR_num (asmR_State *R)
+asmR_num(asmR_State *R)
 {
   char *tok;
-  Word len = asmR_tok (R, &tok, isdigit);
-  return asmR_strToNum (tok, len);
+  Word len = asmR_tok(R, &tok, isdigit);
+  return asmR_strToNum(tok, len);
 }
 
 static Word
-asmR_imm (asmR_State *R, Byte *f, SByte *sgn, int *r)
+asmR_imm(asmR_State *R, Byte *f, SByte *sgn, int *r)
 {
   int rsgn;
   long rl;
   char *tok, *nend;
   Word v;
-  asmR_tok (R, &tok, asmR_isImm);
+  asmR_tok(R, &tok, asmR_isImm);
   *f = 0;
   if (*tok == 'e') {
     tok++;
@@ -274,11 +274,11 @@ asmR_imm (asmR_State *R, Byte *f, SByte *sgn, int *r)
   } else
     *sgn = 0;
   errno = 0;
-  v = strtoul (tok, &nend, 0);
+  v = strtoul(tok, &nend, 0);
   if (errno == ERANGE || (*sgn && v > (unsigned long)(LONG_MAX) + 1))
     /* rather than -LONG_MIN; we're assuming two's complement anyway,
        and negating LONG_MIN overflows long */
-    die (ExcBadImmVal);
+    die(ExcBadImmVal);
   tok = nend;
   rsgn = 0;
   if (*tok == '>' && tok[1] == '>') {
@@ -289,74 +289,75 @@ asmR_imm (asmR_State *R, Byte *f, SByte *sgn, int *r)
 	tok++;
 	rsgn = -1;
     }
-    rl = strtoul (tok, &nend, 0);
+    rl = strtoul(tok, &nend, 0);
     if (rl + rsgn > 127 || errno == ERANGE)
-      die (ExcBadImmRot);
+      die(ExcBadImmRot);
     tok = nend;
     *r = rsgn ? -(int)rl : (int)rl;
   } else
     *r = 0;
   if (*tok)
-    die (ExcBadImm);
+    die(ExcBadImm);
   return v;
 }
 
 static LabelValue
-asmR_labelAddr (asmR_State *R, Label *l)
+asmR_labelAddr(asmR_State *R, Label *l)
 {
   LabelValue ret;
   List *hp;
   uint32_t hEntry;
-  hp = hashGet (R->labHash, (char *)l->v.p, &hEntry);
+  hp = hashGet(R->labHash, (char *)l->v.p, &hEntry);
   ret.p = (hp != NULL) ? ((Label *)hp->body)->v.p : NULL;
   return ret;
 }
 
 static asmR_State *
-asmR_readerNew (asmR_Input *inp)
+asmR_readerNew(asmR_Input *inp)
 {
-  asmR_State *R = new (asmR_State);
+  asmR_State *R = new(asmR_State);
   R->ptr = R->img = inp->img;
   R->end = inp->img + inp->size;
   return R;
 }]],
   opType = {
-    r = OpType {"Register r%n = asmR_intReg (R);", ""},
-    R = OpType {"Register r%n = asmR_intRegFS (R);", ""},
-    s = OpType {"Size s%n = asmR_size (R);", ""},
+    r = OpType {"Register r%n;", "r%n = asmR_intReg(R);"},
+    R = OpType {"Register r%n;", "r%n = asmR_intRegFS(R);"},
+    s = OpType {"Size s%n;", "s%n = asmR_size(R);"},
     i = OpType {[[Byte i%n_f;
         SByte i%n_sgn;
         int i%n_r;
-        Word i%n_v = asmR_imm (R, &i%n_f, &i%n_sgn, &i%n_r);]],
-        ""},
-    n = OpType {"Word n%n = asmR_num (R);", ""},
-    t = OpType {"LabelType t%n = asmR_labTy (R);", ""},
-    l = OpType {function (inst, op)
-                  local ty = labelType (inst, op)
-                  return "List *l%n_l = asmR_lab (R, " .. ty .. [[);
-        LabelValue l%n;]]
-                end,
-        "l%n.p = l%n_l->key;"},
-    x = OpType {function (inst, op)
-                  local ty = labelType (inst, op)
-                  return "List *n%n_l = asmR_lab (R, " .. ty ..
-                    ");\n        Label *l;"
-                end,
-                function (inst, op)
-                  local ty = labelType (inst, op)
-                  return [[l = n%n_l->body;
-        if (l->v.n)
-          die (ExcDupLabel, n%n_l->key);
-        l->v.n = ++T->labels[]] .. ty .. "];"
-                end},
-    a = OpType {"Size a%n_size;\n        " ..
-      "ArgType a%n_ty = asmR_argTy (R, &a%n_size);", ""},
+        Word i%n_v;]],
+        "i%n_v = asmR_imm(R, &i%n_f, &i%n_sgn, &i%n_r);"},
+    n = OpType {"Word n%n;", "n%n = asmR_num(R);"},
+    t = OpType {"LabelType t%n;", "t%n = asmR_labTy(R);"},
+    l = OpType {[[List *l%n_l;
+        LabelValue l%n;]],
+      function (inst, op)
+        local ty = labelType (inst, op)
+        return "l%n_l = asmR_lab(R, " .. ty .. [[);
+        l%n.p = l%n_l->key;]]
+      end},
+    x = OpType {[[List *x%n_l;
+        Label *x%n;]],
+      function (inst, op)
+        local ty = labelType (inst, op)
+        return "x%n_l = asmR_lab(R, " .. ty ..
+      [[);
+        x%n = x%n_l->body;
+        if (x%n->v.n)
+          die(ExcDupLabel, x%n_l->key);
+        x%n->v.n = ++T->labels[]] .. ty .. "];"
+      end},
+    a = OpType {[[Size a%n_s;
+        ArgType a%n_ty;]],
+      "a%n_ty = asmR_argTy(R, &a%n_s);"},
   },
   trans = Translator {
     "",                              -- decls
-    [[R->labHash = hashNew (4096);
+    [[R->labHash = hashNew(4096);
   R->eol = 0;]],                     -- init
-    "o = asmR_inst (R);",            -- update
+    "o = asmR_inst(R);",             -- update
     "",                              -- finish
   },
 }
