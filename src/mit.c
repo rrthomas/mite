@@ -65,18 +65,18 @@ main (int argc, char *argv[])
   } else
     w = Asm;
   excPos = 1;
-  if (r == Obj) {
-    objR_Input *inp = new (objR_Input);
-    inp->cImg = img;
-    inp->cSize = size;
-    if (w == Asm) {
-      asmW_Output *out = objToAsm (inp);
-      writeFile (outFile, (Byte *)out->img, out->size);
-    } else if (w == Interp) {
-      interpW_Output *out = objToInterp (inp);
-      objToRun (out);
-    }
-  } else if (r == Asm && w == Obj) {
+  /* if (r == Obj) {
+   *   objR_Input *inp = new (objR_Input);
+   *   inp->cImg = img;
+   *   inp->cSize = size;
+   *   if (w == Asm) {
+   *     asmW_Output *out = objToAsm (inp);
+   *     writeFile (outFile, (Byte *)out->img, out->size);
+   *   } else if (w == Interp) {
+   *     interpW_Output *out = objToInterp (inp);
+   *     objToRun (out);
+   *   }
+   * } else  */if (r == Asm && w == Obj) {
     asmR_Input *inp = new (asmR_Input);
     objW_Output *out;
     inp->img = (char *)img;
