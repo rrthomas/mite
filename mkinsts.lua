@@ -43,12 +43,18 @@ end
 -- each instruction name is uppercased and prefixed with OP_
 
 writeto("opEnum.h")
+write("/* Instruction opcodes */\n\n")
+write("#ifndef MITE_OPENUM\n")
+write("#define MITE_OPENUM\n\n\n")
+write("enum {\n")
 s = opify(inst[1].name) .. " = 0x01, "
 for i = 2, getn(inst) do
   s = s .. opify(inst[i].name) .. ", "
 end
 s = s .. opify("INSTS", getn(inst))
 write(wrap(s, width, indent, indent) .. "\n")
+write("};\n\n")
+write("#endif\n")
 
 
 -- opToName.h
@@ -64,13 +70,14 @@ write(wrap(s, width, indent, indent) .. "\n")
 -- insts.gperf
 -- list of opcode, name pairs in alphabetical order
 writeto("insts.gperf")
-write("struct _Inst { const char *name; unsigned int opcode; };\n")
+write("%{\n")
+write("#include \"insts.h\"\n")
+write("%}\n")
+write("struct Inst { const char *name; unsigned int opcode; };\n")
 write("%%\n")
 for i = 1, getn(inst) do
   write(inst[i].name .. ", " .. opify(inst[i].name) .. "\n")
 end
-write("%%\n")
-write("typedef struct _Inst Inst;\n")
 
 
 -- LaTeX fragments
