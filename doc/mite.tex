@@ -104,9 +104,7 @@ number. The letter indicates the sort of operand required, as shown in
 table~\ref{optypetab}; the number shows the number of the operand.
 
 \begin{ctable}{Operand types\label{optypetab}}{>{$}c<{$}l}
-\toprule
-\input{types}
-\bottomrule
+  \toprule \input{types} \bottomrule
 \end{ctable}
 
 $\{P\}$ has the value $1$ if the predicate $P$ is true, and $0$
@@ -119,16 +117,14 @@ Labels are defined by the \syn{lab} instruction, shown in
 table~\ref{labtab}.
 
 \begin{insttab}{Label definition\label{labtab}}
-\input{instLab}
+  \input{instLab}
 \end{insttab}
 
 There are three types of label: branch labels, denoted \syn{b},
-subroutine labels, denoted \syn{s}, and data labels, denoted \syn{d}. 
-Names must be unique within a translation unit. A label is written as
-a label type followed by a name, or if the type is given by the
-operand type, just a name. A label definition is the same; the
-distinction is purely semantic. A name is a string of letters, digits
-and underscores, and may not start with a digit.
+subroutine labels, denoted \syn{s}, and data labels, denoted \syn{d}.
+A label is written as its name. A name is a string of letters, digits
+and underscores, and may not start with a digit; names must be unique
+within a translation unit.
 
 The value of a code or subroutine label is the address of the
 instruction immediately following it. A data label's value is the
@@ -141,7 +137,7 @@ data labels may not be executed.
 \subsection{Computation}
 
 \begin{insttab}{Computational instructions\label{comptab}}
-\input{instComp}
+  \input{instComp}
 \end{insttab}
 
 The computational instructions are shown in table~\ref{comptab}.
@@ -164,7 +160,7 @@ data to be included in object code; they may not be executed. Data
 between two labels are stored contiguously in $M$.
 
 \begin{insttab}{Data instructions\label{datatab}}
-\input{instData}
+  \input{instData}
 \end{insttab}
 
 \syn{lit} causes its operand to be truncated to a word and stored in
@@ -185,11 +181,9 @@ Object code consists of a series of instructions.
 
 
 \begin{ctable}{Instruction opcodes\label{opcodetab}}{*{3}{>{\synfont}cc!{\hspace{5mm}}}}
-\toprule
-\norm{\bf Instruction} & \bf Opcode & \norm{\bf Instruction} & \bf Opcode &
-\norm{\bf Instruction} & \bf Opcode \\ \midrule
-\input{instOpcode}
-\bottomrule
+  \toprule \norm{\bf Instruction} & \bf Opcode & \norm{\bf
+    Instruction} & \bf Opcode & \norm{\bf Instruction} & \bf Opcode \\
+  \midrule \input{instOpcode} \bottomrule
 \end{ctable}
 
 \subsection{Instructions} \label{objinst}
@@ -218,13 +212,12 @@ binary flags, as shown in table~\ref{modenctab}; the unused bits are
 zeroed.
 
 \begin{ctable}{Constant modifiers encoding\label{modenctab}}{>{\synfont}cc}
-\toprule
-\bf Modifier & \bf Bit position \\ \midrule
-\textrm{rotation} & 0 \\
-w & 1 \\
-s & 2 \\
-e & 3 \\
-\bottomrule
+  \toprule \bf Modifier & \bf Bit position \\ \midrule
+  \textrm{rotation} & 0 \\
+  w & 1 \\
+  s & 2 \\
+  e & 3 \\
+  \bottomrule
 \end{ctable}
 
 
@@ -234,29 +227,27 @@ Long numbers are encoded as follows:
 
 \begin{enumerate}
 \item Left-truncate the number to the minimum number of bits in which
-      it can be represented.
-
+  it can be represented.
+      
 \item Remove an $8n-1$-bit word from the most significant end of the
-      number, where $n$ is the number of bytes left in the current
-      instruction word. If there are fewer than $8n-1$ bits in the
-      number then sign-extend it to that length first.
-
+  number, where $n$ is the number of bytes left in the current
+  instruction word. If there are fewer than $8n-1$ bits in the number
+  then sign-extend it to that length first.
+      
 \item Add a bit to the most significant end of the word, which should
-      be zero if more bits remain in the number, and one otherwise.
-
+  be zero if more bits remain in the number, and one otherwise.
+  
 \item Store the word, with the bytes in big-endian order.
-
+  
 \item While there are still bits in the number, repeat the following
-      steps:
+  steps:
 
 \begin{enumerate}
-
 \item Remove a $31$-bit word from the most significant end of the
-      number, padding with zeroes if there are fewer than $31$ bits
-      left.
-
+  number, padding with zeroes if there are fewer than $31$ bits left.
+  
 \item Add a bit to the most significant end of the word, which should
-      be zero if more bits remain in the number, and one otherwise.
+  be zero if more bits remain in the number, and one otherwise.
 
 \item Store the word, with the bytes in big-endian order.
 \end{enumerate}
@@ -270,7 +261,7 @@ Long numbers are encoded as follows:
 Martin Richards introduced me to Cintcode~\cite{cintcode}, which
 kindled my interest in virtual machines, and led to
 Beetle~\cite{beetledis} and an earlier version of Mite~\cite{mite}, of
-which the current Mite is a sort of synthesis. 
+which the current Mite is a sort of synthesis.
 GNU~\emph{lightning}~\cite{lightning} helped inspire me to greater
 simplicity, while still aiming for good performance. Alistair Turnbull
 has been a fount of criticism for all my work on virtual machines.

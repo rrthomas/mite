@@ -6,19 +6,15 @@
 -- types.tex
 
 
-miteDir = arg[1] -- $(MITE)
-dofile(miteDir .. "/script/util.lua") -- utility routines
-dofile(miteDir .. "/spec.lua") -- Mite's specification
-
 -- Make a name->instruction index
 nameToInst = makeIndex("name", inst)
 
 -- Global formatting parameters
 width = 72 -- max width of output files
 
--- Expand the desc fields of the instructions
+-- Expand the effect fields of the instructions
 for i = 1, getn(inst) do
-  local d = inst[i].desc
+  local d = inst[i].effect
   d = gsub(d, "%%(%d)",
            function (n)
              return tostring(inst[%i].ops[tonumber(n)]) .. "_" ..
@@ -26,7 +22,7 @@ for i = 1, getn(inst) do
            end)
   d = gsub(d, "%%%%", "%%")
   d = gsub(d, "%<%-", "\\gets ")
-  inst[i].desc = d
+  inst[i].effect = d
 end
 
 -- write a LaTeX table line for the given fields
@@ -39,7 +35,7 @@ function writeTable(...)
     for j = 1, getn(inst.ops) do
       write("$" .. inst.ops[j] .. "_" .. tostring(j) .. "$ ")
     end
-    write("& " .. inst.desc .. " \\\\\n")
+    write("& " .. inst.effect .. " \\\\\n")
   end
 end
 
@@ -67,12 +63,12 @@ end
 writeto("instOpcode.tex")
 rows = ceil(getn(inst) / 3)
 for i = 1, rows do
-  write(opEntry(i) .. " & " .. opEntry(i + rows) .. " & " ..
-        opEntry(i + rows * 2) .. " \\\\\n")
+  writeLine(opEntry(i) .. " & " .. opEntry(i + rows) .. " & " ..
+            opEntry(i + rows * 2) .. " \\\\")
 end
 
 -- types.tex: the operand types
 writeto("types.tex")
-for i = 1, getn(type) do
-  write(type[i].name .. " & " .. type[i].desc .. " \\\\\n")
+for i = 1, getn(opType) do
+  writeLine(opType[i].name .. " & " .. opType[i].desc .. " \\\\")
 end

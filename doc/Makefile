@@ -12,21 +12,19 @@ HEVEA_FLAGS = -I texmf
 
 # Suffix rules
 
-.SUFFIXES: .tex .dvi .ps .pdf .html
-
-.tex.dvi:
+%.dvi: %.tex
 	latex $<
 #	bibtex $*
 #	latex $<
 	latex $<
 
-.dvi.ps:
+%.ps: %.dvi:
 	dvips $<
 
-.ps.pdf:
+%.ps: %.pdf:
 	ps2pdf $<
 
-.tex.html:
+%.html: %.tex
 	hevea $(HEVEA_FLAGS) sym.hva $<
 
 
