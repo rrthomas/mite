@@ -1,3 +1,3 @@
 *.dvi *.ps *.pdf
-types.tex instLab.tex instComp.tex instData.tex instOpcodes.tex
+types.tex instLab.tex instComp.tex instData.tex instOpcode.tex
 auto
