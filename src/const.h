@@ -34,8 +34,15 @@
   /* Number of bytes left in the word from p */
 #define WORD_BYTES_LEFT(p) (WORD_BYTE - ((uintptr_t)p & WORD_MASK))
   /* Number of bytes left in the word from p */
+/* maximum number of octal digits in a Word (upper bound on max. no.
+   of decimal digits) */
+#define WORD_MAXLEN (sizeof (Word) * CHAR_BIT / 3)
 
 #define INIT_IMAGE_SIZE 16384
 #define INIT_LABS 256
+
+/* The maximum length of an immediate constant (esw->> and two
+   numbers) */
+#define IMM_MAXLEN (6 + 2 * WORD_MAXLEN)
 
 #endif
