@@ -15,9 +15,7 @@ HEVEA_FLAGS = -I texmf
 
 # Suffix rules
 
-# Next line stops spurious rules for .w files being activated; remove once mit.w is no more.
-.SUFFIXES:
-.SUFFIXES: .c .h .o .tex .dvi .ps .pdf .html
+.SUFFIXES: .tex .dvi .ps .pdf .html
 .tex.dvi:
 	latex $<
 	bibtex $*
