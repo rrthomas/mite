@@ -35,10 +35,11 @@ PROGS = mit endian
 all: mit
 
 depend: $(SRCS) $(GEN_SRCS)
-	mkdep -p $(CFLAGS) $(SRCS)
+	rm -f .depend
+	gcc -M -MM $(CFLAGS) $(SRCS) >> .depend
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) .depend
 
 veryclean dist-clean: clean
 	rm -f $(PROGS) $(GEN_SRCS)
@@ -64,12 +65,6 @@ insts.gperf translate.h instEnum.h: $(MITE_TOP)/spec.lua procSpec.lua
 	$(RUNLUA) procSpec.lua
 	touch translate.h
 
-mit.o: translators.c
-
-except.h: excEnum.h
-
-except.c: excMsg.h
-
 excEnum.h excMsg.h: except.lua mkExcept.lua
 	$(RUNLUA) mkExcept.lua except.lua
 	touch except.h
@@ -77,10 +72,14 @@ excEnum.h excMsg.h: except.lua mkExcept.lua
 
 # Translators; this rule should be automated and removed
 translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua \
-    interpWrite.lua runWrite.lua mkTrans.lua
+    interpWrite.lua runWrite.lua interpDebug.lua mkTrans.lua \
+    transList.lua
 	$(RUNLUA) mkTrans.lua transList.lua $*
 
 
 # Include dependencies
+
+# Target to avoid squealing if there's no depend
+.depend: depend
 
 include .depend
