@@ -1,2 +1,6 @@
+% From symb-ent.hva
+\newcommand{\@entity}[1]{\@print{&}\@subst{#1}\@print{;}}
+
+% Extra syms
 \newcommand{\gets}{<--}
-\newcommand{\lips}{&hellip;}
+\newcommand{\lips}{\@entity{hellip}}
