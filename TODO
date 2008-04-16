@@ -1,3 +1,9 @@
+Rework reader API so that it has one case per instruction, like
+writers. Sigh.
+
+Use wrap() to indent text while building translators.c. Use \t to
+indicate indentation, and pre-expand tabs.
+
 Add the list of instrumenters to translators.c.
 
 Get interpreter working.
