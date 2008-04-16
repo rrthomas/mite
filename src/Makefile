@@ -19,14 +19,14 @@ RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 # Source files
 
-SRCS = mit.c except.c hash.c file.c insts.c translators.c
+SRCS = mit.c except.c hash.c file.c translators.h
 
 
 # Generated files
 
 OBJS = $(patsubst %.c,%.o,$(SRCS))
 GEN_SRCS = instEnum.h insts.gperf insts.c endian.h excEnum.h excMsg.h \
-    translators.h translators.c
+    translators.c
 PROGS = mit endian
 
 
