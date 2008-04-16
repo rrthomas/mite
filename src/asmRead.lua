@@ -20,8 +20,30 @@ function labelType (inst, op)
   end
 end
 
+OpType =
+  function (arg)
+    local decl, code = arg[1], arg[2]
+    -- decl: declarations for the operand reading code
+    -- code: code to read an operand of the given type
+    -- each is either a string, or a function (inst, op) ->
+    -- string
+    -- in the output, %n -> operand no.
+    function funcify (f)
+      if type (f) ~= "function" then
+        f = function (inst, op)
+              return %f
+            end
+      end
+      return function (inst, opNo)
+               local s = %f (inst, opNo)
+               return gsub (s, "%%n", tostring (opNo))
+             end
+    end
+    local t = {decl = funcify (decl), code = funcify (code)}
+    return t
+  end
 
-return {
+local r = {
   reads = "Mite assembly",
   input =
   [[/* Assembly reader input */
@@ -60,7 +82,7 @@ asmR_isImm(int c)
 }
 
 /* Discard leading white space and comments */
-static Word
+static
 asmR_skipSpace(asmR_State *R)
 { 
 #define p R->ptr
@@ -320,44 +342,88 @@ asmR_readerNew(asmR_Input *inp)
   R->end = inp->img + inp->size;
   return R;
 }]],
-  opType = {
-    r = OpType {"Register r%n;", "r%n = asmR_intReg(R);"},
-    R = OpType {"Register r%n;", "r%n = asmR_intRegFS(R);"},
-    s = OpType {"Size s%n;", "s%n = asmR_size(R);"},
-    i = OpType {[[Byte i%n_f;
-        SByte i%n_sgn;
-        int i%n_r;
-        Word i%n_v;]],
-        "i%n_v = asmR_imm(R, &i%n_f, &i%n_sgn, &i%n_r);"},
-    n = OpType {"Word n%n;", "n%n = asmR_num(R);"},
-    t = OpType {"LabelType t%n;", "t%n = asmR_labTy(R);"},
-    l = OpType {[[List *l%n_l;
-        LabelValue l%n;]],
-      function (inst, op)
-        local ty = labelType (inst, op)
-        return "l%n_l = asmR_lab(R, " .. ty .. [[);
-        l%n.p = l%n_l->key;]]
-      end},
-    x = OpType {[[List *x%n_l;
-        Label *x%n;]],
-      function (inst, op)
-        local ty = labelType (inst, op)
-        return "x%n_l = asmR_lab(R, " .. ty ..
-      [[);
-        x%n = x%n_l->body;
-        if (x%n->v.n)
-          die(ExcDupLabel, x%n_l->key);
-        x%n->v.n = ++T->labels[]] .. ty .. "];"
-      end},
-    a = OpType {[[Size a%n_s;
-        ArgType a%n_ty;]],
-      "a%n_ty = asmR_argTy(R, &a%n_s);"},
-  },
+
+  inst = {},
+
   trans = Translator {
-    "",                              -- decls
+    "",                              -- decl
     [[R->labHash = hashNew(4096);
   R->eol = 0;]],                     -- init
     "o = asmR_inst(R);",             -- update
     "",                              -- finish
   },
 }
+
+rOpType = {
+  r = OpType {"Register r%n;", "r%n = asmR_intReg(R);"},
+  R = OpType {"Register r%n;", "r%n = asmR_intRegFS(R);"},
+  s = OpType {"Size s%n;", "s%n = asmR_size(R);"},
+  i = OpType {[[Byte i%n_f;
+        SByte i%n_sgn;
+        int i%n_r;
+        Word i%n_v;]],
+    "i%n_v = asmR_imm(R, &i%n_f, &i%n_sgn, &i%n_r);"},
+  n = OpType {"Word n%n;", "n%n = asmR_num(R);"},
+  t = OpType {"LabelType t%n;", "t%n = asmR_labTy(R);"},
+  l = OpType {[[List *l%n_l;
+        LabelValue l%n;]],
+    function (inst, op)
+      local ty = labelType (inst, op)
+      return "l%n_l = asmR_lab(R, " .. ty .. [[);
+        l%n.p = l%n_l->key;]]
+  end},
+  x = OpType {[[List *x%n_l;
+        Label *x%n;]],
+    function (inst, op)
+      local ty = labelType (inst, op)
+      return "x%n_l = asmR_lab(R, " .. ty ..
+        [[);
+        x%n = x%n_l->body;
+        if (x%n->v.n)
+          die(ExcDupLabel, x%n_l->key);
+        x%n->v.n = ++T->labels[]] .. ty .. "];"
+    end},
+a = OpType {[[Size a%n_s;
+        ArgType a%n_ty;]],
+  "a%n_ty = asmR_argTy(R, &a%n_s);"},
+}
+
+-- Check the reader implements the correct opTypes
+assert (setequal (Set (project ("name", opType)),
+                  Set (project (1, enpair (rOpType)))),
+        "incorrect opType in " .. r.reads .. " reader")
+
+-- Compute the instruction definitions
+for i = 1, getn (inst) do
+  local inst = inst[i]
+  local decl, code = "", ""
+
+  -- Add the declarations
+  for j = 1, getn (inst.ops) do
+    local opType, opRepeat = getOpInfo (inst.ops[j])
+    local opDecl = rOpType[opType].decl (inst, j)
+    if opDecl ~= "" then
+      decl = decl .. opDecl .. "\n"
+    end
+  end
+
+  -- Add the code
+  for j = 1, getn (inst.ops) do
+    local opType, opRepeat = getOpInfo (inst.ops[j])
+    local opCode = rOpType[opType].code (inst, j)
+    if opCode ~= "" then
+      if opRepeat then
+        code = code .. "for (i = 1; i <= n" .. tostring (j - 1)
+          .. "; i++) {\n  "
+      end
+      code = code .. opCode .. "\n"
+      if opRepeat then
+        code = code .. "}\n"
+      end
+    end
+  end
+
+  r.inst[i] = Inst {inst.name, decl, code}
+end
+
+return r

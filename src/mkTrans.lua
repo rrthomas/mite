@@ -16,7 +16,7 @@ instWidth = 36
 --   reads: what the reader reads
 --   input: input type
 --   prelude: literal source code
---   opType: operand type reader table
+--   inst: instruction table
 --   trans: reader-specific parts of translator function  
 
 -- Writer type
@@ -35,39 +35,17 @@ instWidth = 36
 --   inst: instruction table
 --   trans: instrumenter-specific parts of translator function
 
-OpType =
-  function (arg)
-    local decls, code = arg[1], arg[2]
-    -- decls: declarations for the operand reading code
-    -- code: code to read an operand of the given type
-    -- each is either a string, or a function (inst, op) ->
-    -- string
-    -- in the output, %n -> operand no.
-    function funcify (f)
-      if type (f) ~= "function" then
-        f = function (inst, op)
-              return %f
-            end
-      end
-      return function (inst, opNo)
-               local s = %f (inst, opNo)
-               return gsub (s, "%%n", tostring (opNo))
-             end
-    end
-    local t = {decls = funcify (decls), code = funcify (code)}
-    return t
-  end
-
 Inst = Object {_init = {
     "name", -- instruction name
-    "def",  -- definition
+    "decl", -- declarations
+    "code", -- code
 }}
 
 Translator = Object {_init = {
     "decls",  -- extra variable declarations
     "init",   -- extra initialisation
     "update", -- update after reading each instruction
-    "finish", -- code to execute after translation and resolution
+    "final",  -- code to execute after translation and resolution
 }}
 
 
@@ -82,14 +60,15 @@ function mkBlock (title, code, indent)
                  indent, title, indent, code, indent, title)
 end
 
-function getOpInfo (reader, opType)
+-- Given a compound operand type (type plus optional letter), return
+-- the basic type and a flag indicating whether it repeats
+function getOpInfo (opType)
   local opRepeat
   if strsub (opType, -1, -1) == "+" then
     opType = strsub (opType, 1, -2)
     opRepeat = 1
   end
-  local opTypeInfo = reader.opType[opType]
-  return opType, opTypeInfo, opRepeat
+  return opType, opRepeat
 end
 
 
@@ -130,17 +109,20 @@ function mkTrans (arg)
         %mkInstrumentation (title, {"trans", field}, indent)
     end
 
-  -- Check the reader implements the correct opTypes
-  assert (setequal (Set (project ("name", opType)),
-                  Set (project (1, enpair (r.opType)))),
-         "incorrect opType in " .. r.reads .. " reader")
-
-  -- Check the writer implements the correct instructions
+  -- Check the reader and writer implement the correct instructions
   for i = 1, getn (inst) do
-    assert (w.inst[i], "instruction " .. inst[i].name .. " missing")
+    assert (r.inst[i],
+            "reader instruction " .. inst[i].name .. " missing")
+    assert (w.inst[i],
+            "writer instruction " .. inst[i].name .. " missing")
+    assert (r.inst[i].name == inst[i].name,
+            "reader instruction " .. tostring (i) .. " ('" ..
+              w.inst[i].name .. "') should be '" .. inst[i].name ..
+              "'")
     assert (w.inst[i].name == inst[i].name,
-           "instruction " .. tostring (i) .. " ('" .. w.inst[i].name ..
-             "') should be '" .. inst[i].name .. "'")
+            "writer instruction " .. tostring (i) .. " ('" ..
+              w.inst[i].name .. "') should be '" .. inst[i].name ..
+              "'")
   end
 
 
@@ -207,33 +189,29 @@ function mkTrans (arg)
 
   -- The instruction cases
   for i = 1, getn (inst) do
+    -- Start of case
     out = out .. "    case " .. opify (inst[i].name) .. ":\n" ..
       "      {\n"
     local inst = inst[i]
 
-    for j = 1, getn (inst.ops) do
-      local opType, opTypeInfo = getOpInfo (r, inst.ops[j])
-      local decls = opTypeInfo.decls (inst, j)
-      if decls ~= "" then
-        out = out .. "        " .. decls .. "\n"
-      end
-    end
-
-    for j = 1, getn (inst.ops) do
-      local opType, opTypeInfo, opRepeat = getOpInfo (r, inst.ops[j])
-      -- TODO: deal with opRepeat
-      local code = opTypeInfo.code (inst, j)
-      if code ~= "" then
-        out = out .. "        " .. code .. "\n"
-      end
-    end
-
+    -- Output declarations
+    out = out .. r.inst[i].decl .. "\n"
     for j = 1, getn (instrum) do
-      out = out .. "        " .. instrum[j].inst[i].def .. ";\n"
+      out = out .. instrum[j].inst[i].decl .. "\n"
     end
-    out = out .. "        " .. w.inst[i].def .. ";\n" ..
-      "        break;\n" ..
-      "      }\n"
+    out = out .. w.inst[i].decl .. "\n"
+    
+    -- Output main code
+    out = out .. r.inst[i].code .. "\n"
+    for j = 1, getn (instrum) do
+      out = out .. instrum[j].inst[i].code .. "\n"
+    end
+    out = out .. w.inst[i].code .. "\n"
+
+    -- End of case
+    out = out .. [[        break;
+      }
+]]
   end
   out = out ..
 [[    default:
@@ -251,7 +229,7 @@ function mkTrans (arg)
       "(T, R, W, " .. writes .. "W_RESOLVE_IMG, " .. writes ..
       "W_RESOLVE_PTR);\n"
   end
-  out = out .. mkInsert ("finish", "finish", "  ") ..
+  out = out .. mkInsert ("finalisation", "final", "  ") ..
 [[  return out;
 }]]
 
@@ -302,6 +280,7 @@ for i = 1, getn (translators) do
               "(" .. translators[i][1] .. "R_Input *inp);\n")
 end
 writeLine ("#endif")
+
 
 -- Write the C file
 
