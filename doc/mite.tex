@@ -46,9 +46,8 @@
 \begin{document}
 
 \title{The Mite virtual machine}
-\author{Reuben Thomas\\\url{rrt@sc3d.org}\\\url{http://www.mupsych.org/~rrt/}}
-\date{1st February 2003}
-\maketitle
+\author{Reuben Thomas\\\url{rrt@sc3d.org}\\\url{http://rrt.sc3d.org/}}
+\date{1st February 2003} \maketitle
 
 
 
@@ -257,26 +256,27 @@ Long numbers are encoded as follows:
 \begin{enumerate}
 \item Left-truncate the number to the minimum number of bits in which
   it can be represented.
-  
+
 \item Remove an $8n-1$-bit word from the most significant end of the
   number, where $n$ is the number of bytes left in the current
   instruction word. If there are fewer than $8n-1$ bits in the number
   then sign-extend it to that length first.
-  
+
 \item Add a bit to the most significant end of the word, which should
   be zero if more bits remain in the number, and one otherwise.
-  
+
 \item Store the word, with the bytes in big-endian order.
-  
+
 \item While there are still bits in the number, repeat the following
   steps:
 
   \begin{enumerate}
   \item Remove a $31$-bit word from the most significant end of the
     number, padding with zeroes if there are fewer than $31$ bits left.
-    
-  \item Add a bit to the most significant end of the word, which should
-    be zero if more bits remain in the number, and one otherwise.
+
+  \item Add a bit to the most significant end of the word, which
+    should be zero if more bits remain in the number, and one
+    otherwise.
 
   \item Store the word, with the bytes in big-endian order.
   \end{enumerate}
