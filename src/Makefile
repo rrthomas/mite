@@ -24,7 +24,7 @@ SRCS = mit.c except.c hash.c file.c
 
 # Generated files
 
-OBJS = $(patsubst %.c,%.o,$(SRCS))
+OBJS = $(patsubst %.c,%.o,$(SRCS) translators.c insts.c)
 GEN_SRCS = instEnum.h insts.gperf insts.c endian.h excEnum.h excMsg.h \
     translators.c translators.h
 PROGS = mit endian
@@ -51,7 +51,7 @@ mit: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 # avoid spurious warnings when compiling gperf output
-insts.o:
+insts.o: insts.c
 	$(CC) -c $(COPTS) -o $@ $<
 
 insts.c: insts.gperf
@@ -71,7 +71,7 @@ excEnum.h excMsg.h: except.lua mkExcept.lua
 
 
 # Translators; this rule should be automated and removed
-translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua \
+translators.h translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua \
     interpWrite.lua runWrite.lua interpDebug.lua mkTrans.lua \
     transList.lua
 	$(RUNLUA) mkTrans.lua transList.lua $*
