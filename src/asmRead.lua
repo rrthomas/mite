@@ -30,14 +30,15 @@ OpType =
     -- in the output, %n -> operand no.
     function funcify (f)
       if type (f) ~= "function" then
+        local _f = f
         f = function (inst, op)
-              return %f
-            end
+          return _f
+        end
       end
       return function (inst, opNo)
-               local s = %f (inst, opNo)
-               return gsub (s, "%%n", tostring (opNo))
-             end
+        local s = f (inst, opNo)
+        return string.gsub (s, "%%n", tostring (opNo))
+      end
     end
     local t = {decl = funcify (decl), code = funcify (code)}
     return t
@@ -383,23 +384,23 @@ rOpType = {
           die(ExcDupLabel, x%n_l->key);
         x%n->v.n = ++T->labels[]] .. ty .. "];"
     end},
-a = OpType {[[Size a%n_s;
+a = OpType {[[Size a%n_size;
         ArgType a%n_ty;]],
-  "a%n_ty = asmR_argTy(R, &a%n_s);"},
+  "a%n_ty = asmR_argTy(R, &a%n_size);"},
 }
 
 -- Check the reader implements the correct opTypes
-assert (setequal (Set (project ("name", opType)),
-                  Set (project (1, enpair (rOpType)))),
+assert (set.equal (set (list.project ("name", opType)),
+                   set (list.project (1, list.enpair (rOpType)))),
         "incorrect opType in " .. r.reads .. " reader")
 
 -- Compute the instruction definitions
-for i = 1, getn (inst) do
+for i = 1, #inst do
   local inst = inst[i]
   local decl, code = "", ""
 
   -- Add the declarations
-  for j = 1, getn (inst.ops) do
+  for j = 1, #inst.ops do
     local opType, opRepeat = getOpInfo (inst.ops[j])
     local opDecl = rOpType[opType].decl (inst, j)
     if opDecl ~= "" then
@@ -408,12 +409,12 @@ for i = 1, getn (inst) do
   end
 
   -- Add the code
-  for j = 1, getn (inst.ops) do
+  for j = 1, #inst.ops do
     local opType, opRepeat = getOpInfo (inst.ops[j])
     local opCode = rOpType[opType].code (inst, j)
     if opCode ~= "" then
       if opRepeat then
-        code = code .. "for (i = 1; i <= n" .. tostring (j - 1)
+        code = code .. "for (size_t i = 1; i <= n" .. tostring (j - 1)
           .. "; i++) {\n  "
       end
       code = code .. opCode .. "\n"

@@ -10,11 +10,11 @@ MITE_TOP = ..
 CC = gcc
 WARN = -Wall -W -Wundef -Wpointer-arith -Wbad-function-cast -Wcast-qual \
     -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
-COPTS = -ansi -pedantic -g # -O2 -fomit-frame-pointer
+COPTS = -std=c99 -g # -O2 -fomit-frame-pointer
 CFLAGS = $(COPTS) $(WARN)
 LDFLAGS = -lm # -s
 
-RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
+RUNLUA = lua $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 
 # Source files

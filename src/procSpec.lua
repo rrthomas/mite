@@ -9,25 +9,25 @@
 -- instEnum.h
 -- enumeration of opcodes
 -- each instruction name is uppercased and prefixed with "OP_"
-writeto ("instEnum.h")
-writeLine ("/* Instruction opcodes */\n",
-          "#ifndef MITE_INSTENUM",
-          "#define MITE_INSTENUM\n\n",
-          "typedef enum {")
-instEnum = map (opify, project ("name", inst))
+io.output ("instEnum.h")
+io.writelines ("/* Instruction opcodes */\n",
+               "#ifndef MITE_INSTENUM",
+               "#define MITE_INSTENUM\n\n",
+               "typedef enum {")
+instEnum = list.map (opify, list.project ("name", inst))
 instEnum[1] = instEnum[1] .. " = 0x01"
-writeWrapped (join (", ", instEnum))
-writeLine ("} Opcode;\n",
-          "#endif")
+writeWrapped (table.concat (instEnum, ", "))
+io.writelines ("} Opcode;\n",
+               "#endif")
 
 -- insts.gperf
 -- list of name, opcode pairs in alphabetical order
-writeto ("insts.gperf")
-writeLine ("%{",
-          "#include \"insts.h\"",
-          "%}",
-          "struct Inst { const char *name; Opcode opcode; };",
-          "%%")
-for i = 1, getn (inst) do
-  writeLine (inst[i].name .. ", " .. opify (inst[i].name))
+io.output ("insts.gperf")
+io.writelines ("%{",
+               "#include \"insts.h\"",
+               "%}",
+               "struct Inst { const char *name; Opcode opcode; };",
+               "%%")
+for i = 1, #inst do
+  io.writelines (inst[i].name .. ", " .. opify (inst[i].name))
 end

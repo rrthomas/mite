@@ -2,9 +2,11 @@
 -- (c) Reuben Thomas 2001
 
 miteDir, script = arg[1], arg[2] -- $(MITE), name of script
-prog = { name = gsub (arg[2], "%..*$", "") }
-require "std" -- standard library
-shift (2) -- remove the arguments
+prog = { name = string.gsub (arg[2], "%..*$", "") }
+require "std"
+Object = std.object
+table.remove (arg, 1) -- remove the arguments
+table.remove (arg, 1)
 dofile (miteDir .. "/script/miteUtil.lua") -- Mite-specific utilities
 dofile (miteDir .. "/spec.lua") -- Mite's specification
 dofile (script) -- run the given script

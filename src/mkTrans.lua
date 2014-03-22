@@ -52,20 +52,20 @@ Translator = Object {_init = {
 -- Code construction helper functions
 
 function transFunc (reads, writes)
-  return reads .. "To" .. strcaps (writes)
+  return reads .. "To" .. string.caps (writes)
 end
 
 function mkBlock (title, code, indent)
-  return format ("%s/* %s */\n%s%s\n%s/* end of %s */\n",
-                 indent, title, indent, code, indent, title)
+  return string.format ("%s/* %s */\n%s%s\n%s/* end of %s */\n",
+                        indent, title, indent, code, indent, title)
 end
 
 -- Given a compound operand type (type plus optional letter), return
 -- the basic type and a flag indicating whether it repeats
 function getOpInfo (opType)
   local opRepeat
-  if strsub (opType, -1, -1) == "+" then
-    opType = strsub (opType, 1, -2)
+  if opType:sub (-1, -1) == "+" then
+    opType = opType:sub (1, -2)
     opRepeat = 1
   end
   return opType, opRepeat
@@ -82,12 +82,12 @@ function mkTrans (arg)
   local w = writers[writes]
   local instrum = {n = 0}
   if instrumentation then
-    for i = 1, getn (instrumentation) do
+    for i = 1, #instrumentation do
       tinsert (instrum, instrumenters[instrumentation[i]])
     end
   end
   local transFunc = transFunc (reads, writes)
-  local resolveFunc = "resolveDangles" .. strcaps (transFunc)
+  local resolveFunc = "resolveDangles" .. string.caps (transFunc)
   local rstate, wstate = reads .. "R_State", writes .. "W_State"
   local inputType = reads .. "R_Input"
   local outputType = writes .. "W_Output"
@@ -95,22 +95,22 @@ function mkTrans (arg)
   local mkInstrumentation =
     function (title, path, indent)
       local out = ""
-      for i = 1, getn (%instrum) do
-        out = out .. mkBlock (%instrum[i].instrument .. " " .. title,
-                              lookup (%instrum[i], path), indent)
+      for i = 1, #instrum do
+        out = out .. mkBlock (instrum[i].instrument .. " " .. title,
+                              lookup (instrum[i], path), indent)
       end
       return out
     end
 
   local mkInsert =
     function (title, field, indent)
-      return mkBlock ("reader " .. title, %r.trans[field], indent) ..
-        mkBlock("writer " .. title, %w.trans[field], indent) ..
-        %mkInstrumentation (title, {"trans", field}, indent)
+      return mkBlock ("reader " .. title, r.trans[field], indent) ..
+        mkBlock("writer " .. title, w.trans[field], indent) ..
+        mkInstrumentation (title, {"trans", field}, indent)
     end
 
   -- Check the reader and writer implement the correct instructions
-  for i = 1, getn (inst) do
+  for i = 1, #inst do
     assert (r.inst[i],
             "reader instruction " .. inst[i].name .. " missing")
     assert (w.inst[i],
@@ -188,7 +188,7 @@ function mkTrans (arg)
  "    switch (o) {\n"
 
   -- The instruction cases
-  for i = 1, getn (inst) do
+  for i = 1, #inst do
     -- Start of case
     out = out .. "    case " .. opify (inst[i].name) .. ":\n" ..
       "      {\n"
@@ -196,14 +196,14 @@ function mkTrans (arg)
 
     -- Output declarations
     out = out .. r.inst[i].decl .. "\n"
-    for j = 1, getn (instrum) do
+    for j = 1, #instrum do
       out = out .. instrum[j].inst[i].decl .. "\n"
     end
     out = out .. w.inst[i].decl .. "\n"
     
     -- Output main code
     out = out .. r.inst[i].code .. "\n"
-    for j = 1, getn (instrum) do
+    for j = 1, #instrum do
       out = out .. instrum[j].inst[i].code .. "\n"
     end
     out = out .. w.inst[i].code .. "\n"
@@ -241,86 +241,86 @@ end
 translators = dofile (transListFile)
 
 -- Extract lists of readers and writers
-readers = Set (project (1, translators))
-for i, _ in readers do
+readers = table.invert (list.project (1, translators))
+for i in pairs (readers) do
   readers[i] = dofile (i .. "Read.lua")
 end
-writers = Set (project (2, translators))
-for i, _ in writers do
+writers = table.invert (list.project (2, translators))
+for i in pairs (writers) do
   writers[i] = dofile (i .. "Write.lua")
 end
-instrumenters = Set (flatten (project (3, translators)))
-for i, _ in instrumenters do
+instrumenters = table.invert (list.flatten (list.project (3, translators)))
+for i in pairs (instrumenters) do
   instrumenters[i] = dofile (i .. ".lua")
 end
 
 
 -- Write the header file
-writeto (transFile .. ".h") -- open the output file
-writeLine ("/* Mite translator",
-          " * (c) Reuben Thomas",
-          " */",
-          "",
-          "",
-          "#ifndef MITE_TRANSLATORS",
-          "#define MITE_TRANSLATORS",
-          "",
-          "",
-          "#include \"translate.h\"",
-          "")
-for i, _ in writers do
-  writeLine (writers[i].output)
+io.output (transFile .. ".h") -- open the output file
+io.writelines ("/* Mite translator",
+               " * (c) Reuben Thomas",
+               " */",
+               "",
+               "",
+               "#ifndef MITE_TRANSLATORS",
+               "#define MITE_TRANSLATORS",
+               "",
+               "",
+               "#include \"translate.h\"",
+               "")
+for i in pairs (writers) do
+  io.writelines (writers[i].output)
 end
-for i, _ in readers do
-  writeLine (readers[i].input)
+for i in pairs (readers) do
+  io.writelines (readers[i].input)
 end
-for i = 1, getn (translators) do
-  writeLine (translators[i][2] .. "W_Output *",
-            transFunc (unpack (translators[i])) ..
-              "(" .. translators[i][1] .. "R_Input *inp);\n")
+for i = 1, #translators do
+  io.writelines (translators[i][2] .. "W_Output *",
+                 transFunc (unpack (translators[i])) ..
+                   "(" .. translators[i][1] .. "R_Input *inp);\n")
 end
-writeLine ("#endif")
+io.writelines ("#endif")
 
 
 -- Write the C file
 
-writeto (transFile .. ".c") -- open the output file
-writeLine ("/* Mite translator",
-          " * (c) Reuben Thomas",
-          " *",
-          " * Built with the following translators:",
-          " *")
+io.output (transFile .. ".c") -- open the output file
+io.writelines ("/* Mite translator",
+               " * (c) Reuben Thomas",
+               " *",
+               " * Built with the following translators:",
+               " *")
 
 -- List the translators
-for i = 1, getn (translators) do
-  writeLine (" *   " .. translators[i][1] .. " -> " ..
-            translators[i][2])
+for i = 1, #translators do
+  io.writelines (" *   " .. translators[i][1] .. " -> " ..
+                   translators[i][2])
 end
 
-writeLine (" */\n") -- end of comment block
-writeLine ("#include \"" .. transFile .. ".h\"\n")
-writeLine ("#include \"translate.c\"")
+io.writelines (" */\n") -- end of comment block
+io.writelines ("#include \"" .. transFile .. ".h\"\n")
+io.writelines ("#include \"translate.c\"")
 
 -- Write the preludes and resolver macros
 function writeBlock (s, f, t)
   if t[f] then
-    writeLine ("\n" .. mkBlock ((t.reads or t.writes or t.instrument)
-                                .. " " .. s,
-                                t[f], ""))
+    io.writelines ("\n" .. mkBlock ((t.reads or t.writes or t.instrument)
+                                      .. " " .. s,
+                                    t[f], ""))
   end
 end
 
-map (curry (writeBlock, "reader prelude", "prelude"),
-     values (readers))
-map (curry (writeBlock, "writer prelude", "prelude"),
-     values (writers))
-map (curry (writeBlock, "prelude", "prelude"),
-     values (instrumenters))
-map (curry (writeBlock, "resolver macros", "resolve"),
-     values (writers))
+list.map (functional.bind (writeBlock, "reader prelude", "prelude"),
+          table.values (readers))
+list.map (functional.bind (writeBlock, "writer prelude", "prelude"),
+          table.values (writers))
+list.map (functional.bind (writeBlock, "prelude", "prelude"),
+          table.values (instrumenters))
+list.map (functional.bind (writeBlock, "resolver macros", "resolve"),
+          table.values (writers))
 
 -- Write the translator functions
-map (compose (writeLine, mkTrans), translators)
+list.map (compose (io.writelines, mkTrans), translators)
 
 -- Mark the end
-writeLine ("\n\n/* end of Mite translator */")
+io.writelines ("\n\n/* end of Mite translator */")

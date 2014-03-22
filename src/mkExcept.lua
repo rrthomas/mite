@@ -10,23 +10,23 @@ Exc = Object {_init = {
     "message",
 }}
 
-dofile(arg[1]) -- load the exceptions table
+dofile (arg[1]) -- load the exceptions table
 
 
 -- excEnum.h
 -- enumeration of opcodes
-function prefix(s)
+function prefix (s)
   return "Exc" .. s
 end
-writeto("excEnum.h")
-excEnum = map(prefix, project("name", exception))
+io.output ("excEnum.h")
+excEnum = list.map (prefix, list.project ("name", exception))
 excEnum[1] = excEnum[1] .. " = 0x01"
-writeWrapped(join(", ", excEnum))
+writeWrapped (table.concat (excEnum, ", "))
 
 -- excMsg.h
 -- list of messages
-function quote(s)
+function quote (s)
   return "\"" .. s .. "\""
 end
-writeto("excMsg.h")
-writeLine(join(",\n", map(quote, project("message", exception))))
+io.output ("excMsg.h")
+io.writelines (table.concat (list.map (quote, list.project ("message", exception)), ",\n"))

@@ -9,7 +9,7 @@ MITE_TOP = ..
 
 HEVEA_FLAGS = -I texmf
 
-RUNLUA = lua -f $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
+RUNLUA = lua $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 
 # Suffix rules
