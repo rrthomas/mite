@@ -2,5 +2,5 @@
 \newcommand{\@entity}[1]{\@print{&}\@subst{#1}\@print{;}}
 
 % Extra syms
-\newcommand{\gets}{<--}
+\newcommand{\gets}{←}
 \newcommand{\lips}{\@entity{hellip}}
