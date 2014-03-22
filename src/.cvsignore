@@ -1,4 +1,0 @@
-mit insts.c insts.gperf instEnum.h excEnum.h excMsg.h
-endian endian.h
-objToAsm.c asmToObj.c objToInterp.c
-translators.c translators.h

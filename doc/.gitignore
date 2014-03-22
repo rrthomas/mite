@@ -1,0 +1,12 @@
+*.dvi
+*.ps
+*.pdf
+*.aux
+*.log
+opTypes.tex
+instLab.tex
+instComp.tex
+instData.tex
+instOpcode.tex
+instCcall.tex
+auto
