@@ -48,7 +48,7 @@ writeTable ("lit", "litl", "space")
 
 -- instCcall.tex: the C call instructions
 io.output ("instCcall.tex")
-writeTable ("func", "funcv", "arg", "callf", "callfr", "retf", "retfv")
+writeTable ("func", "funcv", "arg", "callf", "callfr", "retf", "retf0")
 
 -- instOp.tex: the opcode table (3 columns)
 function opEntry (n)
