@@ -1,8 +1,9 @@
-*.dvi
-*.ps
 *.pdf
 *.aux
 *.log
+*.html
+*.bbl
+*.blg
 opTypes.tex
 instLab.tex
 instComp.tex

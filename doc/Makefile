@@ -1,5 +1,5 @@
 # Makefile for Mite documentation
-# (c) Reuben Thomas 1999
+# (c) Reuben Thomas 1999, 2014
 
 
 MITE_TOP = ..
@@ -7,24 +7,16 @@ MITE_TOP = ..
 
 # Programs and options
 
-HEVEA_FLAGS = -I texmf
-
 RUNLUA = lua $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 
 
 # Suffix rules
 
-%.dvi: %.tex
-	latex $<
-#	bibtex $*
-#	latex $<
-	latex $<
-
-%.ps: %.dvi
-	dvips $<
-
-%.pdf: %.ps
-	ps2pdf $<
+%.pdf: %.tex
+	pdflatex $<
+	bibtex $*
+	pdflatex $<
+	pdflatex $<
 
 %.html: %.tex
 	hevea $(HEVEA_FLAGS) sym.hva $<
@@ -44,7 +36,7 @@ clean:
 	rm -f *.log *.aux *.blg *.bbl
 
 dist-clean:
-	rm -f *.dvi *.html *.ps *.pdf $(TEX_TABLES)
+	rm -f *.html *.pdf $(TEX_TABLES)
 
 
 # File dependencies
@@ -53,4 +45,4 @@ $(TEX_TABLES): $(MITE_TOP)/spec.lua procSpec.lua
 	$(RUNLUA) procSpec.lua
 	touch mite.tex
 
-mite.dvi: $(TEX_TABLES)
+mite.pdf: $(TEX_TABLES)
