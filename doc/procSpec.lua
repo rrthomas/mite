@@ -20,13 +20,14 @@ end
 
 -- write LaTeX table lines for the given instructions
 function writeTable (...)
+  local arg = {...}
   for i = 1, #arg do
     local inst = nameToInst[arg[i]]
-    write (inst.name .. " ")
+    io.write (inst.name .. " ")
     for j = 1, #inst.ops do
-      write ("$" .. inst.ops[j] .. "_" .. tostring (j) .. "$ ")
+      io.write ("$" .. inst.ops[j] .. "_" .. tostring (j) .. "$ ")
     end
-    write ("& " .. inst.effect .. " \\\\\n")
+    io.write ("& " .. inst.effect .. " \\\\\n")
   end
 end
 
