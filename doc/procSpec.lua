@@ -1,5 +1,5 @@
 -- Generate documentation tables from specification
--- (c) Reuben Thomas 2001
+-- (c) Reuben Thomas 2001, 2014
 
 
 -- Make a name->instruction index
