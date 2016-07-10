@@ -5,12 +5,12 @@
 MITE = .
 
 
-all: mit doc
+all: mit docs
 
 mit:
 	cd src; $(MAKE) all
 
-doc:
+docs:
 	cd doc; $(MAKE) all
 
 dist: all dist-clean

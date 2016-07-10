@@ -13,10 +13,7 @@ RUNLUA = lua $(MITE_TOP)/script/runLua.lua $(MITE_TOP)
 # Suffix rules
 
 %.pdf: %.tex
-	pdflatex $<
-	bibtex $*
-	pdflatex $<
-	pdflatex $<
+	rubber --pdf $<
 
 %.html: %.tex
 	hevea $(HEVEA_FLAGS) sym.hva $<
@@ -41,7 +38,10 @@ dist-clean:
 
 # File dependencies
 
-$(TEX_TABLES): $(MITE_TOP)/spec.lua procSpec.lua
+$(TEX_TABLES): dummy-procspec
+	@
+
+dummy-procspec: $(MITE_TOP)/spec.lua procSpec.lua
 	$(RUNLUA) procSpec.lua
 	touch mite.tex
 
