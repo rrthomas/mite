@@ -3,7 +3,7 @@
 
 miteDir, script = arg[1], arg[2] -- $(MITE), name of script
 prog = { name = string.gsub (arg[2], "%..*$", "") }
-require "std"
+std = require "std".barrel ()
 Object = std.object
 table.remove (arg, 1) -- remove the arguments
 table.remove (arg, 1)

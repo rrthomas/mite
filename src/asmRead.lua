@@ -390,8 +390,8 @@ a = OpType {[[Size a%n_size;
 }
 
 -- Check the reader implements the correct opTypes
-assert (set.equal (set (list.project ("name", opType)),
-                   set (list.project (1, list.enpair (rOpType)))),
+assert (std.set.equal (std.set (std.table.project ("name", opType)),
+                       std.set (std.table.project (1, std.table.enpair (rOpType)))),
         "incorrect opType in " .. r.reads .. " reader")
 
 -- Compute the instruction definitions

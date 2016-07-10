@@ -241,15 +241,15 @@ end
 translators = dofile (transListFile)
 
 -- Extract lists of readers and writers
-readers = table.invert (list.project (1, translators))
+readers = table.invert (std.table.project (1, translators))
 for i in pairs (readers) do
   readers[i] = dofile (i .. "Read.lua")
 end
-writers = table.invert (list.project (2, translators))
+writers = table.invert (std.table.project (2, translators))
 for i in pairs (writers) do
   writers[i] = dofile (i .. "Write.lua")
 end
-instrumenters = table.invert (list.flatten (list.project (3, translators)))
+instrumenters = table.invert (std.table.flatten (std.table.project (3, translators)))
 for i in pairs (instrumenters) do
   instrumenters[i] = dofile (i .. ".lua")
 end
@@ -276,7 +276,7 @@ for i in pairs (readers) do
 end
 for i = 1, #translators do
   io.writelines (translators[i][2] .. "W_Output *",
-                 transFunc (unpack (translators[i])) ..
+                 transFunc (table.unpack (translators[i])) ..
                    "(" .. translators[i][1] .. "R_Input *inp);\n")
 end
 io.writelines ("#endif")
@@ -310,17 +310,17 @@ function writeBlock (s, f, t)
   end
 end
 
-list.map (functional.bind (writeBlock, "reader prelude", "prelude"),
-          table.values (readers))
-list.map (functional.bind (writeBlock, "writer prelude", "prelude"),
-          table.values (writers))
-list.map (functional.bind (writeBlock, "prelude", "prelude"),
-          table.values (instrumenters))
-list.map (functional.bind (writeBlock, "resolver macros", "resolve"),
-          table.values (writers))
+std.functional.map (std.functional.bind (writeBlock, {"reader prelude", "prelude"}),
+                    std.ielems, table.values (readers))
+std.functional.map (std.functional.bind (writeBlock, {"writer prelude", "prelude"}),
+                    std.ielems, table.values (writers))
+std.functional.map (std.functional.bind (writeBlock, {"prelude", "prelude"}),
+                    std.ielems, table.values (instrumenters))
+std.functional.map (std.functional.bind (writeBlock, {"resolver macros", "resolve"}),
+                    std.ielems, table.values (writers))
 
 -- Write the translator functions
-list.map (compose (io.writelines, mkTrans), translators)
+std.functional.map (std.functional.compose (mkTrans, io.writelines), std.ielems, translators)
 
 -- Mark the end
 io.writelines ("\n\n/* end of Mite translator */")

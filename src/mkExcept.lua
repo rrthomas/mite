@@ -19,7 +19,7 @@ function prefix (s)
   return "Exc" .. s
 end
 io.output ("excEnum.h")
-excEnum = list.map (prefix, list.project ("name", exception))
+excEnum = std.functional.map (prefix, std.ielems, std.table.project ("name", exception))
 excEnum[1] = excEnum[1] .. " = 0x01"
 writeWrapped (table.concat (excEnum, ", "))
 
@@ -29,4 +29,4 @@ function quote (s)
   return "\"" .. s .. "\""
 end
 io.output ("excMsg.h")
-io.writelines (table.concat (list.map (quote, list.project ("message", exception)), ",\n"))
+io.writelines (table.concat (std.functional.map (quote, std.ielems, std.table.project ("message", exception)), ",\n"))

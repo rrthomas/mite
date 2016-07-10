@@ -14,7 +14,7 @@ io.writelines ("/* Instruction opcodes */\n",
                "#ifndef MITE_INSTENUM",
                "#define MITE_INSTENUM\n\n",
                "typedef enum {")
-instEnum = list.map (opify, list.project ("name", inst))
+instEnum = std.functional.map (opify, std.ielems, std.table.project ("name", inst))
 instEnum[1] = instEnum[1] .. " = 0x01"
 writeWrapped (table.concat (instEnum, ", "))
 io.writelines ("} Opcode;\n",
