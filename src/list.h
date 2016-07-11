@@ -6,6 +6,7 @@
 #ifndef MITE_LIST
 #define MITE_LIST
 
+#include "config.h"
 
 struct _List {
     struct _List *next;

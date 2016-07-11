@@ -5,6 +5,7 @@
 #ifndef MITE_INSTS
 #define MITE_INSTS
 
+#include "config.h"
 
 #include "instEnum.h"
 

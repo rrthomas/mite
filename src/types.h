@@ -6,6 +6,7 @@
 #ifndef MITE_TYPES
 #define MITE_TYPES
 
+#include "config.h"
 
 #include <stdint.h>
 

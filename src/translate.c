@@ -3,6 +3,8 @@
 */
 
 
+#include "config.h"
+
 #include <ctype.h>
 #include <math.h>
 

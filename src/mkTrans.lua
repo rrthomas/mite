@@ -243,15 +243,15 @@ translators = dofile (transListFile)
 -- Extract lists of readers and writers
 readers = table.invert (std.table.project (1, translators))
 for i in pairs (readers) do
-  readers[i] = dofile (i .. "Read.lua")
+  readers[i] = dofile (miteDir .. "/src/" .. i .. "Read.lua")
 end
 writers = table.invert (std.table.project (2, translators))
 for i in pairs (writers) do
-  writers[i] = dofile (i .. "Write.lua")
+  writers[i] = dofile (miteDir .. "/src/" .. i .. "Write.lua")
 end
 instrumenters = table.invert (std.table.flatten (std.table.project (3, translators)))
 for i in pairs (instrumenters) do
-  instrumenters[i] = dofile (i .. ".lua")
+  instrumenters[i] = dofile (miteDir .. "/src/" .. i .. ".lua")
 end
 
 

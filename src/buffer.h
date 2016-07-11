@@ -6,6 +6,7 @@
 #ifndef MITE_BUFFER
 #define MITE_BUFFER
 
+#include "config.h"
 
 #include "except.h"
 #include "util.h"

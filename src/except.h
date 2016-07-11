@@ -6,6 +6,7 @@
 #ifndef MITE_EXCEPT
 #define MITE_EXCEPT
 
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdarg.h>

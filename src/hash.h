@@ -6,6 +6,7 @@
 #ifndef MITE_HASH
 #define MITE_HASH
 
+#include "config.h"
 
 #include <stdint.h>
 

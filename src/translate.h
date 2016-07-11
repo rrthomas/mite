@@ -6,12 +6,13 @@
 #ifndef MITE_TRANSLATE
 #define MITE_TRANSLATE
 
+#include "config.h"
 
 #include <stddef.h>
 #include <stdint.h>
 #include <limits.h>
 
-#include "endian.h"
+#include "mite-endian.h"
 #include "util.h"
 #include "types.h"
 #include "const.h"

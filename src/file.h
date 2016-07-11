@@ -6,6 +6,7 @@
 #ifndef MITE_FLEN
 #define MITE_FLEN
 
+#include "config.h"
 
 #include <stdio.h>
 

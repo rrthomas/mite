@@ -6,6 +6,7 @@
 #ifndef MITE_CONST
 #define MITE_CONST
 
+#include "config.h"
 
 #include <stdint.h>
 
