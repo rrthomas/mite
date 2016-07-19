@@ -10,10 +10,9 @@ noinst_LIBRARIES = libmite.a
 libmite_a_SOURCES = buffer.h const.h except.h except.c hash.h hash.c file.h file.c insts.h list.h list.c translate.h translate.c types.h util.h
 nodist_libmite_a_SOURCES = $(GEN_SRCS)
 
-noinst_PROGRAMS = endian
 bin_PROGRAMS = mit
 
-GEN_SRCS = instEnum.h insts.gperf insts.c mite-endian.h excEnum.h excMsg.h \
+GEN_SRCS = instEnum.h insts.gperf insts.c excEnum.h excMsg.h \
     translators.c translators.h
 
 except.o: $(GEN_SRCS)
@@ -33,10 +32,6 @@ EXTRA_DIST = $(LUA_SRCS)
 
 insts.c: insts.gperf
 	gperf -L ANSI-C -N findInst -t -k 1,2,'$$' $< > $@
-
-# FIXME: Remove this in favour of AC_C_BIGENDIAN
-mite-endian.h: endian
-	./endian > $@
 
 insts.gperf translate.h instEnum.h: $(top_srcdir)/spec.lua procSpec.lua
 	$(RUNLUA) $(srcdir)/procSpec.lua

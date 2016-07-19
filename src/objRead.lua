@@ -89,21 +89,21 @@ objR_getNum (objR_State *R, int *sgnRet)
 #undef p
 }
 
-#ifdef LITTLE_ENDIAN_MITE
+#ifndef WORDS_BIGENDIAN
 
 #  define objR_OPCODE \
      (objR_w) & BYTE_MASK
 #  define objR_OP(p) \
      (objR_w >> (BYTE_BIT * (p))) & BYTE_MASK
 
-#else /* !LITTLE_ENDIAN_MITE */
+#else /* WORDS_BIGENDIAN */
 
 #  define objR_OPCODE \
      (objR_w >> (BYTE_BIT * 3)) & BYTE_MASK
 #  define objR_OP(p) \
      (objR_w >> (BYTE_BIT * (INST_BYTE - (p)))) & BYTE_MASK
 
-#endif /* LITTLE_ENDIAN_MITE */
+#endif /* !WORDS_BIGENDIAN */
 
 #define objR_labelAddr(R, l) \
   l->v

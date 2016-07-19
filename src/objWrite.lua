@@ -82,17 +82,17 @@ objW_writerNew(void)
 #define B(b) \
   *W->ptr++ = (Byte)b
 
-#ifdef LITTLE_ENDIAN_MITE
+#ifndef WORDS_BIGENDIAN
 #  define W(a, b, c, d) \
      *(InstWord *)W->ptr = a | (b << BYTE_BIT) | \
        (c << (BYTE_BIT * 2)) | (d << (BYTE_BIT * 3)); \
      W->ptr += INST_BYTE
-#else /* !LITTLE_ENDIAN_MITE */
+#else /* WORDS_BIGENDIAN */
 #  define W(a, b, c, d) \
      *(InstWord *)W->ptr = (a << (BYTE_BIT * 3)) | \
        (b << (BYTE_BIT * 2)) | (c << BYTE_BIT) | d; \
      W->ptr += INST_BYTE
-#endif /* LITTLE_ENDIAN_MITE */
+#endif /* !WORDS_BIGENDIAN */
 
 #define Lab(off, ty, l) \
   addDangle(T, ty, l, W->ptr - W->img + off)

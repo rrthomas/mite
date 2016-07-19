@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <limits.h>
 
-#include "mite-endian.h"
 #include "util.h"
 #include "types.h"
 #include "const.h"

@@ -42,7 +42,7 @@ evalImm (Byte f, int sgn, int r, Word v)
 {
   if (sgn)
     v = (Word)(-(SWord)v);
-#ifndef LITTLE_ENDIAN_MITE
+#ifdef WORDS_BIGENDIAN
   if (f & FLAG_E)
     v = WORD_BYTE - v;
 #endif
