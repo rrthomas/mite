@@ -1,5 +1,7 @@
 Release version 2 with a suitable amount of the following done.
 
+Replace bootstrap with https://github.com/gnulib-modules/bootstrap
+
 Rework reader API so that it has one case per instruction, like
 writers. Sigh.
 
