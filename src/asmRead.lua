@@ -83,7 +83,7 @@ asmR_isImm(int c)
 }
 
 /* Discard leading white space and comments */
-static
+static void
 asmR_skipSpace(asmR_State *R)
 { 
 #define p R->ptr
