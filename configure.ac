@@ -71,6 +71,10 @@ dnl Check for header files
 AC_HEADER_STDC
 gl_INIT
 
+dnl Check for LuaRocks
+AX_LUAROCKS_ROCK(stdlib)
+AX_LUAROCKS_ROCK(rrtlib)
+
 dnl Check features
 AC_C_BIGENDIAN
 
