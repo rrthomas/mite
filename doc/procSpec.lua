@@ -3,8 +3,7 @@
 
 
 -- Make a name->instruction index
--- FIXME: Get index_value from rrtlib
-nameToInst = std.list.index_value ("name", inst)
+nameToInst = rrt_list.index_value ("name", inst)
 
 -- Expand the effect fields of the instructions
 for i = 1, #inst do
