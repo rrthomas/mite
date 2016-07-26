@@ -44,7 +44,7 @@ excEnum.h excMsg.h: except.lua mkExcept.lua
 # Translators; FIXME: this rules should be automated and removed
 translators.h translators.c: asmRead.lua asmWrite.lua objRead.lua objWrite.lua \
     interpWrite.lua runWrite.lua interpDebug.lua mkTrans.lua \
-    transList.lua
+    transList.lua $(top_srcdir)/spec.lua
 	$(RUNLUA) $(srcdir)/mkTrans.lua $(srcdir)/transList.lua translators
 
 clean-local:
