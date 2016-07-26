@@ -38,18 +38,18 @@ writeTable ("lab")
 
 -- instComp.tex: the computational instructions
 io.output ("instComp.tex")
-writeTable ("mov", "movi", "ldl", "ld", "st", "ldo", "sto", "add",
+writeTable ("mov", "movi", "ldl", "ld", "st", "add",
             "sub", "mul", "div", "rem", "and", "or", "xor", "sl",
-            "srl", "sra", "teq", "tlt", "tltu", "b", "br", "bf", "bt",
+            "srl", "sra", "teq", "tlt", "tltu", "b", "br", "bf",
             "call", "callr", "ret", "salloc")
 
 -- instData.tex: the data instructions
 io.output ("instData.tex")
-writeTable ("lit", "litl", "space")
+writeTable ("lit", "litl")
 
--- instCcall.tex: the C call instructions
-io.output ("instCcall.tex")
-writeTable ("func", "funcv", "arg", "callf", "callfr", "retf", "retf0")
+-- -- instCcall.tex: the C call instructions
+-- io.output ("instCcall.tex")
+-- writeTable ("func", "funcv", "arg", "callf", "callfr", "retf", "retf0")
 
 -- instOp.tex: the opcode table (3 columns)
 function opEntry (n)

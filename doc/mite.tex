@@ -174,26 +174,26 @@ label to be stored in the next word of memory.
 consecutive locations.
 
 
-\subsection{C functions}
+% \subsection{C functions}
 
-The instructions shown in table~\ref{ccalltab} allow C functions to be
-both implemented and called by Mite code.
+% The instructions shown in table~\ref{ccalltab} allow C functions to be
+% both implemented and called by Mite code.
 
-\begin{insttab}{C function instructions\label{ccalltab}}
-  \input{instCcall}
-\end{insttab}
+% \begin{insttab}{C function instructions\label{ccalltab}}
+%   \input{instCcall}
+% \end{insttab}
 
-An argument type is \syn{r} for an integer register, \syn{f} for a
-float register or \syn{b}$n$ for a memory block of $n$ words.
+% An argument type is \syn{r} for an integer register, \syn{f} for a
+% float register or \syn{b}$n$ for a memory block of $n$ words.
 
-In an \syn{arg} instruction, a memory block is given by a register
-holding the address of the block. Arguments for a function call are
-given in order from right to left.
+% In an \syn{arg} instruction, a memory block is given by a register
+% holding the address of the block. Arguments for a function call are
+% given in order from right to left.
 
-There must be no branch labels or branches between a \syn{func}
-instruction and the corresponding \syn{callf}, \syn{callfr} or
-\syn{callfn}. When \syn{getret} is used it must immediately follow the
-corresponding call instruction.
+% There must be no branch labels or branches between a \syn{func}
+% instruction and the corresponding \syn{callf}, \syn{callfr} or
+% \syn{callfn}. When \syn{getret} is used it must immediately follow the
+% corresponding call instruction.
 
 
 
