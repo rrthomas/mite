@@ -7,7 +7,6 @@ Makefile.in
 /build-aux
 /gnulib
 /lib
-/m4
 /config.h
 /config.h.in
 /config.log
