@@ -4,6 +4,7 @@
 *.html
 *.bbl
 *.blg
+*.synctex.gz
 opTypes.tex
 instLab.tex
 instComp.tex
