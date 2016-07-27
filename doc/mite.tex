@@ -15,10 +15,12 @@
 \usepackage{amstext}
 \usepackage{booktabs}
 \usepackage{url}
+\usepackage{ctable}
 %\usepackage[active]{srcltx}
 
 %%% Settings for this document
 \urlstyle{rm}
+\setupctable{botcap,mincapwidth=0.8\textwidth}
 
 %%% Macros for this document
 \newcommand{\cont}{\noindent}
@@ -26,20 +28,8 @@
 \newcommand{\syn}[1]{\ensuremath{\text{\synfont #1}}}
 \newcommand{\norm}[1]{\textrm{#1}}
 
-%%% Centred tables
-\newenvironment{ctabular}[1]%
-{\begin{center}\begin{tabular}{#1}}%
-    {\end{tabular}\end{center}}
-\newcommand{\ctablecaption}{}
-\newenvironment{ctable}[3][tbp]%
-{\renewcommand{\ctablecaption}{#2}%
-  \begin{table}[#1]\begin{center}\begin{tabular}{#3}}%
-      {\end{tabular}\caption{\ctablecaption}\end{center}\end{table}}
-
 %%% Instruction tables
-\newenvironment{insttab}[1]
-{\begin{ctable}{#1}{>{\synfont}p{13ex}p{44ex}}\toprule}
-  {\bottomrule\end{ctable}}
+\newcommand{\insttab}[2]{\ctable[caption=#1]{>{\synfont}p{13ex}p{44ex}}{}{\FL #2\bottomrule}}
 
 
 \begin{document}
@@ -106,9 +96,7 @@ In the syntax, each operand is denoted by a letter subscripted by a
 number. The letter indicates the sort of operand required, as shown in
 table~\ref{optypetab}; the number shows the number of the operand.
 
-\begin{ctable}{Operand types\label{optypetab}}{>{$}c<{$}l}
-  \toprule \input{opTypes} \bottomrule
-\end{ctable}
+\ctable[caption=Operand types\label{optypetab}]{>{$}c<{$}l}{}{\FL\input{opTypes}\bottomrule}
 
 $\{P\}$ has the value $1$ if the predicate $P$ is true, and $0$
 otherwise. $\rho$ is a random value.
@@ -119,9 +107,7 @@ otherwise. $\rho$ is a random value.
 Labels are defined by the \syn{lab} instruction, shown in
 table~\ref{labtab}.
 
-\begin{insttab}{Label definition\label{labtab}}
-  \input{instLab}
-\end{insttab}
+\insttab{Label definition\label{labtab}}{\input{instLab}}
 
 There types of label are: branch labels, denoted \syn{b}, subroutine
 labels, denoted \syn{s}, data labels, denoted \syn{d}, and function
@@ -139,9 +125,7 @@ and function labels may not be executed.
 
 \subsection{Computation}
 
-\begin{insttab}{Computational instructions\label{comptab}}
-  \input{instComp}
-\end{insttab}
+\insttab{Computational instructions\label{comptab}}{\input{instComp}}
 
 The computational instructions are shown in table~\ref{comptab}.
 
@@ -162,9 +146,7 @@ The data instructions, shown in table~\ref{datatab}, allow literal
 data to be included in object code; they may not be executed. Data
 between two labels are stored contiguously in $M$.
 
-\begin{insttab}{Data instructions\label{datatab}}
-  \input{instData}
-\end{insttab}
+\insttab{Data instructions\label{datatab}}{\input{instData}}
 
 \syn{lit} causes its operand to be truncated to a word and stored in
 the next word of memory. \syn{litl} causes the values of the given
@@ -179,9 +161,7 @@ consecutive locations.
 % The instructions shown in table~\ref{ccalltab} allow C functions to be
 % both implemented and called by Mite code.
 
-% \begin{insttab}{C function instructions\label{ccalltab}}
-%   \input{instCcall}
-% \end{insttab}
+% \insttab{C function instructions\label{ccalltab}}{\input{instCcall}
 
 % An argument type is \syn{r} for an integer register, \syn{f} for a
 % float register or \syn{b}$n$ for a memory block of $n$ words.
@@ -205,11 +185,7 @@ leading ``0x''.
 Object code consists of a series of instructions.
 
 
-\begin{ctable}{Instruction opcodes\label{opcodetab}}{*{3}{>{\synfont}cc!{\hspace{5mm}}}}
-  \toprule \norm{\bf Instruction} & \bf Opcode & \norm{\bf
-    Instruction} & \bf Opcode & \norm{\bf Instruction} & \bf Opcode \\
-  \midrule \input{instOpcode} \bottomrule
-\end{ctable}
+\ctable[caption=Instruction opcodes\label{opcodetab}]{*{3}{>{\synfont}cc!{\hspace{5mm}}}}{}{\FL\norm{\bf Instruction} & \bf Opcode & \norm{\bf Instruction} & \bf Opcode & \norm{\bf Instruction} & \bf Opcode \ML \input{instOpcode} \bottomrule}
 
 \subsection{Instructions} \label{objinst}
 
@@ -238,14 +214,12 @@ basic value encoded as a long number. The modifiers are encoded as
 binary flags, as shown in table~\ref{modenctab}; the unused bits are
 zeroed.
 
-\begin{ctable}{Constant modifiers encoding\label{modenctab}}{>{\synfont}cc}
-  \toprule \bf Modifier & \bf Bit position \\ \midrule
-  \textrm{rotation} & 0 \\
-  w & 1 \\
-  s & 2 \\
-  e & 3 \\
-  \bottomrule
-\end{ctable}
+\ctable[caption=Constant modifiers encoding\label{modenctab}]{>{\synfont}cc}{}%
+{\FL \bf Modifier & \bf Bit position\ML
+  \textrm{rotation} & 0 \NN
+  w & 1 \NN
+  s & 2 \NN
+  e & 3 \LL}
 
 
 \subsection{Long numbers} \label{longnums}
