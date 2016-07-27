@@ -28,7 +28,7 @@ EXTRA_DIST = $(LATEX_SRCS) $(LATEX_PDFS) procSpec.lua mite.bib
 DISTCLEANFILES = $(LATEX_PDFS)
 
 .tex.pdf:
-	BIBINPUTS=$(srcdir) $(RUBBER) --pdf $<
+	$(RUBBER) --texpath $(srcdir) --pdf $<
 
 .tex.html:
 	hevea $(HEVEA_FLAGS) sym.hva $<
