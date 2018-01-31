@@ -10,7 +10,7 @@ AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_AR
 AC_PROG_RANLIB
-AX_WITH_PROG(RUBBER, rubber, true)
+AX_WITH_PROG(LATEXMK, latexmk, true)
 
 dnl Extra warnings with GCC
 AC_ARG_ENABLE([gcc-warnings],

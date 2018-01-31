@@ -4,6 +4,8 @@
 *.html
 *.bbl
 *.blg
+*.fls
+*.fdb_latexmk
 *.synctex.gz
 opTypes.tex
 instLab.tex

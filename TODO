@@ -29,8 +29,6 @@ reader and writer, and easier debugging in future.
 Make a distribution that can easily be compiled with any ISO C
 compiler (preferably a single C file).
 
-Use latexmk.
-
 Make a file bundle release (just a tar of the contents of CVS).
 
 Check out & build Mite on a clean system.
