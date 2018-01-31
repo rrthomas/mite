@@ -26,12 +26,10 @@ Construct a util.lua to avoid relying on my std lib.
 Rewrite scripts in Python for better definition of the type of a
 reader and writer, and easier debugging in future.
 
-Make a distribution that can easily be compiled with any ANSI C
+Make a distribution that can easily be compiled with any ISO C
 compiler (preferably a single C file).
 
-Write a shell script to process LaTeX files semi-intelligently, i.e. 
-search for "bibliography" and if not found, just run latex twice;
-otherwise, run latex, bibtex, latex, latex. Look in l2web.
+Use latexmk.
 
 Make a file bundle release (just a tar of the contents of CVS).
 
