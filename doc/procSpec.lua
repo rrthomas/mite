@@ -53,7 +53,7 @@ writeTable ("lit", "litl")
 -- instOp.tex: the opcode table (3 columns)
 function opEntry (n)
   if inst[n] == nil then return "" end
-  return inst[n].name .. " & " .. string.format ("%0.2x", n) .. "h"
+  return inst[n].name .. " & " .. string.format ("%0.2x", n - 1) .. "h"
 end
 
 io.output ("instOpcode.tex")

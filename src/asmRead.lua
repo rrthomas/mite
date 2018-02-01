@@ -157,7 +157,7 @@ asmR_intReg(asmR_State *R)
   char *tok;
   Word len = asmR_tok(R, &tok, isdigit);
   Word r = asmR_strToNum(tok, len);
-  if (r == 0 || r > REGISTER_MAX)
+  if (r > REGISTER_MAX)
     die(ExcBadRegister);
   return r;
 }
