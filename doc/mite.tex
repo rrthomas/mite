@@ -147,12 +147,10 @@ between two labels are stored contiguously in $M$.
 
 \insttab{Data instructions\label{datatab}}{\input{instData}}
 
-\syn{lit} causes its operand to be truncated to a word and stored in
-the next word of memory. \syn{litl} causes the values of the given
-label to be stored in the next word of memory.
-
-\syn{space} causes the given number of zero words to be stored in
-consecutive locations.
+\syn{lit} causes its operands to be truncated to $s$ bytes and stored
+in the next $n$ $s$-byte words of memory, repeating the last operand
+as necessary to fill the given number of words. \syn{litl} causes the
+value of the given label to be stored in the next word of memory.
 
 
 % \subsection{C functions}
