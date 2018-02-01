@@ -384,9 +384,9 @@ rOpType = {
           die(ExcDupLabel, x%n_l->key);
         x%n->v.n = ++T->labels[]] .. ty .. "];"
     end},
-a = OpType {[[Size a%n_size;
+  a = OpType {[[Size a%n_size;
         ArgType a%n_ty;]],
-  "a%n_ty = asmR_argTy(R, &a%n_size);"},
+    "a%n_ty = asmR_argTy(R, &a%n_size);"},
 }
 
 -- Check the reader implements the correct opTypes
