@@ -17,12 +17,16 @@ Mite is distributed under the BSD license; see the file LICENSE.
 
 Quick start and extras
 
+FIXME: Add pointers to sources of all the tools
+
 Mite should work on almost any ISO C system (see the docs for the small
-print); you also need Lua 5.2 (http://www.lua.org/ ), and lua-stdlib
+print). To build it you need a POSIX environment with a C99 compiler, gperf,
+Lua 5.3 (http://www.lua.org/ ), and lua-stdlib
 (https://github.com/rrthomas/lua-stdlib/ ), most easily installed using
-LuaRocks (http://www.luarocks.org ). Makefiles are provided. "make all"
-makes mit, the Mite translator, and the documentation; you should check
-src/Makefile first.
+LuaRocks (http://www.luarocks.org ), a LaTeX system (including latexmk), and
+HeVeA. To build from a source release:
+
+./configure && make
 
 The design is described in mite.tex; the API is in iface.tex.
 
