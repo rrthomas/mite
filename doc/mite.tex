@@ -130,12 +130,12 @@ and function labels may not be executed.
 The computational instructions are shown in table~\ref{comptab}.
 
 Immediate constants are of the form
-[\syn{e}][\syn{s}][\syn{w}]$n$[\syn{>\/>}$r$]. $n$ (and $r$, if
+[\syn{e}][\syn{s}][\syn{w}]$n$[\syn{\textgreater\textgreater}$r$]. $n$ (and $r$, if
 present) is an integer. If \syn{e} (for ``endianness'') is present,
 $n$ is subtracted from $W$ on a big-endian Mite, or left unaltered
 otherwise; then if \syn{s} is present, it is multiplied by $S$, and if
 \syn{w} is present, it is multiplied by $W$. The final value is
-truncated to $8W$ bits, then if \syn{>\/>}$r$ is present, it is
+truncated to $8W$ bits, then if \syn{\textgreater\textgreater}$r$ is present, it is
 rotated by $r$ places, to the right if positive, and to the left if
 negative.
 
