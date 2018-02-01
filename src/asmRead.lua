@@ -185,7 +185,7 @@ asmR_size(asmR_State *R)
   Word n;
   Word len = asmR_tok(R, &tok, isalnum);
   if (len == 1 && *tok == 'a')
-    return SIZE_A;
+    return SIZE_W;
   n = asmR_strToNum(tok, len);
   if (n == 0 || n & (n - 1))    /* Sizes have exactly one bit set */
     die(ExcBadSize);

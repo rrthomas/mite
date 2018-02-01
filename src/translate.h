@@ -39,7 +39,7 @@ typedef unsigned int Register;
 
 /* Size type */
 typedef unsigned int Size;
-#define SIZE_A (sizeof (Word))  /* Size of an address */
+#define SIZE_W (sizeof (Word))  /* Size of an address */
 
 /* Label types */
 typedef enum {
