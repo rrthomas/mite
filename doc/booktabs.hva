@@ -1,3 +1,4 @@
+% FIXME: integrate with hevea’s own booktabs.hva
 \newcommand{\toprule}{\hline}
 \newcommand{\midrule}{\hline}
 \newcommand{\bottomrule}{\hline}
