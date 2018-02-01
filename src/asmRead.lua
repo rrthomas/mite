@@ -389,10 +389,10 @@ rOpType = {
     "a%n_ty = asmR_argTy(R, &a%n_size);"},
 }
 
+-- FIXME: The rest should be in mkTrans.lua or util.lua
+
 -- Check the reader implements the correct opTypes
-assert (std.set.equal (std.set (std.table.project ("name", opType)),
-                       std.set (std.table.project (1, std.table.enpair (rOpType)))),
-        "incorrect opType in " .. r.reads .. " reader")
+checkReaderOpTypes (opType, r, rOpType)
 
 -- Compute the instruction definitions
 for i = 1, #inst do

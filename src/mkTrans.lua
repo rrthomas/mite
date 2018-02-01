@@ -71,6 +71,18 @@ function getOpInfo (opType)
   return opType, opRepeat
 end
 
+-- Check the reader implements the correct opTypes
+function checkReaderOpTypes (opType, r, rOpType)
+  if not std.set.equal (std.set (std.table.project ("name", opType)),
+                        std.set (std.table.project (1, std.table.enpair (rOpType))))
+  then
+    print ("opType: " .. std.set (std.table.project ("name", opType)))
+    print ("rOpType: " .. std.set (std.table.project (1, std.table.enpair (rOpType))))
+    -- FIXME: use die
+    assert (false, "incorrect opType in " .. r.reads .. " reader")
+  end
+end
+
 
 -- Main code construction function
 
