@@ -18,6 +18,6 @@ __attribute__ ((__gnu_inline__))
 #endif
 #endif
 struct Inst *
-findInst (register const char *str, register unsigned int len);
+findInst (register const char *str, register size_t len);
 
 #endif
