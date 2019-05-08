@@ -62,7 +62,7 @@ inst = {
   Inst {"call",    {"l"},                 "push \\syn{P}; $\\syn{P}<-\\syn{s}%1$"},
   Inst {"callr",   {"r"},                 "push \\syn{P}; $\\syn{P}<-%1$"},
   Inst {"ret",     {},                    "pop \\syn{P}"},
-  Inst {"salloc",  {"r"},                 "$\\syn{S}<-\\rho$; $\\syn{F}<-\\rho$; $\\syn{F}-\\syn{S}S\\geq %1W$"},
+  Inst {"salloc",  {"r"},                 "$\\syn{S}<-\\rho$; $\\syn{F}<-\\rho$; $S(\\syn{F}-\\syn{S})\\geq %1W$"},
   Inst {"lit",     {"s", "n", "i+"},      "$%2$ $%1$-byte literals $%3$"},
   Inst {"litl",    {"t", "l"},            "a literal label"},
   -- Inst {"func",    {"i"},                 "start a function call with $%1$ arguments"},
