@@ -74,7 +74,7 @@ item, and \syn{F} points to the bottom of the current frame.
 
 The memory $M$ is an array of bytes. The stack resides in memory.
 $M_s(a)$ denotes the $s$ bytes in memory starting at byte $a$; $a$
-must be a multiple of $W$, and $s$ (the ``size'') must be a power of
+must be a multiple of $s$, and $s$ (the ``size'') must be a power of
 $2$ between $1$ and $W$ inclusive, or $w$, which represents $W$.
 Within a word, bytes may be stored in big or little-endian order.
 Two's complement number representation is used.
@@ -108,7 +108,7 @@ table~\ref{labtab}.
 
 \insttab{Label definition\label{labtab}}{\input{instLab}}
 
-There types of label are: branch labels, denoted \syn{b}, subroutine
+The types of label are: branch labels, denoted \syn{b}, subroutine
 labels, denoted \syn{s}, data labels, denoted \syn{d}, and function
 labels, denoted \syn{f}. A label is written as its name. A name is a
 string of letters, digits and underscores, and may not start with a
@@ -131,7 +131,7 @@ The computational instructions are shown in table~\ref{comptab}.
 Immediate constants are of the form
 [\syn{e}][\syn{s}][\syn{w}]$n$[\syn{\textgreater\textgreater}$r$]. $n$ (and $r$, if
 present) is an integer. If \syn{e} (for ``endianness'') is present,
-$n$ is subtracted from $W$ on a big-endian Mite, or left unaltered
+$n$ is subtracted from $W-1$ on a big-endian Mite, or left unaltered
 otherwise; then if \syn{s} is present, it is multiplied by $S$, and if
 \syn{w} is present, it is multiplied by $W$. The final value is
 truncated to $8W$ bits, then if \syn{\textgreater\textgreater}$r$ is present, it is
@@ -143,7 +143,7 @@ negative.
 
 The data instructions, shown in table~\ref{datatab}, allow literal
 data to be included in object code; they may not be executed. Data
-between two labels are stored contiguously in $M$.
+between two labels are stored contiguously in $M$, except for any padding required for alignment to relevant word size.
 
 \insttab{Data instructions\label{datatab}}{\input{instData}}
 
