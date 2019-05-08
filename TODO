@@ -1,7 +1,8 @@
 Release version 2 with a suitable amount of the following done.
 
-Rework reader API so that it has one case per instruction, like
-writers. Sigh.
+Resurrect object reader (and asm writer?).
+
+Add some tests (see below).
 
 Use wrap() to indent text while building translators.c. Use \t to
 indicate indentation, and pre-expand tabs.
